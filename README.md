@@ -1,6 +1,8 @@
 # ValStack
 Stacking 1D spectra tools
 
+![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
+
 Contains:
 
 1. Fnc_Stk_Dir.py:
@@ -29,7 +31,6 @@ Contains:
    - Function to select different galaxy subsamples for stacking.
    - Fitting tool for the different emmision/absorption lines through a simple/multiple component gaussian profiles.
 
-
 8. Fnc_Stk_Utl.py 
    - Contains auxiliary functions for the stacking analysis
 
@@ -37,8 +38,7 @@ Contains:
 9. Lines_Dictionary.py 
    - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA.
 
-
-![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
+require "Scientist"
 
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 
