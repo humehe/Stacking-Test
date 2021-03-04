@@ -3,7 +3,7 @@ Stacking 1D spectra tools
 
 Contains:
 
-_ Fnc_Stk_Dir.py Defines: 
+_Fnc_Stk_Dir.py Defines: 
 
 Location of the input catalogue and spectral data. 
 
@@ -12,7 +12,7 @@ Parameters for selecting galaxy pairs and subsamples of galaxies according to th
 Location of the resulting products of the stacking analyses e.g. tables, plots, pre stacking processed spectra and stacked spectra.
 
 
-_ Fnc_Stk_Mth.py Contains useful math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption) for the stacking anaysis.
+_Fnc_Stk_Mth.py Contains useful math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption) for the stacking anaysis.
 
 
 Fnc_Stk_Tbl.py Contains functions to access different tables. 
