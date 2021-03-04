@@ -49,6 +49,7 @@ Text...
 Text ...
 
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
+## Example
 ## License
 ###### "Scientist"
 
