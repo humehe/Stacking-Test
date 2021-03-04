@@ -33,7 +33,7 @@ Fnc_Stk_Stk.py Contains the core of the stacking tool, a bootstrap function to c
 Fnc_Stk_Utl.py Contains auxiliary functions for the stacking analysis
 
 
-![Alt text](relative/path/to/img.jpg?raw=true "Title")
-
-
 Lines_Dictionary.py Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA.
+
+
+![Alt text](relative/path/to/img.jpg?raw=true "Title")
