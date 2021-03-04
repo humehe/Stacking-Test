@@ -15,7 +15,7 @@ Contains:
    - Functions to access different tables. 
 
 4. Fnc_Stk_Fts.py 
-   -Funtions to access and modify (add, modify, delete) fits headers.
+   - Funtions to access and modify (add, modify, delete) fits headers.
 
 5. Fnc_Stk_Plt.py
    - Plot templates used through all the stacking analysis. 
