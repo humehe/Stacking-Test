@@ -1,6 +1,11 @@
 # ValStack
 Stacking 1D spectra tools
 
+1. First list item
+   - First nested list item
+     - Second nested list item
+     - Third
+      - Fourth
 Contains:
 
 _Fnc_Stk_Dir.py Defines: 
