@@ -1,11 +1,6 @@
 # ValStack
 Stacking 1D spectra tools
 
-1. First list item
-   - First nested list item
-     - Second nested list item
-     - Third
-      - Fourth
 Contains:
 
 1. Fnc_Stk_Dir.py:
@@ -15,18 +10,16 @@ Contains:
 
 
 2. Fnc_Stk_Mth.py:
-   - Contains useful math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption) for the stacking anaysis.
-
+   - Useful math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption fitting).
 
 3. Fnc_Stk_Tbl.py 
    - Functions to access different tables. 
-
 
 4. Fnc_Stk_Fts.py 
    -Funtions to access and modify (add, modify, delete) fits headers.
 
 5. Fnc_Stk_Plt.py
-   - Contains different plot templates used through all the stacking analysis. 
+   - Plot templates used through all the stacking analysis. 
 
 6. Fnc_Stk_Spc.py 
    - Contains a series of functions for pre-processing the spectra needed for the stacking analysis
