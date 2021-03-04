@@ -8,7 +8,6 @@ Contains:
    - Parameters for selecting galaxy pairs and subsamples of galaxies according to their physical properties. 
    - Location of the resulting products of the stacking analyses e.g. tables, plots, pre stacking processed spectra and stacked spectra.
 
-
 2. Fnc_Stk_Mth.py:
    - Useful math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption fitting).
 
@@ -35,7 +34,7 @@ Contains:
    - Contains auxiliary functions for the stacking analysis
 
 
-Lines_Dictionary.py 
+9. Lines_Dictionary.py 
    - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA.
 
 
