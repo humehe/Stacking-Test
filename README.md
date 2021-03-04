@@ -38,11 +38,19 @@ Contains:
 9. Lines_Dictionary.py 
    - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA.
 
-## "Parameters"
-## "Plots"
-## "Line fitting"
-## "License"
+## Parameters
+![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
+## Plots
+## Line fitting
+Text...
+
+![Alt text](./Images/FitSingle.jpg?raw=true "Pre-processing of stacked spetra.")
+
+Text ...
+
+![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
+## License
 ###### "Scientist"
 
-![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
+
 
