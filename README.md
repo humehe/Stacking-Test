@@ -1,4 +1,4 @@
-# Stacking-Test
+# ValStack
 Stacking 1D spectra tools
 
 Contains:
