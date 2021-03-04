@@ -36,5 +36,5 @@ Fnc_Stk_Utl.py Contains auxiliary functions for the stacking analysis
 Lines_Dictionary.py Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA.
 
 
-![Alt text](VUDS-Z.pdf?raw=true "Title")
+![Alt text](./Images/VUDS-Z.jpg?raw=true "Title")
 
