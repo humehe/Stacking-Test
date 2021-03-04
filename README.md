@@ -38,5 +38,7 @@ Contains:
    - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA.
 
 
-![Alt text](./Images/VUDS-Z.jpg?raw=true "Title")
+![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
+
+![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 
