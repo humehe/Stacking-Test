@@ -64,6 +64,7 @@ VSAT uses lmfit for line fitting and by default a simple gaussian is used as a l
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Examples
 
+###### "Plots"
 ```python
 
 Plot_All_Spec_All_Int(n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_spt_prp,
@@ -81,7 +82,54 @@ Plot_All_Spec_All_Int(n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_
 			plt_stk_med    = plot_stack_med   ,plt_stk_avg      = plot_stack_avg  ,plt_stk_avw = plot_stack_avw)
 
 ```
-
+###### "Line Fitting"
+```python
+for function in plt_fit_stk_fct:
+	lambda_low        = 1300
+	lambda_hgh        = 1305
+	Plot_Idp_Spc_Lne(
+					int_typ_spl     = lst_spt_prp     ,stk_function   = function + fct_extra,
+					lmb_min         = lambda_low      ,lmb_max        = lambda_hgh ,
+					fit_type        = fitting_m       ,fit_fnct       = fitting_f ,
+					verbose         = True            ,autoaxis       = True ,
+					pre_off_plt     = False           ,ofs_ctr_fit    = False ,
+					n_int_spt       = n_int_splt_by   ,
+					lower_shift     = 0               ,upper_shift    = 1            ,   #0-1 All
+					max_sep         = max_red_sep     ,
+					mlt_stk_fct     = plt_fit_stk_fct ,
+					mke_lne_fit     = mke_new_lne_fit , 
+					fit_vls_hdr     = fit_upd_hdr     ,
+					int_vlf_hdr     = fit_ivf_hdr     ,
+					uft_lne_vls     = fit_luf_hdr     ,
+					cnt_bnp_adj     = cnt_bnp_reg     ,
+					fpt_foreground  = fit_plt_fg      ,fpt_background = fit_plt_bg,
+					fix_ctr_gau     = fix_ctr_gaussian,
+					fix_pre_gau     = fix_pre_gaussian,
+					fix_pst_gau     = fix_pst_gaussian,
+					fix_ctr_gau_1   = fix_gau_1       ,
+					fix_ctr_gau_2   = fix_gau_2		  ,
+					pre_shf_lim     = pre_gauss_shf   ,pst_shf_lim    = pst_gauss_shf,
+					pre_shf_ctr     = pre_gauss_ctr   ,pst_shf_ctr    = pst_gauss_ctr,
+					fix_mdl_gau     = fix_mdl_gaussian,
+					mdl_shf_ctr     = mdl_gauss_ctr   ,mdl_shf_lim    = mdl_gauss_shf,
+					ivl_fts_hdr     = int_vls_prv_fit
+					)
+	Plot_Slc_Spc_Lne(
+					int_typ_spl    = lst_spt_prp    ,stk_function   = function + fct_extra ,
+					lmb_min        = lambda_low     ,lmb_max        = lambda_hgh ,
+					stk_fct        = plt_fit_stk_fct,
+					fit_type       = fitting_m      ,fit_fnct       = fitting_f     ,
+					verbose        = True           ,autoaxis       = True          ,
+					pre_off_plt    = False          ,n_int_spt      = n_int_splt_by ,
+					lower_shift    = 0              ,upper_shift    = 1             ,
+					plt_ind_fit    = slcs_plt_fit   ,
+					autoaxis_SSL   = True           ,
+					lbl_col_idv    = True           ,#nmb_cols      = 2,
+					fpt_foreground = fit_plt_fg     ,fpt_background = fit_plt_bg,
+					max_sep        = max_red_sep    ,
+					empty_plots    = 2              ,landscape_plt  = True,
+					splt_ind_lns   = slcs_plt_ind)
+```
 ## Dependencies
 Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
  - [astropy](https://www.astropy.org)
