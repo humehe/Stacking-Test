@@ -51,7 +51,7 @@ Contains:
 
 
 ## Parameters
-![Alt text](./Images/Step.jpg?raw=true "Pre-processing of stacked spetra.")
+![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Plots
 ## Line fitting
 Text...
