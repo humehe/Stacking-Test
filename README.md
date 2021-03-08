@@ -63,6 +63,7 @@ Text ...
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Example
 ## Dependencies
+Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
  - [astropy](https://www.astropy.org)
  - [bottleneck](https://pypi.org/project/Bottleneck/)
  - [pandas](https://pandas.pydata.org)
@@ -70,6 +71,7 @@ Text ...
  - [numpy](https://numpy.org)
  - [lmfit](https://lmfit.github.io/lmfit-py/)
  - [pysynphot](https://pysynphot.readthedocs.io/en/latest/)
+ - [pyraf](https://astroconda.readthedocs.io/en/latest/installation.html)
  - [termcolor](https://pypi.org/project/termcolor/)
 ## License
 ###### "Scientist"
