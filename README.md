@@ -56,7 +56,7 @@ Contains:
 ## Plots
 ## Line fitting
 Text...
-[Go to Real Cool Heading section](## Lines Dictionary)
+[Go to Real Cool Heading section](##Lines Dictionary)
 
 ![Alt text](./Images/FitSingle.jpg?raw=true "Pre-processing of stacked spetra.")
 
