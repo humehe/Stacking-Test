@@ -36,7 +36,19 @@ Contains:
 
 
 9. Lines_Dictionary.py 
-   - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA.
+   - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA. The list contains different parameters for the Stacking procedure:
+   - - 0. Central wavelength.
+   - 1. Line width.
+   - 2. Line width region for plotting purposes.
+   - 3. Line id for stacking routines. 
+   - 4. Line id for labelling plots.
+   - 5. Line id for fits headers.
+   - 6. Line marker for plotting purposes.
+   - 7. Line fitting: Central wavelength constrains.
+   - 8. Line fitting: Central wavelength offset.
+   - 9. Line id for stacking routines.
+   - 10. Line fitting: Amplitude bound constrains.
+
 
 ## Parameters
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
