@@ -38,6 +38,64 @@ Stacking 1D spectra tools
 9. Lines_Dictionary.py
    - Contains a list of identified emmission and absorption lines.
 ## Parameters
+It is possible to perform a pre-processing of the spectra before stacking them to create a composite spectrum. This includes continuum substraction/normalization, gaussian smoothing, line masking and wavelength shift. The final composite spectra can be processed to fit the continuum and smooth it. Param.py file contains all the parameters of each stage. 
+###### "Pre-Processing Continuum"
+pre_continuum          = False                                     # Continuum Fitting/Normalization
+pre_cont_typ           = 'ratio'                                   # Continuum fitting type fit,ratio,difference
+pre_cont_lines         = '*'                                       # Image lines to be fit
+pre_cont_funct         = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
+pre_cont_order         = 49                                        # Order Polynomial / num pieces spline
+pre_cont_override      = 'yes'                                     # Override previous norm spec
+pre_cont_replace       = 'no'                                      # Replace rejected points by fit?
+pre_cont_low_rej       = 3                                         # Low rejection in sigma of fit
+pre_cont_high_rej      = 3                                         # High rejection in sigma of fit
+
+###### "Pre-Processing Smoothing"
+pre_smooth             = True                                      # smooth after interpolation and before stacking
+pre_smooth_shape       = 'gaussian'                                # gaussian,boxcar,mexican
+pre_smooth_size        = 1                                         # kernel size
+
+###### "Pre-Processing MASKING"
+pre_mask               = True                                      # mask spectra after smoothing (stacks)
+pre_msk_abs_lines      = True                                      # mask IS absorptions lines
+pre_mask_type          = 'NaN'                                     # continuum/constant/NaN
+pre_mask_cte_val       = 0                                         # constant value for masking
+pre_mask_lw            = 2                                         # line width (A)
+pre_mask_blue_regn     = True                                      # mask initial spectra pixels
+pre_mask_blue_regn_int = 300                                       # intial pix
+pre_mask_blue_regn_fnl = 912                                       # final pix
+
+###### "Sigma-Clip"
+sigma_clipping         = True                                      # Sigma clipping
+sigma_cut              = 3                                         # sigma cut
+sigma_cen_fct          = mean                                      # median, mean
+sigma_msk_fill_val     = np.nan                                    # np.nan, value
+
+###### #Weighting"
+weight_type            = 'cont-flux-med'                           # i-band-mag,cont-flux-sum,cont-flux-med,cont-flux-avg None:
+weight_cnt_flux_get    = True                                      # mask any given wavelength region 
+weight_cnt_flux_lmb_0  = 1430                                      # initial lambda
+weight_cnt_flux_lmb_n  = 1480                                      # final lambda
+
+
+###### "Noise Files"
+spectra_noise          = False                                     #Include Noise files in the Stacks
+
+###### "Stacks Post Processing "
+post_continuum         = False                                     # Fit Cont after stacking
+post_cont_typ          = 'ratio'                                   # Continuum fitting type fit,ratio,difference
+post_cont_lines        = '*'                                       # Image lines to be fit
+post_cont_funct        = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
+post_cont_order        = 9                                         # Order Polynomial / num pieces spline
+post_cont_override     = 'yes'                                     # Override previous norm spec
+post_cont_replace      = 'no'                                      # Replace rejected points by fit?
+post_cont_low_rej      = 5                                         # Low rejection in sigma of fit
+post_cont_high_rej     = 5                                         # High rejection in sigma of fit
+post_smooth            = True                                      # smooth after stacking
+post_smooth_shape      = 'gaussian'                                # smooth after stacking
+post_smooth_size       = 1                                         # smooth after stacking
+
+
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Lines Dictionary
    - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA from [IAC's OTELO spectral line summary](http://research.iac.es/proyecto/otelo/pages/data-tools/spectral-line-summary.php), [Shapley+03](https://ui.adsabs.harvard.edu/abs/2003ApJ...588...65S/abstract), [Halliday+08](https://ui.adsabs.harvard.edu/abs/2008A%26A...479..417H/abstract) and [Le Fevre+15](https://ui.adsabs.harvard.edu/abs/2015A%26A...576A..79L/abstract). However this can de modified. The list contains different parameters for the Stacking procedure:
