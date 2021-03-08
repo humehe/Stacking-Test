@@ -69,7 +69,7 @@ Text ...
  - scipy
  - numpy
  - termcolor
- - [https://pysynphot.readthedocs.io/en/latest/](pysynphot)
+ - [pysynphot](https://pysynphot.readthedocs.io/en/latest/)
 ## License
 ###### "Scientist"
 
