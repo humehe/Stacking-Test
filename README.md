@@ -1,4 +1,4 @@
-# ValStack
+# VSAT
 Stacking 1D spectra tools
 
 ![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
