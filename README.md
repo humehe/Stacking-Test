@@ -1,7 +1,7 @@
 # VSAT-1D
 Stacking 1D spectra tools
 
-![ZZZZZZZ text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
+![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
 
 Contains:
 
@@ -62,6 +62,14 @@ Text ...
 
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Example
+## Dependencies
+ - astropy
+ - bottleneck
+ - pandas
+ - scipy
+ - numpy
+ - termcolor
+ - [https://pysynphot.readthedocs.io/en/latest/](pysynphot)
 ## License
 ###### "Scientist"
 
