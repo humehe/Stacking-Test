@@ -39,15 +39,24 @@ Stacking 1D spectra tools
    - Contains a list of identified emmission and absorption lines.
 ## Parameters
 It is possible to perform a pre-processing of the spectra before stacking them to create a composite spectrum. This includes continuum substraction/normalization, gaussian smoothing, line masking and wavelength shift. The final composite spectra can be processed to fit the continuum and smooth it. Param.py file contains all the parameters of each stage. 
+
 ###### "Pre-Processing Continuum"
 pre_continuum          = False                                     # Continuum Fitting/Normalization
+
 pre_cont_typ           = 'ratio'                                   # Continuum fitting type fit,ratio,difference
+
 pre_cont_lines         = '*'                                       # Image lines to be fit
+
 pre_cont_funct         = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
+
 pre_cont_order         = 49                                        # Order Polynomial / num pieces spline
+
 pre_cont_override      = 'yes'                                     # Override previous norm spec
+
 pre_cont_replace       = 'no'                                      # Replace rejected points by fit?
+
 pre_cont_low_rej       = 3                                         # Low rejection in sigma of fit
+
 pre_cont_high_rej      = 3                                         # High rejection in sigma of fit
 
 ###### "Pre-Processing Smoothing"
