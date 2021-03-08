@@ -35,7 +35,11 @@ Contains:
    - Contains auxiliary functions for the stacking analysis
 
 
-######9. Lines_Dictionary.py
+9. Lines_Dictionary.py
+   - Contains a list of identified emmission and absorption lines.
+## Parameters
+![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
+## Lines Dictionary
    - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA from [IAC's OTELO spectral line summary](http://research.iac.es/proyecto/otelo/pages/data-tools/spectral-line-summary.php), [Shapley+03](https://ui.adsabs.harvard.edu/abs/2003ApJ...588...65S/abstract), [Halliday+08](https://ui.adsabs.harvard.edu/abs/2008A%26A...479..417H/abstract) and [Le Fevre+15](https://ui.adsabs.harvard.edu/abs/2015A%26A...576A..79L/abstract). However this can de modified. The list contains different parameters for the Stacking procedure:
      - 0. Central wavelength.
      - 1. Line width.
@@ -49,13 +53,10 @@ Contains:
      - 9. Line id for stacking routines.
      - 10. Line fitting: Amplitude bound constrains.
 
-
-## Parameters
-![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Plots
 ## Line fitting
 Text...
-[Go to Real Cool Heading section](#9. Lines_Dictionary.py)
+[Go to Real Cool Heading section](## Lines Dictionary)
 
 ![Alt text](./Images/FitSingle.jpg?raw=true "Pre-processing of stacked spetra.")
 
