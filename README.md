@@ -63,6 +63,31 @@ VSAT uses lmfit for line fitting and by default a simple gaussian is used as a l
 
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Examples
+###### "Stacking"
+```python
+stamps_subsample_redshift_flag_fg     = Select_Subsamples(op_tbl_F                                ,'redshift_bk_flag',z_flag_itv_bg, test_fg = False, test_bg = False, slc_int = False)
+stamps_subsample_redshift_flag_fg_bg  = Select_Subsamples(stamps_subsample_redshift_flag_fg[0][-1],'redshift_fg_flag',z_flag_itv_fg, test_fg = False, test_bg = False, slc_int = False)
+fg_in                                 = str(stamps_subsample_redshift_flag_fg_bg[0][-1])
+stamps_subsample_sep_fg               = Select_Subsamples(fg_in,'sep_as'     ,SEP_as_itv_23,z_flag_itv_fg, test_fg = False, test_bg = False)#, slc_smp=False, sel_pre_cnt = selec_spec_contn)
+f                                     = np.array(Stack_Subsample(stamps_subsample_sep_fg      ,
+					sel_pre_shf     = selec_spec_shift  ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
+					pre_cnt         = pre_continuum     ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
+					pre_cnt_fnc     = pre_cont_funct    ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
+					pre_cnt_rpl     = pre_cont_replace  ,pre_cnt_lrj     = pre_cont_low_rej      ,pre_cnt_hrj     = pre_cont_high_rej     ,
+					smt_spc_pre     = pre_smooth        ,smt_shp_pre     = pre_smooth_shape      ,smt_sze_pre     = pre_smooth_size       ,
+					pre_msk         = False             ,pre_msk_typ     = pre_mask_type         ,pre_msk_abs_lne = False             ,
+					pre_msk_cte_val = pre_mask_cte_val,
+					pre_msk_blu_rgn = False             ,pre_blu_lmb_min = pre_mask_blue_regn_int,pre_blu_lmb_max = pre_mask_blue_regn_fnl,
+					sig_clp         = sigma_clipping    ,sig_cut         = sigma_cut             ,sig_fct         = sigma_cen_fct         ,
+					sig_fll         = sigma_msk_fill_val,
+					wgt_typ         = weight_type      ,get_cont_flux   = weight_cnt_flux_get   ,gcv_lmbd_i      = weight_cnt_flux_lmb_0 ,
+					gcv_lmbd_f      = weight_cnt_flux_lmb_n,
+					wrt_fits        = True              ,spc_nse         = spectra_noise         ,
+					pst_cnt         = post_continuum    ,pst_cnt_typ     = post_cont_typ         ,pst_cnt_lns     = post_cont_lines       ,
+					pst_cnt_fnc     = post_cont_funct   ,pst_cnt_ord     = post_cont_order       ,pst_cnt_ovr     = post_cont_override    ,
+					pst_cnt_rpl     = post_cont_replace ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
+					smt_spc_pst     = post_smooth       ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size))
+```
 
 ###### "Plots"
 ```python
