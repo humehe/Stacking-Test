@@ -3,7 +3,7 @@ Stacking 1D spectra tools
 
 ![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
 
-Contains:
+## Content
 
 1. Fnc_Stk_Dir.py:
    - Location of the input catalogue and spectral data. 
