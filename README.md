@@ -65,7 +65,22 @@ VSAT uses lmfit for line fitting and by default a simple gaussian is used as a l
 ## Examples
 
 ```python
-Plot_All_Spec_All_Int(asdkasld, sdkjslkfj)
+
+Plot_All_Spec_All_Int(
+					n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_spt_prp,
+					min_x_lim_Idp  = lambda_low       , max_x_lim_Idp   = lambda_hgh,
+					plt_ind_spec   = plot_spectra_idv , plt_cnt_stk_spc = plot_spectra_stk,
+					wgt_typ        = weight_type,
+					autoaxis_Idp   = False            , aaxs_Idp_ml_y   = True, 
+					min_y_lim_Idp  = 0.5              , max_y_lim_Idp   = 2.0,
+					lower_shift    = 0                , upper_shift     = 0, 
+					only_stt_tbl   = False            , 
+					SNR_lines      = 'None'           , show_legends    = True,
+					max_sep        = max_red_sep      ,
+					mlt_stk_fct    = plt_fit_stk_fct             ,
+					fpt_foreground = fit_plt_fg       ,fpt_background   = fit_plt_bg,
+					plt_stk_med    = plot_stack_med   ,plt_stk_avg      = plot_stack_avg  ,plt_stk_avw = plot_stack_avw)
+
 ```
 
 ## Dependencies
