@@ -56,7 +56,7 @@ Stacking 1D spectra tools
 ## Plots
 ## Line fitting
 Text ... this 
-![Go to Real Cool Heading section](# VSAT-1D)
+![Go to Real Cool Heading section](#VSAT-1D)
 
 ![Alt text](./Images/FitSingle.jpg?raw=true "Pre-processing of stacked spetra.")
 
