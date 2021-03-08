@@ -66,7 +66,7 @@ VSAT uses lmfit for line fitting and by default a simple gaussian is used as a l
 
 ```python
 Plot_All_Spec_All_Int(asdkasld, sdkjslkfj)
-
+```
 
 ## Dependencies
 Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
