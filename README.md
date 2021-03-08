@@ -36,7 +36,7 @@ Contains:
 
 
 9. Lines_Dictionary.py 
-   - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA from [http://research.iac.es/proyecto/otelo/pages/data-tools/spectral-line-summary.php](#OTELO). However this can de modified. The list contains different parameters for the Stacking procedure:
+   - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA from [http://www.research.iac.es/proyecto/otelo/pages/data-tools/spectral-line-summary.php](#OTELO). However this can de modified. The list contains different parameters for the Stacking procedure:
      - 0. Central wavelength.
      - 1. Line width.
      - 2. Line width region for plotting purposes.
