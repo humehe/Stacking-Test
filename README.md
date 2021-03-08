@@ -52,49 +52,49 @@ It is possible to perform a pre-processing of the spectra before stacking them t
    - pre_cont_high_rej      = 3                                         # High rejection in sigma of fit
 
 ###### "Pre-Processing Smoothing"
-pre_smooth             = True                                      # smooth after interpolation and before stacking
-pre_smooth_shape       = 'gaussian'                                # gaussian,boxcar,mexican
-pre_smooth_size        = 1                                         # kernel size
+   - pre_smooth             = True                                      # smooth after interpolation and before stacking
+   - pre_smooth_shape       = 'gaussian'                                # gaussian,boxcar,mexican
+   - pre_smooth_size        = 1                                         # kernel size
 
 ###### "Pre-Processing MASKING"
-pre_mask               = True                                      # mask spectra after smoothing (stacks)
-pre_msk_abs_lines      = True                                      # mask IS absorptions lines
-pre_mask_type          = 'NaN'                                     # continuum/constant/NaN
-pre_mask_cte_val       = 0                                         # constant value for masking
-pre_mask_lw            = 2                                         # line width (A)
-pre_mask_blue_regn     = True                                      # mask initial spectra pixels
-pre_mask_blue_regn_int = 300                                       # intial pix
-pre_mask_blue_regn_fnl = 912                                       # final pix
+   - pre_mask               = True                                      # mask spectra after smoothing (stacks)
+   - pre_msk_abs_lines      = True                                      # mask IS absorptions lines
+   - pre_mask_type          = 'NaN'                                     # continuum/constant/NaN
+   - pre_mask_cte_val       = 0                                         # constant value for masking
+   - pre_mask_lw            = 2                                         # line width (A)
+   - pre_mask_blue_regn     = True                                      # mask initial spectra pixels
+   - pre_mask_blue_regn_int = 300                                       # intial pix
+   - pre_mask_blue_regn_fnl = 912                                       # final pix
 
 ###### "Sigma-Clip"
-sigma_clipping         = True                                      # Sigma clipping
-sigma_cut              = 3                                         # sigma cut
-sigma_cen_fct          = mean                                      # median, mean
-sigma_msk_fill_val     = np.nan                                    # np.nan, value
+   - sigma_clipping         = True                                      # Sigma clipping
+   - sigma_cut              = 3                                         # sigma cut
+   - sigma_cen_fct          = mean                                      # median, mean
+   - sigma_msk_fill_val     = np.nan                                    # np.nan, value
 
 ###### #Weighting"
-weight_type            = 'cont-flux-med'                           # i-band-mag,cont-flux-sum,cont-flux-med,cont-flux-avg None:
-weight_cnt_flux_get    = True                                      # mask any given wavelength region 
-weight_cnt_flux_lmb_0  = 1430                                      # initial lambda
-weight_cnt_flux_lmb_n  = 1480                                      # final lambda
+   - weight_type            = 'cont-flux-med'                           # i-band-mag,cont-flux-sum,cont-flux-med,cont-flux-avg None:
+   - weight_cnt_flux_get    = True                                      # mask any given wavelength region 
+   - weight_cnt_flux_lmb_0  = 1430                                      # initial lambda
+   - weight_cnt_flux_lmb_n  = 1480                                      # final lambda
 
 
 ###### "Noise Files"
-spectra_noise          = False                                     #Include Noise files in the Stacks
+   - spectra_noise          = False                                     #Include Noise files in the Stacks
 
 ###### "Stacks Post Processing "
-post_continuum         = False                                     # Fit Cont after stacking
-post_cont_typ          = 'ratio'                                   # Continuum fitting type fit,ratio,difference
-post_cont_lines        = '*'                                       # Image lines to be fit
-post_cont_funct        = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
-post_cont_order        = 9                                         # Order Polynomial / num pieces spline
-post_cont_override     = 'yes'                                     # Override previous norm spec
-post_cont_replace      = 'no'                                      # Replace rejected points by fit?
-post_cont_low_rej      = 5                                         # Low rejection in sigma of fit
-post_cont_high_rej     = 5                                         # High rejection in sigma of fit
-post_smooth            = True                                      # smooth after stacking
-post_smooth_shape      = 'gaussian'                                # smooth after stacking
-post_smooth_size       = 1                                         # smooth after stacking
+   - post_continuum         = False                                     # Fit Cont after stacking
+   - post_cont_typ          = 'ratio'                                   # Continuum fitting type fit,ratio,difference
+   - post_cont_lines        = '*'                                       # Image lines to be fit
+   - post_cont_funct        = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
+   - post_cont_order        = 9                                         # Order Polynomial / num pieces spline
+   - post_cont_override     = 'yes'                                     # Override previous norm spec
+   - post_cont_replace      = 'no'                                      # Replace rejected points by fit?
+   - post_cont_low_rej      = 5                                         # Low rejection in sigma of fit
+   - post_cont_high_rej     = 5                                         # High rejection in sigma of fit
+   - post_smooth            = True                                      # smooth after stacking
+   - post_smooth_shape      = 'gaussian'                                # smooth after stacking
+   - post_smooth_size       = 1                                         # smooth after stacking
 
 
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
