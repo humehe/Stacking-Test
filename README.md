@@ -63,13 +63,14 @@ Text ...
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Example
 ## Dependencies
- - astropy
- - bottleneck
- - pandas
- - scipy
- - numpy
- - termcolor
+ - [astropy](https://www.astropy.org)
+ - [bottleneck](https://pypi.org/project/Bottleneck/)
+ - [pandas](https://pandas.pydata.org)
+ - [scipy](https://www.scipy.org)
+ - [numpy](https://numpy.org)
+ - [lmfit](https://lmfit.github.io/lmfit-py/)
  - [pysynphot](https://pysynphot.readthedocs.io/en/latest/)
+ - [termcolor](https://pypi.org/project/termcolor/)
 ## License
 ###### "Scientist"
 
