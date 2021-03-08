@@ -54,13 +54,12 @@ Stacking 1D spectra tools
      - 10. Line fitting: Amplitude bound constrains.
 
 ## Plots
+
 ## Line fitting
-Text ... this 
-[Go to Real Cool Heading section](## Lines Dictionary)
+VSAT uses lmfit for line fitting and by default a simple gaussian is used as a line profile. It is possible to use GM mode to fit multiple gaussian emmission before and after the central wavelength of some lines as CIV. The line fitting procedure is performed under a defined wavelength range which can contain a single line or multiple lines as defined in the Line_dictionary.py file. 
 
 ![Alt text](./Images/FitSingle.jpg?raw=true "Pre-processing of stacked spetra.")
 
-Text ...
 
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Example
