@@ -160,9 +160,13 @@ Statistical values from the stacked galaxies can be obtained through:
 ```
 
 ## Plots
+The following snippet will plot the stacked spectra continuum fit and smoothed, including
+an histogram of the number of spectra combined per wavelength.
 ```python
-
-Plot_All_Spec_All_Int(n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_spt_prp,
+Plot_All_Spec_All_Int(
+			frgrnd_plt     = True,
+			bkgrnd_plt     = False,
+			n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_spt_prp,
 			min_x_lim_Idp  = lambda_low       , max_x_lim_Idp   = lambda_hgh,
 			plt_ind_spec   = plot_spectra_idv , plt_cnt_stk_spc = plot_spectra_stk,
 			wgt_typ        = weight_type,
@@ -172,11 +176,16 @@ Plot_All_Spec_All_Int(n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_
 			only_stt_tbl   = False            , 
 			SNR_lines      = 'None'           , show_legends    = True,
 			max_sep        = max_red_sep      ,
-			mlt_stk_fct    = plt_fit_stk_fct             ,
+			mlt_stk_fct    = plt_fit_stk_fct  ,
 			fpt_foreground = fit_plt_fg       ,fpt_background   = fit_plt_bg,
 			plt_stk_med    = plot_stack_med   ,plt_stk_avg      = plot_stack_avg  ,plt_stk_avw = plot_stack_avw)
 
 ```
+![Alt text](./Images/Stacked.jpg?raw=true "Stacked spectra computed COSMOS field.")
+
+It is also possible to plot the individual spectra, generating:
+
+![Alt text](./Images/Stacked-Contribution.jpg?raw=true "Stacked spectra COSMOS field.")
 
 ## Line Fitting
 ```python
