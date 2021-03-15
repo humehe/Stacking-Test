@@ -183,7 +183,7 @@ Plot_All_Spec_All_Int(
 ```
 ![Alt text](./Images/Stacked.jpg?raw=true "Stacked spectra computed COSMOS field.")
 
-It is also possible to plot the individual spectra, generating:
+It is also possible to plot the individual spectra, if plt_cnt_stk_spc is set True, generating:
 
 ![Alt text](./Images/Stacked-Contribution.jpg?raw=true "Stacked spectra COSMOS field.")
 
