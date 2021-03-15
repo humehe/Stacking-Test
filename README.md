@@ -122,7 +122,7 @@ VSAT uses lmfit for line fitting and by default a simple gaussian is used as a l
 
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Examples
-###### "Stacking"
+## Stacking
 The following snippet will stack galaxies from the COSMOS field. 
 
 First we define a subsample of 102 galaxies according to redshift wuality flag and their impact parameter. 
@@ -153,13 +153,13 @@ f                                     = np.array(Stack_Subsample(stamps_subsampl
 					pst_cnt_rpl     = post_cont_replace  ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
 					smt_spc_pst     = post_smooth        ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size))
 ```
-######Stats
+## Stats
 Statistical values from the stacked galaxies can be obtained through:
 ```python
 [stats_table(tblnm,tbl_format_opt) for tblnm in stamps_subsample_sep_fg[0]]
 ```
 
-######Plots
+## Plots
 ```python
 
 Plot_All_Spec_All_Int(n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_spt_prp,
@@ -177,7 +177,8 @@ Plot_All_Spec_All_Int(n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_
 			plt_stk_med    = plot_stack_med   ,plt_stk_avg      = plot_stack_avg  ,plt_stk_avw = plot_stack_avw)
 
 ```
-###### "Line Fitting"
+
+## Line Fitting
 ```python
 for function in plt_fit_stk_fct:
 	lambda_low        = 1300
