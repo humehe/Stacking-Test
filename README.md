@@ -153,7 +153,11 @@ f                                     = np.array(Stack_Subsample(stamps_subsampl
 					pst_cnt_rpl     = post_cont_replace  ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
 					smt_spc_pst     = post_smooth        ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size))
 ```
-
+######Stats
+Statistical values from the stacked galaxies can be obtained through:
+```python
+[stats_table(tblnm,tbl_format_opt) for tblnm in stamps_subsample_sep_fg[0]]
+```
 ###### "Plots"
 ```python
 
