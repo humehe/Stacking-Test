@@ -187,6 +187,11 @@ It is also possible to plot the individual spectra, if plt_cnt_stk_spc is set Tr
 
 ![Alt text](./Images/Stacked-Contribution.jpg?raw=true "Stacked spectra COSMOS field.")
 
+It is also possible to plot the individual spectra files
+![Alt text](./Images/Spec-Individual.jpg?raw=true "Stacked spectra COSMOS field.")
+
+And the pre-processing steps oof each spectra before combining them.
+![Alt text](./Images/Spec-Step.jpg?raw=true "Stacked spectra COSMOS field.")
 ## Line Fitting
 ```python
 for function in plt_fit_stk_fct:
