@@ -158,7 +158,8 @@ Statistical values from the stacked galaxies can be obtained through:
 ```python
 [stats_table(tblnm,tbl_format_opt) for tblnm in stamps_subsample_sep_fg[0]]
 ```
-###### "Plots"
+
+######Plots
 ```python
 
 Plot_All_Spec_All_Int(n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_spt_prp,
