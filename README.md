@@ -55,14 +55,16 @@ It is possible to pre-processes the spectra before stacking them to create a com
 **pre_smooth** = True enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
 
 ###### "Pre-Processing MASKING"
-   - pre_mask               = True                                      # mask spectra after smoothing (stacks)
-   - pre_msk_abs_lines      = True                                      # mask IS absorptions lines
-   - pre_mask_type          = 'NaN'                                     # continuum/constant/NaN
-   - pre_mask_cte_val       = 0                                         # constant value for masking
-   - pre_mask_lw            = 2                                         # line width (A)
-   - pre_mask_blue_regn     = True                                      # mask initial spectra pixels
-   - pre_mask_blue_regn_int = 300                                       # intial pix
-   - pre_mask_blue_regn_fnl = 912                                       # final pix
+**pre_mask**  = True enables spectra masking (after smooothing), **pre_msk_abs_lines**  = True  enables line masking from a list of lines in Lines_Dictionary.py,
+**pre_mask_type** sets the replacement value for masking {_'NaN', 'constant' 'conttinuum'}                                     # continuum/constant/NaN
+<div class="bg-gray">
+  NaN
+</div>
+**pre_mask_cte_val**  = 0                                         # constant value for masking
+**pre_mask_lw**  = 2                                         # line width (A)
+**pre_mask_blue_regn**  = True                                      # mask initial spectra pixels
+**pre_mask_blue_regn_int**  = 300                                       # intial pix
+**pre_mask_blue_regn_fnl**  = 912                                       # final pix
 
 ###### "Sigma-Clip"
    - sigma_clipping         = True                                      # Sigma clipping
