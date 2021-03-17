@@ -313,7 +313,6 @@ fits_file_err = [
                  ]
 Plot_Idp_Spc_BS(fits_file,fits_file_err,bs_iteration_num,
 				nsigma               = 2,
-				#lmb_min              = lambda_low      , lmb_max        = lambda_hgh,
 				min_x_lim_Idp        = lambda_low      , max_x_lim_Idp  = lambda_hgh,
 				autoaxis_Idp         = False           , aaxs_Idp_ml_y  = True, 
 				min_y_lim_Idp        = 0.5             , max_y_lim_Idp  = 2.0,
