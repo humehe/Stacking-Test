@@ -281,6 +281,44 @@ for tbl_2b_btstr in tables:
 
 ```
 
+Plot the Stacked spectra including the CIs generated thorugh the BS process.
+
+```
+prefixF     = 'P_Fg_' + CAT_PARENT + '_0-40-ss-zf_B-3-44-ss-zf_F-3-44-ss-sep_as-'
+sep         = ['0-23'] 			
+bs_function = ['med-c-smt']
+
+```
+
+and then
+
+```
+print
+print 'Generating BS plot (',str(bs_iteration_num),') for: sep: ',sep,', function: ',bs_function
+
+fits_file     = [
+                 res_stk_res + prefix + sep+'-stk-'+bs_function +'.fits',
+                 res_stk_res + prefix + sep+'-stk-hst.fits'
+                 ]                 
+fits_file_err = [
+                 #stt_bst_stk + 'P_Bg_ALL-ss-zf_B-3-44-ss-zf_F-3-44-ss-SEP_as-10-15-BS_MST_10_med-stk-p50.fits',
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-med-c-smt.fits', 
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-1sl-c-smt.fits',
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-1sh-c-smt.fits',
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-2sl-c-smt.fits',
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-2sh-c-smt.fits',
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-3sl-c-smt.fits',
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-3sh-c-smt.fits',
+                 stt_bst_stk + prefix + sep+'-BS_MST_' + str(bs_iteration_num) + '_' + bs_function +'-stk-hst.fits'
+                 ]
+Plot_Idp_Spc_BS(fits_file,fits_file_err,bs_iteration_num,
+				nsigma               = 2,
+				#lmb_min              = lambda_low      , lmb_max        = lambda_hgh,
+				min_x_lim_Idp        = lambda_low      , max_x_lim_Idp  = lambda_hgh,
+				autoaxis_Idp         = False           , aaxs_Idp_ml_y  = True, 
+				min_y_lim_Idp        = 0.5             , max_y_lim_Idp  = 2.0,
+				sep_lin_min          = 10 )
+```
 ![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
 
 ## Dependencies
