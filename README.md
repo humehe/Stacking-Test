@@ -38,48 +38,45 @@ The Valparaíso Stacking Analysis Tools (VSAT) provides a series of tools for se
 9. Lines_Dictionary.py
    - Contains a list of identified emmission and absorption lines.
 ## Parameters
-It is possible to pre-processes the spectra before stacking them to create a composite spectrum. This includes continuum substraction/normalization, smoothing, line masking and wavelength shift. The final composite spectra can be processed to fit the continuum and smooth it. Param.py file contains all the parameters needed in each stage of the stacking analysis. 
+It is possible to pre-processes the spectra before combining them to create a composite spectrum. This includes continuum substraction/normalization, smoothing, line masking and wavelength shift. The final composite spectra can be then re-processed to fit the continuum and smooth it. Param.py file contains all the parameters needed in each step of the stacking analysis and used in the Example section. 
 
 ###### "Pre-Processing Continuum"
-**pre_continuum**      = False enables the continuum fittting prior to the stacking, 
+**pre_continuum** (_bool_) enables the continuum fitting prior to the stacking, 
 **pre_cont_typ** sets the continuum fitting type: ```fit```,```ratio``` or ```difference```, **pre_cont_funct** sets the fitting function: ```legendre```, ```chebyshev```, ```spline1``` or ```spline3``` and **pre_cont_order**  sets the polynomial order.
 
 ###### "Pre-Processing Smoothing"
-**pre_smooth** = True enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
+**pre_smooth** (_bool_) enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
 
 ###### "Pre-Processing MASKING"
-**pre_mask**  = True enables spectra masking (after smooothing), **pre_msk_abs_lines**  = True  enables line masking from a list of lines in Lines_Dictionary.py,
-**pre_mask_type** sets the replacement value for masking ```NaN``` a constant value ```constant``` or continuum ```continuum```,
-**pre_mask_cte_val**  sets tthe constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_blue_regn**  = True  enables masking of a region of the sepctrum delimited by **pre_mask_blue_regn_int** and **pre_mask_blue_regn_fnl**.
+**pre_mask**  (_bool_) enables spectra masking (after smooothing), **pre_msk_abs_lines** (_bool_) enables line masking from a list of lines included in Lines_Dictionary.py, **pre_mask_type** sets the replacement value for masking ```NaN``` for numoy NaN, a constant value ```constant``` or continuum values extracted from the previously continuum fit ```continuum```, **pre_mask_cte_val**  sets tthe constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_blue_regn** (_bool_) enables masking of a region of the sepctrum delimited by **pre_mask_blue_regn_int** and **pre_mask_blue_regn_fnl**.
 
 ###### "Sigma-Clip"
-**sigma_clipping** = True enables sigma cliipping for stacking, **sigma_cut** sets the _n-sigma_ parameter for clipping, **sigma_cen_fct** sets the central function for clipping: ```mean```or ```median``` and **sigma_msk_fill_val** sets the substitute value for clipped value: 
+**sigma_clipping** (_bool_) enables sigma cliipping for stacking, **sigma_cut** sets the _n-sigma_ parameter for clipping, **sigma_cen_fct** sets the central function for clipping: ```mean```or ```median``` and **sigma_msk_fill_val** sets the substitute value for clipped value: 
 ```np.nan``` or ```value```.
 
 ###### #Weighting"
-**weight_type** 'cont-flux-med' sets the weight type to geneerate the average weigthing stacked spectra, (_e.g._ ```cont-flux-sum```,```cont-flux-med```, ```cont-flux-avg``` or ```None```)
-**weight_cnt_flux_get**  = True will get the continuum in a region delimeted by **weight_cnt_flux_lmb_0** and **weight_cnt_flux_lmb_n**. If **weight_type** == ```None``` wights will be set to unity.
+**weight_type** 'cont-flux-med' sets the weight type to geneerate the average weigthing stacked spectra, (_e.g._ ```cont-flux-sum```,```cont-flux-med```, ```cont-flux-avg``` or ```None```), **weight_cnt_flux_get** (_bool_) will get the continuum in a region delimeted by **weight_cnt_flux_lmb_0** and **weight_cnt_flux_lmb_n**. If **weight_type** == ```None``` wights will be set to unity.
 
 ###### "Noise Files"
-***spectra_noise*** = True includes Noise files in the Stacks.
+**spectra_noise** (_bool_) includes Noise files in the Stacks.
 
 ###### "Stacks Post Processing "
-***post_continuum***  and ***post_smooth*** parameters similar to ***pre_continuum***  and ***pre_smooth*** parameters for spectra pre-processing.
+**post_continuum**  and **post_smooth** parameters similar to ***pre_continuum***  and ***pre_smooth*** parameters for spectra pre-processing.
 
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Lines Dictionary
    - Contains a list of identified emmission and absorption lines in the UV spectral range [800-3000]AA from [IAC's OTELO spectral line summary](http://research.iac.es/proyecto/otelo/pages/data-tools/spectral-line-summary.php), [Shapley+03](https://ui.adsabs.harvard.edu/abs/2003ApJ...588...65S/abstract), [Halliday+08](https://ui.adsabs.harvard.edu/abs/2008A%26A...479..417H/abstract) and [Le Fevre+15](https://ui.adsabs.harvard.edu/abs/2015A%26A...576A..79L/abstract). However this can de modified. The list contains different parameters for the Stacking procedure:
-     - 0. Central wavelength.
-     - 1. Line width.
-     - 2. Line width region for plotting purposes.
-     - 3. Line id for stacking routines. 
-     - 4. Line id for labelling plots.
-     - 5. Line id for fits headers.
-     - 6. Line marker for plotting purposes.
-     - 7. Line fitting: Central wavelength constrains.
-     - 8. Line fitting: Central wavelength offset.
-     - 9. Line id for stacking routines.
-     - 10. Line fitting: Amplitude bound constrains.
+     - 0: Central wavelength.
+     - 1: Line width.
+     - 2: Line width region for plotting purposes.
+     - 3: Line id for stacking routines. 
+     - 4: Line id for labelling plots.
+     - 5: Line id for fits headers.
+     - 6: Line marker for plotting purposes.
+     - 7: Line fitting: Central wavelength constrains.
+     - 8: Line fitting: Central wavelength offset.
+     - 9: Line id for stacking routines.
+     - 10: Line fitting: Amplitude bound constrains.
 
 ## Plots
 
@@ -97,8 +94,9 @@ The following snippet will stack galaxies from the COSMOS field.
 First we define a subsample of galaxies according to some redshift and separation constrains. This can be used to define subsamples of objects restricted by any given object property. A series of tables will be gnerated and saved in the tables directory.
 
 ```python
-stamps_subsample_redshift_flag_fg     = Select_Subsamples(op_tbl_F                                ,'redshift_bk_flag',z_flag_itv_bg, test_fg = False, test_bg = False, slc_int = False)
-stamps_subsample_redshift_flag_fg_bg  = Select_Subsamples(stamps_subsample_redshift_flag_fg[0][-1],'redshift_fg_flag',z_flag_itv_fg, test_fg = False, test_bg = False, slc_int = False)
+stamps_subsample_redshift_flag_fg     = Select_Subsamples(op_tbl_F,'redshift_bk_flag',z_flag_itv_bg, test_fg = False, test_bg = False, slc_int = False)
+stamps_subsample_redshift_flag_fg_bg  = Select_Subsamples(stamps_subsample_redshift_flag_fg[0][-1],'redshift_fg_flag',z_flag_itv_fg, test_fg = False, 
+					test_bg = False, slc_int = False)
 fg_in                                 = str(stamps_subsample_redshift_flag_fg_bg[0][-1])
 stamps_subsample_sep_fg               = Select_Subsamples(fg_in,'sep_as'     ,SEP_as_itv_23,z_flag_itv_fg, test_fg = False, test_bg = False)#, slc_smp=False, sel_pre_cnt = selec_spec_contn)
 ```
@@ -106,7 +104,7 @@ stamps_subsample_sep_fg               = Select_Subsamples(fg_in,'sep_as'     ,SE
 Next we stack the subsample. 
 
 ```python
-f                                     = np.array(Stack_Subsample(stamps_subsample_sep_fg      ,
+f                                     = np.array(Stack_Subsample(stamps_subsample_sep_fg ,
 					sel_pre_shf     = selec_spec_shift   ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
 					pre_cnt         = pre_continuum      ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
 					pre_cnt_fnc     = pre_cont_funct     ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
@@ -166,7 +164,7 @@ This will generate and save a pdf plot file including the median, average, and w
 
 ![Alt text](./Images/Spec-Individual.jpg?raw=true "Stacked spectra COSMOS field.")
 
-It will alsoo generate a detailed plot of every step of the pre-processing procedure prior to the stacking process of all the combined spectra.
+It will also generate a detailed plot of every step of the pre-processing procedure prior to the stacking process of all the combined spectra.
 ![Alt text](./Images/Spec-Step.jpg?raw=true "Stacked spectra COSMOS field.")
 ###### "Line Fitting"
 
@@ -220,7 +218,16 @@ Plot_Slc_Spc_Lne(
 ![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
 
 ###### "Bootstrap"
-For computing the Confidence Inteervals (CIs) for the generated stacks:
+To compute the Confidence Inteervals (CIs) of the composite spectra it is possible to bootstrap the spectra used in the stacking process. 
+
+**bs_iteration_num** defines the number of bootstrap repetitionsm, **bs_percentage** defines the percentaje of elements to be resampled in each iteration (_default=1_), **bs_function**  defines the function used for the bootstrap.
+
+It is possible to complete a broken BS process. 
+**comp_BS_run**	(_bool_) enables the BS completion
+**bst_brk_int** sets the reeeinizilaation step at which the process broked, **bst_brk_lst** sets the BS number repetitions (_default=bs_iteration_num_)  #Last iteration step (default = bs_iteration_num) and **crts_BS_otb** (_bool_) creates the BS master table only for Completed BS Repetitions(_= bs_iteration_num_) but without master table. 
+
+
+To generate the CIs, first we define:
 
 ```python
 prefixF       = 'P_Fg_' + CAT_PARENT + '_0-40-ss-zf_B-3-44-ss-zf_F-3-44-ss-sep_as-'
@@ -228,7 +235,7 @@ tables        = [frg_dir_res + prefixF + '0-23.csv']
 bs_function_s = [ '_med-c-smt']
 ```
 
-Then
+Then we run the BS process:
 
 ```
 for tbl_2b_btstr in tables:
@@ -281,7 +288,7 @@ for tbl_2b_btstr in tables:
 
 ```
 
-Plot the Stacked spectra including the CIs generated thorugh the BS process.
+Finally, to plot the Stacked spectra including the CIs generated thorugh the BS process; first we define:
 
 ```
 prefixF     = 'P_Fg_' + CAT_PARENT + '_0-40-ss-zf_B-3-44-ss-zf_F-3-44-ss-sep_as-'
