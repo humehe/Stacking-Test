@@ -224,6 +224,11 @@ for function in plt_fit_stk_fct:
 					mdl_shf_ctr     = mdl_gauss_ctr   ,mdl_shf_lim    = mdl_gauss_shf,
 					ivl_fts_hdr     = int_vls_prv_fit
 					)
+	
+	
+
+![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Ind-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
+```python
 	Plot_Slc_Spc_Lne(
 					int_typ_spl    = lst_spt_prp    ,stk_function   = function + fct_extra ,
 					lmb_min        = lambda_low     ,lmb_max        = lambda_hgh ,
@@ -240,6 +245,7 @@ for function in plt_fit_stk_fct:
 					empty_plots    = 2              ,landscape_plt  = True,
 					splt_ind_lns   = slcs_plt_ind)
 ```
+![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt?raw=true "Stacked spectra COSMOS field.")	
 ## Dependencies
 Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
  - [astropy](https://www.astropy.org)
