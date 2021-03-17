@@ -41,56 +41,30 @@ The Valparaíso Stacking Analysis Tools (VSAT) provides a series of tools for se
 It is possible to pre-processes the spectra before stacking them to create a composite spectrum. This includes continuum substraction/normalization, smoothing, line masking and wavelength shift. The final composite spectra can be processed to fit the continuum and smooth it. Param.py file contains all the parameters needed in each stage of the stacking analysis. 
 
 ###### "Pre-Processing Continuum"
-   - pre_continuum          = False                                     # Continuum Fitting/Normalization
-   - pre_cont_typ           = 'ratio'                                   # Continuum fitting type fit,ratio,difference
-   - pre_cont_lines         = '*'                                       # Image lines to be fit
-   - pre_cont_funct         = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
-   - pre_cont_order         = 3                                         # Order Polynomial / num pieces spline
-   - pre_cont_override      = 'yes'                                     # Override previous norm spec
-   - pre_cont_replace       = 'no'                                      # Replace rejected points by fit?
-   - pre_cont_low_rej       = 3                                         # Low rejection in sigma of fit
-   - pre_cont_high_rej      = 3                                         # High rejection in sigma of fit
+**pre_continuum**      = False enables the continuum fittting prior to the stacking, 
+**pre_cont_typ** sets the continuum fitting type: ```fit```,```ratio``` or ```difference```, **pre_cont_funct** sets the fitting function: ```legendre```, ```chebyshev```, ```spline1``` or ```spline3``` and **pre_cont_order**  sets the polynomial order.
 
 ###### "Pre-Processing Smoothing"
 **pre_smooth** = True enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
 
 ###### "Pre-Processing MASKING"
 **pre_mask**  = True enables spectra masking (after smooothing), **pre_msk_abs_lines**  = True  enables line masking from a list of lines in Lines_Dictionary.py,
-**pre_mask_type** sets the replacement value for masking ```NaN``` a constant value ```constant``` or continuum ```conttinuum```,
-**pre_mask_cte_val**  = 0                                         # constant value for masking
-**pre_mask_lw**  = 2                                         # line width (A)
-**pre_mask_blue_regn**  = True  enables masking of a region of the sepctrum delimited by **pre_mask_blue_regn_int** and **pre_mask_blue_regn_fnl**
+**pre_mask_type** sets the replacement value for masking ```NaN``` a constant value ```constant``` or continuum ```continuum```,
+**pre_mask_cte_val**  sets tthe constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_blue_regn**  = True  enables masking of a region of the sepctrum delimited by **pre_mask_blue_regn_int** and **pre_mask_blue_regn_fnl**.
 
 ###### "Sigma-Clip"
-   - sigma_clipping         = True                                      # Sigma clipping
-   - sigma_cut              = 3                                         # sigma cut
-   - sigma_cen_fct          = mean                                      # median, mean
-   - sigma_msk_fill_val     = np.nan                                    # np.nan, value
+**sigma_clipping** = True enables sigma cliipping for stacking, **sigma_cut** sets the _n-sigma_ parameter for clipping, **sigma_cen_fct** sets the central function for clipping: ```mean```or ```median``` and **sigma_msk_fill_val** sets the substitute value for clipped value: 
+```np.nan``` or ```value```.
 
 ###### #Weighting"
-   - weight_type            = 'cont-flux-med'                           # i-band-mag,cont-flux-sum,cont-flux-med,cont-flux-avg None:
-   - weight_cnt_flux_get    = True                                      # mask any given wavelength region 
-   - weight_cnt_flux_lmb_0  = 1430                                      # initial lambda
-   - weight_cnt_flux_lmb_n  = 1480                                      # final lambda
-
+**weight_type** 'cont-flux-med' sets the weight type to geneerate the average weigthing stacked spectra, (_e.g._ ```cont-flux-sum```,```cont-flux-med```, ```cont-flux-avg``` or ```None```)
+**weight_cnt_flux_get**  = True will get the continuum in a region delimeted by **weight_cnt_flux_lmb_0** and **weight_cnt_flux_lmb_n**. If **weight_type** == ```None``` wights will be set to unity.
 
 ###### "Noise Files"
-   - spectra_noise          = False                                     #Include Noise files in the Stacks
+***spectra_noise*** = True includes Noise files in the Stacks.
 
 ###### "Stacks Post Processing "
-   - post_continuum         = False                                     # Fit Cont after stacking
-   - post_cont_typ          = 'ratio'                                   # Continuum fitting type fit,ratio,difference
-   - post_cont_lines        = '*'                                       # Image lines to be fit
-   - post_cont_funct        = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
-   - post_cont_order        = 9                                         # Order Polynomial / num pieces spline
-   - post_cont_override     = 'yes'                                     # Override previous norm spec
-   - post_cont_replace      = 'no'                                      # Replace rejected points by fit?
-   - post_cont_low_rej      = 5                                         # Low rejection in sigma of fit
-   - post_cont_high_rej     = 5                                         # High rejection in sigma of fit
-   - post_smooth            = True                                      # smooth after stacking
-   - post_smooth_shape      = 'gaussian'                                # smooth after stacking
-   - post_smooth_size       = 1                                         # smooth after stacking
-
+***post_continuum***  and ***post_smooth*** parameters similar to ***pre_continuum***  and ***pre_smooth*** parameters for spectra pre-processing.
 
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Lines Dictionary
@@ -110,7 +84,7 @@ It is possible to pre-processes the spectra before stacking them to create a com
 ## Plots
 
 ## Line fitting
-VSAT uses lmfit for line fitting and by default a simple gaussian is used as a line profile. It is possible to use GM mode to fit multiple gaussian emmission before and after the central wavelength of some lines as CIV. The line fitting procedure is performed under a defined wavelength range which can contain a single line or multiple lines as defined in the Line_dictionary.py file. 
+VSAT uses lmfit for line fitting and by default a simple gaussian, however it is possible to use ```GM``` mode to fit multiple gaussian components for emmission before and after the central wavelength of some lines as CIV. The line fitting procedure is performed under a defined wavelength range which can contain a single line or multiple lines as defined in the Line_dictionary.py file. 
 
 ![Alt text](./Images/FitSingle.jpg?raw=true "Pre-processing of stacked spetra.")
 
@@ -120,14 +94,17 @@ VSAT uses lmfit for line fitting and by default a simple gaussian is used as a l
 ###### "Stacking"
 The following snippet will stack galaxies from the COSMOS field. 
 
-First we define a subsample of 102 galaxies according to redshift wuality flag and their impact parameter. 
+First we define a subsample of galaxies according to some redshift and separation constrains. This can be used to define subsamples of objects restricted by any given object property. A series of tables will be gnerated and saved in the tables directory.
+
 ```python
 stamps_subsample_redshift_flag_fg     = Select_Subsamples(op_tbl_F                                ,'redshift_bk_flag',z_flag_itv_bg, test_fg = False, test_bg = False, slc_int = False)
 stamps_subsample_redshift_flag_fg_bg  = Select_Subsamples(stamps_subsample_redshift_flag_fg[0][-1],'redshift_fg_flag',z_flag_itv_fg, test_fg = False, test_bg = False, slc_int = False)
 fg_in                                 = str(stamps_subsample_redshift_flag_fg_bg[0][-1])
 stamps_subsample_sep_fg               = Select_Subsamples(fg_in,'sep_as'     ,SEP_as_itv_23,z_flag_itv_fg, test_fg = False, test_bg = False)#, slc_smp=False, sel_pre_cnt = selec_spec_contn)
 ```
+
 Next we stack the subsample. 
+
 ```python
 f                                     = np.array(Stack_Subsample(stamps_subsample_sep_fg      ,
 					sel_pre_shf     = selec_spec_shift   ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
@@ -148,6 +125,7 @@ f                                     = np.array(Stack_Subsample(stamps_subsampl
 					pst_cnt_rpl     = post_cont_replace  ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
 					smt_spc_pst     = post_smooth        ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size))
 ```
+
 ###### "Stats"
 Statistical values from the stacked galaxies can be obtained through:
 ```python
@@ -155,8 +133,8 @@ Statistical values from the stacked galaxies can be obtained through:
 ```
 
 ###### "Plots"
-The following snippet will plot the stacked spectra continuum fit and smoothed, including
-an histogram of the number of spectra combined per wavelength.
+To plot the generated composite spectra (_e.g. average, median weighted average_)including post-processed versions (_continuum normalized and smoothed_) can bee generated with:
+
 ```python
 Plot_All_Spec_All_Int(
 			frgrnd_plt     = True,
@@ -176,64 +154,68 @@ Plot_All_Spec_All_Int(
 			plt_stk_med    = plot_stack_med   ,plt_stk_avg      = plot_stack_avg  ,plt_stk_avw = plot_stack_avw)
 
 ```
+This will generate and save a pdf plot file including the median, average, and weighted average in the upper panel and an histogram of the number of spectra combined per wavelength element in the lower panel.
+
 ![Alt text](./Images/Stacked.jpg?raw=true "Stacked spectra computed COSMOS field.")
 
-It is also possible to plot the individual spectra, if plt_cnt_stk_spc is set True, generating:
+**plt_cnt_stk_spc** = ```True``` generates a plot of all the individual spectra used to generate the composite spectra (upper panel) with the composite specra in the bottom panel.
 
 ![Alt text](./Images/Stacked-Contribution.jpg?raw=true "Stacked spectra COSMOS field.")
 
-It is also possible to plot the individual spectra files
+**plt_ind_spec** = ```True``` will generate individual plots of all the spectra used to generate the compsite spectra. 
+
 ![Alt text](./Images/Spec-Individual.jpg?raw=true "Stacked spectra COSMOS field.")
 
-And the pre-processing steps oof each spectra before combining them.
+It will alsoo generate a detailed plot of every step of the pre-processing procedure prior to the stacking process of all the combined spectra.
 ![Alt text](./Images/Spec-Step.jpg?raw=true "Stacked spectra COSMOS field.")
 ###### "Line Fitting"
+
 ```python
 Plot_Idp_Spc_Lne(
-		int_typ_spl     = lst_spt_prp     ,stk_function   = function + fct_extra,
-		lmb_min         = lambda_low      ,lmb_max        = lambda_hgh ,
-		fit_type        = fitting_m       ,fit_fnct       = fitting_f ,
+		int_typ_spl     = 'sep_as'        ,stk_function   = 'avg-c-smt',
+		lmb_min         = 1200            ,lmb_max        = 1900 ,
+		fit_type        = 'lmfit'         ,fit_fnct       = 'gauss',
 		verbose         = True            ,autoaxis       = True ,
 		pre_off_plt     = False           ,ofs_ctr_fit    = False ,
-		n_int_spt       = n_int_splt_by   ,
-		lower_shift     = 4               ,upper_shift    = 0            ,   #Foregorund
-		max_sep         = max_red_sep     ,
-		mlt_stk_fct     = plt_fit_stk_fct ,
-		mke_lne_fit     = mke_new_lne_fit , 
-		fit_vls_hdr     = fit_upd_hdr     ,
-		int_vlf_hdr     = fit_ivf_hdr     ,
-		uft_lne_vls     = fit_luf_hdr     ,
-		cnt_bnp_adj     = cnt_bnp_reg     ,
-		fpt_foreground  = fit_plt_fg      ,fpt_background = fit_plt_bg,
-		fix_ctr_gau     = fix_ctr_gaussian,
-		fix_pre_gau     = fix_pre_gaussian,
-		fix_pst_gau     = fix_pst_gaussian,
-		fix_ctr_gau_1   = fix_gau_1       ,
-		fix_ctr_gau_2   = fix_gau_2		  ,
-		pre_shf_lim     = pre_gauss_shf   ,pst_shf_lim    = pst_gauss_shf,
-		pre_shf_ctr     = pre_gauss_ctr   ,pst_shf_ctr    = pst_gauss_ctr,
-		fix_mdl_gau     = fix_mdl_gaussian,
-		mdl_shf_ctr     = mdl_gauss_ctr   ,mdl_shf_lim    = mdl_gauss_shf,
-		ivl_fts_hdr     = int_vls_prv_fit
+		n_int_spt       = 4               ,
+		lower_shift     = 4               ,upper_shift    = 0,
+		max_sep         = 23              ,
+		mlt_stk_fct     = 'avg'           ,
+		mke_lne_fit     = True            , 
+		fit_vls_hdr     = True            ,
+		int_vlf_hdr     = True            ,
+		uft_lne_vls     = False           ,
+		cnt_bnp_adj     = True            ,
+		fpt_foreground  = True            ,fpt_background = False,
+		fix_ctr_gau     = False,
+		fix_pre_gau     = False,
+		fix_pst_gau     = False,
+		fix_ctr_gau_1   = False           ,
+		fix_ctr_gau_2   = False     	  ,
+		pre_shf_lim     = 0               ,pst_shf_lim    = 0,
+		pre_shf_ctr     = 0               ,pst_shf_ctr    = 0,
+		fix_mdl_gau     = False           ,
+		mdl_shf_ctr     = 0               ,mdl_shf_lim    = 0,
+		ivl_fts_hdr     = False
 					)
 ```
 ![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Ind-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
 ```python
 Plot_Slc_Spc_Lne(
-		int_typ_spl    = lst_spt_prp    ,stk_function   = function + fct_extra ,
-		lmb_min        = lambda_low     ,lmb_max        = lambda_hgh ,
-		stk_fct        = plt_fit_stk_fct,
-		fit_type       = fitting_m      ,fit_fnct       = fitting_f ,
-		verbose        = True           ,autoaxis       = True ,
-		pre_off_plt    = False          ,n_int_spt      = n_int_splt_by ,
-		lower_shift     = 4            ,upper_shift    = 0            ,   #Foregorund
-		plt_ind_fit    = slcs_plt_fit   ,
+		int_typ_spl    = 'sep_as'       ,stk_function   = 'avg-c-smt',
+		lmb_min        = 1200           ,lmb_max        = 1900,
+		stk_fct        = 'avg',
+		fit_type       = fitting_m      ,fit_fnct       = fitting_f,
+		verbose        = True           ,autoaxis       = True,
+		pre_off_plt    = False          ,n_int_spt      = 4 ,
+		lower_shift     = 4             ,upper_shift    = 0 ,   #Foregorund
+		plt_ind_fit    = True           ,
 		autoaxis_SSL   = True           ,
 		lbl_col_idv    = True           ,#nmb_cols      = 2,
-		fpt_foreground = fit_plt_fg     ,fpt_background = fit_plt_bg,
-		max_sep        = max_red_sep    ,
+		fpt_foreground = True           ,fpt_background = False,
+		max_sep        = 23             ,
 		empty_plots    = 2              ,landscape_plt  = True,
-		splt_ind_lns   = slcs_plt_ind)
+		splt_ind_lns   = True)
 ```
 ![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
 
@@ -241,7 +223,62 @@ Plot_Slc_Spc_Lne(
 For computing the Confidence Inteervals (CIs) for the generated stacks:
 
 ```python
-[stats_table(tblnm,tbl_format_opt) for tblnm in stamps_subsample_sep_fg[0]]
+prefixF       = 'P_Fg_' + CAT_PARENT + '_0-40-ss-zf_B-3-44-ss-zf_F-3-44-ss-sep_as-'
+tables        = [frg_dir_res + prefixF + '0-23.csv']
+bs_function_s = [ '_med-c-smt']
+```
+
+Then
+
+```
+for tbl_2b_btstr in tables:
+	Boot_out = Bootstrap(tbl_2b_btstr,None,bs_iteration_num,bs_percentage,
+				cmp_bst_cyc     = comp_BS_run       ,int_bst_brk     = bst_brk_int           ,lst_bst_brk     = bst_brk_lst           ,
+				bst_cyc_otb     = crts_BS_otb       ,
+				sel_pre_shf     = selec_spec_shift  ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
+				pre_cnt         = pre_continuum     ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
+				pre_cnt_fnc     = pre_cont_funct    ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
+				pre_cnt_rpl     = pre_cont_replace  ,pre_cnt_lrj     = pre_cont_low_rej      ,pre_cnt_hrj     = pre_cont_high_rej     ,
+				smt_spc_pre     = pre_smooth        ,smt_shp_pre     = pre_smooth_shape      ,smt_sze_pre     = pre_smooth_size       ,
+				pre_msk         = False             ,pre_msk_typ     = pre_mask_type         ,pre_msk_abs_lne = False                 ,
+				pre_msk_cte_val = pre_mask_cte_val,
+				pre_msk_blu_rgn = False             ,pre_blu_lmb_min = pre_mask_blue_regn_int,pre_blu_lmb_max = pre_mask_blue_regn_fnl,
+				sig_clp         = sigma_clipping    ,sig_cut         = sigma_cut             ,sig_fct         = sigma_cen_fct         ,
+				sig_fll         = sigma_msk_fill_val,
+				wgt_typ         = weight_type       ,get_cont_flux   = weight_cnt_flux_get   ,gcv_lmbd_i      = weight_cnt_flux_lmb_0 ,
+				gcv_lmbd_f      = weight_cnt_flux_lmb_n,
+				wrt_fits        = True              ,spc_nse         = spectra_noise         ,
+				pst_cnt         = post_continuum    ,pst_cnt_typ     = post_cont_typ         ,pst_cnt_lns     = post_cont_lines       ,
+				pst_cnt_fnc     = post_cont_funct   ,pst_cnt_ord     = post_cont_order       ,pst_cnt_ovr     = post_cont_override    ,
+				pst_cnt_rpl     = post_cont_replace ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
+				smt_spc_pst     = post_smooth       ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size)
+	for bs_function in bs_function_s:
+		Boot_out = str_bst_tbl + (tbl_2b_btstr.split('/')[-1]).split('.csv')[0] + '-BS_MST_'+ str(bs_iteration_num)+'.csv'
+		print
+		print 'Stacking all straps:'
+		print 'From table:',Boot_out
+		print 'Function: ',bs_function
+		stamps_bootstrap_1 = Select_Subsamples(Boot_out,None,None,test_fg = True, test_bg = False, slc_int = False, slc_smp = False,bs_func = bs_function)
+		stacks_bootstrap_1 = np.array(Stack_Subsample(stamps_bootstrap_1,bs_func = bs_function,
+					sel_pre_shf     = selec_spec_shift  ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
+					pre_cnt         = pre_continuum     ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
+					pre_cnt_fnc     = pre_cont_funct    ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
+					pre_cnt_rpl     = pre_cont_replace  ,pre_cnt_lrj     = pre_cont_low_rej      ,pre_cnt_hrj     = pre_cont_high_rej     ,
+					smt_spc_pre     = pre_smooth        ,smt_shp_pre     = pre_smooth_shape      ,smt_sze_pre     = pre_smooth_size       ,
+					pre_msk         = False             ,pre_msk_typ     = pre_mask_type         ,
+					pre_msk_abs_lne = False             ,pre_msk_cte_val = pre_mask_cte_val      ,
+					pre_msk_blu_rgn = False             ,pre_blu_lmb_min = pre_mask_blue_regn_int,pre_blu_lmb_max = pre_mask_blue_regn_fnl,
+					sig_clp         = sigma_clipping    ,sig_cut         = sigma_cut             ,sig_fct         = sigma_cen_fct         ,
+					sig_fll         = sigma_msk_fill_val,
+					wgt_typ         = weight_type       ,get_cont_flux   = weight_cnt_flux_get   ,gcv_lmbd_i      = weight_cnt_flux_lmb_0 ,
+					gcv_lmbd_f      = weight_cnt_flux_lmb_n,
+					wrt_fits        = True              ,spc_nse         = spectra_noise         ,
+					pst_cnt         = post_continuum    ,pst_cnt_typ     = post_cont_typ         ,pst_cnt_lns     = post_cont_lines       ,
+					pst_cnt_fnc     = post_cont_funct   ,pst_cnt_ord     = post_cont_order       ,pst_cnt_ovr     = post_cont_override    ,
+					pst_cnt_rpl     = post_cont_replace ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
+					smt_spc_pst     = post_smooth       ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size,
+					stk_pct_mde     = True              ,stk_wgt_mde     = False))
+
 ```
 
 ![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
