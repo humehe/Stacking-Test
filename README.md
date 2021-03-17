@@ -9,7 +9,7 @@ The Valparaíso Stacking Analysis Tools (VSAT) provides a series of tools for se
    - Location of the input catalogue and spectral data. 
    - Parameters for selecting subsamples of galaxies according to their physical properties.
    - Stacking and Boootstrap parameters.
-   - Location of the resulting products of the stacking analyses e.g. tables, plots, pre stacking processed spectra and stacked spectra.
+   - Location of the resulting products of the stacking analyses _e.g. tables, plots, pre stacking processed spectra and stacked spectra_.
 
 2. Fnc_Stk_Mth.py:
    - Math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption fitting) needed throughout the stacking analysis.
