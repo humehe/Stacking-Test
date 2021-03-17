@@ -244,6 +244,16 @@ for function in plt_fit_stk_fct:
 					splt_ind_lns   = slcs_plt_ind)
 ```
 ![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
+
+###### "Bootstrap"
+For computing the Confidence Inteervals (CIs) for the generated stacks:
+
+```python
+[stats_table(tblnm,tbl_format_opt) for tblnm in stamps_subsample_sep_fg[0]]
+```
+
+![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
+
 ## Dependencies
 Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
  - [astropy](https://www.astropy.org)
