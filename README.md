@@ -325,7 +325,7 @@ Plot_Idp_Spc_BS(fits_file,fits_file_err,bs_iteration_num,
 				min_y_lim_Idp        = 0.5             , max_y_lim_Idp  = 2.0,
 				sep_lin_min          = 10 )
 ```
-![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Mlt-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
+![Alt text](./Images/P_Fg_COSMOS_BS_MST_100_med-c-smt-1150-1900.jpg?raw=true "Stacked spectra COSMOS field.")	
 
 ## Dependencies
 Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
