@@ -57,9 +57,10 @@ It is possible to pre-processes the spectra before stacking them to create a com
 ###### "Pre-Processing MASKING"
 **pre_mask**  = True enables spectra masking (after smooothing), **pre_msk_abs_lines**  = True  enables line masking from a list of lines in Lines_Dictionary.py,
 **pre_mask_type** sets the replacement value for masking {_'NaN', 'constant' 'conttinuum'}                                     # continuum/constant/NaN
-<div class="text-white bg-blue mb-2">
-  NaN
-</div>
+```diff
+#NaN
+ ```
+
 **pre_mask_cte_val**  = 0                                         # constant value for masking
 **pre_mask_lw**  = 2                                         # line width (A)
 **pre_mask_blue_regn**  = True                                      # mask initial spectra pixels
