@@ -174,7 +174,7 @@ Plot_All_Spec_All_Int(
 			min_y_lim_Idp  = 0.5              , max_y_lim_Idp   = 2.0,
 			lower_shift    = 0                , upper_shift     = 0, 
 			only_stt_tbl   = False            , 
-			SNR_lines      = 'None'           , show_legends    = True,
+			SNR_lines      = None             , show_legends    = True,
 			max_sep        = max_red_sep      ,
 			mlt_stk_fct    = plt_fit_stk_fct  ,
 			fpt_foreground = fit_plt_fg       ,fpt_background   = fit_plt_bg,
