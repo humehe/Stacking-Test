@@ -1,5 +1,5 @@
 # VSAT-1D
-Stacking 1D spectra tools
+The Valparaíso Stacking Analysis Tools (VSAT) provides a series of tools for selecting, stacking and anlysing 1D spectra. It is intended for stacking samples of sepctra belonging to large extragalactic catalogues by selecting subsamples from this catalogues according to their available properties (_e.g. redshift, stellar mass, star formatiion rate_) being possible to generate weighted composite spectra. However it is possible to use VSAT on smaller datasets containing any kind of astronomical object.
 
 ![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
 
@@ -7,54 +7,52 @@ Stacking 1D spectra tools
 
 1. Fnc_Stk_Dir.py:
    - Location of the input catalogue and spectral data. 
-   - Parameters for selecting galaxy pairs and subsamples of galaxies according to their physical properties. 
+   - Parameters for selecting subsamples of galaxies according to their physical properties.
+   - Stacking and Boootstrap parameters.
    - Location of the resulting products of the stacking analyses e.g. tables, plots, pre stacking processed spectra and stacked spectra.
 
 2. Fnc_Stk_Mth.py:
-   - Useful math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption fitting).
+   - Math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption fitting) needed throughout the stacking analysis.
 
 3. Fnc_Stk_Tbl.py 
-   - Functions to access different tables. 
+   - Functions to read, write and modify different tables. 
 
 4. Fnc_Stk_Fts.py 
    - Funtions to access and modify (add, modify, delete) fits headers.
 
 5. Fnc_Stk_Plt.py
-   - Plot templates used through all the stacking analysis. 
+   - Plot templates used throughout the stacking analysis. 
 
 6. Fnc_Stk_Spc.py 
-   - Contains a series of functions for pre-processing the spectra needed for the stacking analysis
+   - Functions (_e.g. smoothing, continuum fitting, masking_) for pre-processing the spectra prior to the stacking analysis
 
 7. Fnc_Stk_Stk.py 
-   - Contains the core of the stacking tool
+   - Core of the stacking tool.
    - Bootstrap function to compute the CIs of the stacked spectra. 
    - Function to select different galaxy subsamples for stacking.
    - Fitting tool for the different emmision/absorption lines through a simple/multiple component gaussian profiles.
 
 8. Fnc_Stk_Utl.py 
-   - Contains auxiliary functions for the stacking analysis
-
+   - Auxiliary functions for the stacking analysis.
 
 9. Lines_Dictionary.py
    - Contains a list of identified emmission and absorption lines.
 ## Parameters
-It is possible to perform a pre-processing of the spectra before stacking them to create a composite spectrum. This includes continuum substraction/normalization, gaussian smoothing, line masking and wavelength shift. The final composite spectra can be processed to fit the continuum and smooth it. Param.py file contains all the parameters of each stage. 
+It is possible to pre-processes the spectra before stacking them to create a composite spectrum. This includes continuum substraction/normalization, smoothing, line masking and wavelength shift. The final composite spectra can be processed to fit the continuum and smooth it. Param.py file contains all the parameters needed in each stage of the stacking analysis. 
 
 ###### "Pre-Processing Continuum"
    - pre_continuum          = False                                     # Continuum Fitting/Normalization
    - pre_cont_typ           = 'ratio'                                   # Continuum fitting type fit,ratio,difference
    - pre_cont_lines         = '*'                                       # Image lines to be fit
    - pre_cont_funct         = 'spline3'                                 # Fitting function: legendre, chebyshev, spline1, spline3
-   - pre_cont_order         = 49                                        # Order Polynomial / num pieces spline
+   - pre_cont_order         = 3                                         # Order Polynomial / num pieces spline
    - pre_cont_override      = 'yes'                                     # Override previous norm spec
    - pre_cont_replace       = 'no'                                      # Replace rejected points by fit?
    - pre_cont_low_rej       = 3                                         # Low rejection in sigma of fit
    - pre_cont_high_rej      = 3                                         # High rejection in sigma of fit
 
 ###### "Pre-Processing Smoothing"
-   - pre_smooth             = True                                      # smooth after interpolation and before stacking
-   - pre_smooth_shape       = 'gaussian'                                # gaussian,boxcar,mexican
-   - pre_smooth_size        = 1                                         # kernel size
+**pre_smooth** = True enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
 
 ###### "Pre-Processing MASKING"
    - pre_mask               = True                                      # mask spectra after smoothing (stacks)
