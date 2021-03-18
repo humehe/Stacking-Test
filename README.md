@@ -1,5 +1,5 @@
 # VSAT-1D
-The Valparaíso Stacking Analysis Tool (VSAT) provides a series of tools for selecting, stacking and anlysing 1D spectra. It is intended for stacking samples of sepctra belonging to large extragalactic catalogues by selecting subsamples from this catalogues according to their available properties (_e.g. redshift, stellar mass, star formatiion rate_) being possible to generate diverse (_e.g. median, average, weighted averaage, histogram_) composite spectra. However it is possible to use VSAT on smaller datasets containing any kind of astronomical object.
+The Valparaíso Stacking Analysis Tool (VSAT) provides a series of tools for selecting, stacking and anlysing 1D spectra. It is intended for stacking samples of sepctra belonging to large extragalactic catalogues by selecting subsamples from these catalogues according to their available properties (_e.g. redshift, stellar mass, star formatiion rate_) being possible to generate diverse (_e.g. median, average, weighted average, histogram_) composite spectra. However it is possible to use VSAT on smaller datasets containing any type of astronomical object.
 
 ![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
 
@@ -39,30 +39,30 @@ The Valparaíso Stacking Analysis Tool (VSAT) provides a series of tools for sel
    - Contains a list of identified emmission and absorption lines.
 
 ## Parameters
-It is possible to pre-processes the spectra before combining them to create a composite spectrum. This includes continuum substraction/normalization, smoothing, line masking and wavelength shift. The final composite spectra can be then re-processed to fit the continuum and smooth it. Param.py file contains all the parameters needed in each step of the stacking analysis and used in the Example section. 
+It is possible to pre-processes the spectra before combining them to generate a composite spectrum. This includes continuum substraction/normalization, smoothing, line masking and wavelength shift. The final composite spectra can be then re-processed (_i.e. continuum fitting or smoothing_). Param.py file contains all the parameters needed in each step of the stacking analysis and used in the Example section. 
 
 ###### "Pre-Processing Continuum"
-**pre_continuum** (_bool, optiional_) enables the continuum fitting prior to the stacking, 
+**pre_continuum** (_bool, optional_) enables the continuum fitting prior to the stacking, 
 **pre_cont_typ** sets the continuum fitting type: ```fit```,```ratio``` or ```difference```, **pre_cont_funct** sets the fitting function: ```legendre```, ```chebyshev```, ```spline1``` or ```spline3``` and **pre_cont_order**  sets the polynomial order.
 
 ###### "Pre-Processing Smoothing"
-**pre_smooth** (_bool, optiional_) enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
+**pre_smooth** (_bool, optional_) enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
 
 ###### "Pre-Processing MASKING"
-**pre_mask**  (_bool_) enables spectra masking (after smooothing), **pre_msk_abs_lines** (_bool_) enables line masking from a list of lines included in Lines_Dictionary.py, **pre_mask_type** sets the replacement value for masking: ```NaN``` for numpy NaN, ```constant```  for a constant value or ```continuum``` to use continuum values extracted from the previously continuum fit spectrum, **pre_mask_cte_val**  sets the constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_blue_regn** (_bool_) enables masking of a region of the sepctrum delimited by **pre_mask_blue_regn_int** and **pre_mask_blue_regn_fnl**.
+**pre_mask**  (_bool, optional_) enables spectra masking (after smooothing), **pre_msk_abs_lines** (_bool, optional_) enables line masking from a list of lines included in Lines_Dictionary.py, **pre_mask_type** sets the replacement value for masking: ```NaN``` for numpy NaN, ```constant```  for a constant value or ```continuum``` to use continuum values extracted from the previously continuum fit spectrum, **pre_mask_cte_val**  sets the constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_regn** (_bool, optional_) enables masking of a region of the sepctrum delimited by **pre_mask_regn_int** and **pre_mask_regn_fnl**.
 
 ###### "Sigma-Clip"
-**sigma_clipping** (_bool_) enables sigma cliipping for stacking, **sigma_cut** sets the _n-sigma_ parameter for clipping, **sigma_cen_fct** sets the central function for clipping: ```mean```or ```median``` and **sigma_msk_fill_val** sets the substitute value for clipped value: 
+**sigma_clipping** (_bool, optional_) enables sigma cliipping for stacking, **sigma_cut** sets the _n-sigma_ parameter for clipping, **sigma_cen_fct** sets the central function for clipping: ```mean```or ```median``` and **sigma_msk_fill_val** sets the substitute value for clipped value: 
 ```np.nan``` or ```value```.
 
 ###### #Weighting"
 **weight_type** 'cont-flux-med' sets the weight type to generate the average weigthing stacked spectra, (_e.g._ ```cont-flux-sum```,```cont-flux-med```, ```cont-flux-avg``` or ```None```), **weight_cnt_flux_get** (_bool_) will get the continuum in a region delimeted by **weight_cnt_flux_lmb_0** and **weight_cnt_flux_lmb_n**. If **weight_type** == ```None``` wights will be set to unity.
 
 ###### "Noise Files"
-**spectra_noise** (_bool, optiional_) includes noise files in the stacking analysis.
+**spectra_noise** (_bool, optional_) includes noise files in the stacking analysis.
 
 ###### "Stacks Post Processing "
-**post_continuum** and **post_smooth** (_bool, optiional_) their parameters are similar to ***pre_continuum***  and ***pre_smooth*** parameters for spectra pre-processing.
+**post_continuum** and **post_smooth** (_bool, optional_) their parameters are similar to ***pre_continuum***  and ***pre_smooth*** parameters for spectra pre-processing.
 
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Lines Dictionary
@@ -210,7 +210,7 @@ Plot_Slc_Spc_Lne(
 		lower_shift     = 4             ,upper_shift    = 0 ,   #Foregorund
 		plt_ind_fit    = True           ,
 		autoaxis_SSL   = True           ,
-		lbl_col_idv    = True           ,#nmb_cols      = 2,
+		lbl_col_idv    = True           ,
 		fpt_foreground = True           ,fpt_background = False,
 		max_sep        = 23             ,
 		empty_plots    = 2              ,landscape_plt  = True,
@@ -241,25 +241,26 @@ Then we run the BS process:
 ```
 for tbl_2b_btstr in tables:
 	Boot_out = Bootstrap(tbl_2b_btstr,None,bs_iteration_num,bs_percentage,
-				cmp_bst_cyc     = comp_BS_run       ,int_bst_brk     = bst_brk_int           ,lst_bst_brk     = bst_brk_lst           ,
-				bst_cyc_otb     = crts_BS_otb       ,
-				sel_pre_shf     = selec_spec_shift  ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
-				pre_cnt         = pre_continuum     ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
-				pre_cnt_fnc     = pre_cont_funct    ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
-				pre_cnt_rpl     = pre_cont_replace  ,pre_cnt_lrj     = pre_cont_low_rej      ,pre_cnt_hrj     = pre_cont_high_rej     ,
-				smt_spc_pre     = pre_smooth        ,smt_shp_pre     = pre_smooth_shape      ,smt_sze_pre     = pre_smooth_size       ,
-				pre_msk         = False             ,pre_msk_typ     = pre_mask_type         ,pre_msk_abs_lne = False                 ,
-				pre_msk_cte_val = pre_mask_cte_val,
-				pre_msk_blu_rgn = False             ,pre_blu_lmb_min = pre_mask_blue_regn_int,pre_blu_lmb_max = pre_mask_blue_regn_fnl,
-				sig_clp         = sigma_clipping    ,sig_cut         = sigma_cut             ,sig_fct         = sigma_cen_fct         ,
-				sig_fll         = sigma_msk_fill_val,
-				wgt_typ         = weight_type       ,get_cont_flux   = weight_cnt_flux_get   ,gcv_lmbd_i      = weight_cnt_flux_lmb_0 ,
+				cmp_bst_cyc     = comp_BS_run          ,int_bst_brk     = bst_brk_int           ,lst_bst_brk     = bst_brk_lst           ,
+				bst_cyc_otb     = crts_BS_otb          ,
+				sel_pre_shf     = selec_spec_shift     ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
+				pre_cnt         = pre_continuum        ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
+				pre_cnt_fnc     = pre_cont_funct       ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
+				pre_cnt_rpl     = pre_cont_replace     ,pre_cnt_lrj     = pre_cont_low_rej      ,pre_cnt_hrj     = pre_cont_high_rej     ,
+				smt_spc_pre     = pre_smooth           ,smt_shp_pre     = pre_smooth_shape      ,smt_sze_pre     = pre_smooth_size       ,
+				pre_msk         = False                ,pre_msk_typ     = pre_mask_type         ,pre_msk_abs_lne = False                 ,
+				pre_msk_cte_val = pre_mask_cte_val     ,
+				pre_msk_rgn     = False                ,pre_lmb_min.    = pre_mask_regn_int     ,pre_lmb_max     = pre_mask_regn_fnl,
+				sig_clp         = sigma_clipping       ,sig_cut         = sigma_cut             ,sig_fct         = sigma_cen_fct         ,
+				sig_fll         = sigma_msk_fill_val   ,
+				wgt_typ         = weight_type          ,
+				get_cont_flux   = weight_cnt_flux_get  ,gcv_lmbd_i      = weight_cnt_flux_lmb_0 ,
 				gcv_lmbd_f      = weight_cnt_flux_lmb_n,
-				wrt_fits        = True              ,spc_nse         = spectra_noise         ,
-				pst_cnt         = post_continuum    ,pst_cnt_typ     = post_cont_typ         ,pst_cnt_lns     = post_cont_lines       ,
-				pst_cnt_fnc     = post_cont_funct   ,pst_cnt_ord     = post_cont_order       ,pst_cnt_ovr     = post_cont_override    ,
-				pst_cnt_rpl     = post_cont_replace ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
-				smt_spc_pst     = post_smooth       ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size)
+				wrt_fits        = True                 ,spc_nse         = spectra_noise         ,
+				pst_cnt         = post_continuum       ,pst_cnt_typ     = post_cont_typ         ,pst_cnt_lns     = post_cont_lines       ,
+				pst_cnt_fnc     = post_cont_funct      ,pst_cnt_ord     = post_cont_order       ,pst_cnt_ovr     = post_cont_override    ,
+				pst_cnt_rpl     = post_cont_replace    ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
+				smt_spc_pst     = post_smooth          ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size)
 	for bs_function in bs_function_s:
 		Boot_out = str_bst_tbl + (tbl_2b_btstr.split('/')[-1]).split('.csv')[0] + '-BS_MST_'+ str(bs_iteration_num)+'.csv'
 		print
@@ -268,24 +269,25 @@ for tbl_2b_btstr in tables:
 		print 'Function: ',bs_function
 		stamps_bootstrap_1 = Select_Subsamples(Boot_out,None,None,test_fg = True, test_bg = False, slc_int = False, slc_smp = False,bs_func = bs_function)
 		stacks_bootstrap_1 = np.array(Stack_Subsample(stamps_bootstrap_1,bs_func = bs_function,
-					sel_pre_shf     = selec_spec_shift  ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
-					pre_cnt         = pre_continuum     ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
-					pre_cnt_fnc     = pre_cont_funct    ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
-					pre_cnt_rpl     = pre_cont_replace  ,pre_cnt_lrj     = pre_cont_low_rej      ,pre_cnt_hrj     = pre_cont_high_rej     ,
-					smt_spc_pre     = pre_smooth        ,smt_shp_pre     = pre_smooth_shape      ,smt_sze_pre     = pre_smooth_size       ,
-					pre_msk         = False             ,pre_msk_typ     = pre_mask_type         ,
-					pre_msk_abs_lne = False             ,pre_msk_cte_val = pre_mask_cte_val      ,
-					pre_msk_blu_rgn = False             ,pre_blu_lmb_min = pre_mask_blue_regn_int,pre_blu_lmb_max = pre_mask_blue_regn_fnl,
-					sig_clp         = sigma_clipping    ,sig_cut         = sigma_cut             ,sig_fct         = sigma_cen_fct         ,
-					sig_fll         = sigma_msk_fill_val,
-					wgt_typ         = weight_type       ,get_cont_flux   = weight_cnt_flux_get   ,gcv_lmbd_i      = weight_cnt_flux_lmb_0 ,
+					sel_pre_shf     = selec_spec_shift     ,sel_pre_cnt     = selec_spec_contn      ,sel_pre_msk     = selec_spec_masks      ,
+					pre_cnt         = pre_continuum        ,pre_cnt_typ     = pre_cont_typ          ,pre_cnt_lns     = pre_cont_lines        ,
+					pre_cnt_fnc     = pre_cont_funct       ,pre_cnt_ord     = pre_cont_order        ,pre_cnt_ovr     = pre_cont_override     ,
+					pre_cnt_rpl     = pre_cont_replace     ,pre_cnt_lrj     = pre_cont_low_rej      ,pre_cnt_hrj     = pre_cont_high_rej     ,
+					smt_spc_pre     = pre_smooth           ,smt_shp_pre     = pre_smooth_shape      ,smt_sze_pre     = pre_smooth_size       ,
+					pre_msk         = False                ,pre_msk_typ     = pre_mask_type         ,
+					pre_msk_abs_lne = False                ,pre_msk_cte_val = pre_mask_cte_val      ,
+					pre_msk_rgn     = False                ,pre_lmb_min     = pre_mask_regn_int     ,pre_lmb_max     = pre_mask_regn_fnl,
+					sig_clp         = sigma_clipping       ,sig_cut         = sigma_cut             ,sig_fct         = sigma_cen_fct         ,
+					sig_fll         = sigma_msk_fill_val   ,
+					wgt_typ         = weight_type          ,
+					get_cont_flux   = weight_cnt_flux_get  ,gcv_lmbd_i      = weight_cnt_flux_lmb_0 ,
 					gcv_lmbd_f      = weight_cnt_flux_lmb_n,
-					wrt_fits        = True              ,spc_nse         = spectra_noise         ,
-					pst_cnt         = post_continuum    ,pst_cnt_typ     = post_cont_typ         ,pst_cnt_lns     = post_cont_lines       ,
-					pst_cnt_fnc     = post_cont_funct   ,pst_cnt_ord     = post_cont_order       ,pst_cnt_ovr     = post_cont_override    ,
-					pst_cnt_rpl     = post_cont_replace ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
-					smt_spc_pst     = post_smooth       ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size,
-					stk_pct_mde     = True              ,stk_wgt_mde     = False))
+					wrt_fits        = True                 ,spc_nse         = spectra_noise         ,
+					pst_cnt         = post_continuum       ,pst_cnt_typ     = post_cont_typ         ,pst_cnt_lns     = post_cont_lines       ,
+					pst_cnt_fnc     = post_cont_funct      ,pst_cnt_ord     = post_cont_order       ,pst_cnt_ovr     = post_cont_override    ,
+					pst_cnt_rpl     = post_cont_replace    ,pst_cnt_lrj     = post_cont_low_rej     ,pst_cnt_hrj     = post_cont_high_rej    ,
+					smt_spc_pst     = post_smooth          ,smt_shp_pst     = post_smooth_shape     ,smt_sze_pst     = post_smooth_size,
+					stk_pct_mde     = True                 ,stk_wgt_mde     = False))
 
 ```
 
