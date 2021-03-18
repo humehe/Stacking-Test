@@ -1,5 +1,5 @@
 # VSAT-1D
-The Valparaíso Stacking Analysis Tool (VSAT) provides a series of tools for selecting, stacking and anlysing 1D spectra. It is intended for stacking samples of sepctra belonging to large extragalactic catalogues by selecting subsamples from these catalogues according to their available properties (_e.g. redshift, stellar mass, star formatiion rate_) being possible to generate diverse (_e.g. median, average, weighted average, histogram_) composite spectra. However it is possible to use VSAT on smaller datasets containing any type of astronomical object.
+The Valparaíso Stacking Analysis Tool (VSAT) provides a series of tools for selecting, stacking and anlysing 1D spectra. It is intended for stacking samples of sepctra belonging to large extragalactic catalogues by selecting subsamples of galaxies defined by their available properties (_e.g. redshift, stellar mass, star formatiion rate_) being possible to generate diverse (_e.g. median, average, weighted average, histogram_) composite spectra. However it is possible to also use VSAT on smaller datasets containing any type of astronomical object.
 
 ![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
 
@@ -43,13 +43,13 @@ It is possible to pre-processes the spectra before combining them to generate a 
 
 ###### "Pre-Processing Continuum"
 **pre_continuum** (_bool, optional_) enables the continuum fitting prior to the stacking, 
-**pre_cont_typ** sets the continuum fitting type: ```fit```,```ratio``` or ```difference```, **pre_cont_funct** sets the fitting function: ```legendre```, ```chebyshev```, ```spline1``` or ```spline3``` and **pre_cont_order**  sets the polynomial order.
+**pre_cont_typ** sets the continuum fitting type: ```fit```,```ratio``` or ```difference```, **pre_cont_funct** sets the fitting function: ```legendre```, ```chebyshev```, ```spline1``` or ```spline3``` and **pre_cont_order**  sets the polynomial order. Two fits files will be generated, the continuum normalized/substracted spectra (```spectra-c.fits```) and the continuum fitted (```spectra-c-f.fits```) .
 
 ###### "Pre-Processing Smoothing"
-**pre_smooth** (_bool, optional_) enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
+**pre_smooth** (_bool, optional_) enables the spectral smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the kernel size in pixel units.
 
 ###### "Pre-Processing MASKING"
-**pre_mask**  (_bool, optional_) enables spectra masking (after smooothing), **pre_msk_abs_lines** (_bool, optional_) enables line masking from a list of lines included in Lines_Dictionary.py, **pre_mask_type** sets the replacement value for masking: ```NaN``` for numpy NaN, ```constant```  for a constant value or ```continuum``` to use continuum values extracted from the previously continuum fit spectrum, **pre_mask_cte_val**  sets the constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_regn** (_bool, optional_) enables masking of a region of the sepctrum delimited by **pre_mask_regn_int** and **pre_mask_regn_fnl**.
+**pre_mask**  (_bool, optional_) enables spectra masking (after smooothing), **pre_msk_abs_lines** (_bool, optional_) enables line masking from a list of lines included in Lines_Dictionary.py, **pre_mask_type** sets the replacement value for masking: ```NaN``` for numpy NaN, ```constant```  for a constant value or ```continuum``` to use continuum values extracted from the previously continuum fit spectrum, **pre_mask_cte_val**  sets the constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_regn** (_bool, optional_) enables masking of a region of the sepctrum delimited by **pre_mask_regn_int** and **pre_mask_regn_fnl**. If ```rshft_corr_direct=True```, then the locatioon of the masks will be corrected by a factor defined by ```rshft_corr```.
 
 ###### "Sigma-Clip"
 **sigma_clipping** (_bool, optional_) enables sigma cliipping for stacking, **sigma_cut** sets the _n-sigma_ parameter for clipping, **sigma_cen_fct** sets the central function for clipping: ```mean```or ```median``` and **sigma_msk_fill_val** sets the substitute value for clipped value: 
@@ -375,6 +375,7 @@ Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task 
  - [scipy](https://www.scipy.org)
  - [numpy](https://numpy.org)
  - [lmfit](https://lmfit.github.io/lmfit-py/)
+ - [matplotlib](https://matplotlib.org)
  - [pysynphot](https://pysynphot.readthedocs.io/en/latest/)
  - [pyraf](https://astroconda.readthedocs.io/en/latest/installation.html)
  - [termcolor](https://pypi.org/project/termcolor/)
