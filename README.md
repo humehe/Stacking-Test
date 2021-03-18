@@ -195,12 +195,13 @@ This will generate and save a pdf plot file (```~/Example/Stack_Results/COSMOS/P
 
 ![Alt text](./Images/Stacked-Contribution.jpg?raw=true "Stacked spectra COSMOS field.")
 
-**plt_ind_spec** = ```True``` will generate individual plots of all the spectra used to generate the compsite spectra. 
+**plt_ind_spec** = ```True``` will generate individual plots (```~/Example/Stack_Results/COSMOS/PLOTS/IND//FRGRD/0-23/```) of all the spectra used to generate the compsite spectra. 
 
 ![Alt text](./Images/Spec-Individual.jpg?raw=true "Stacked spectra COSMOS field.")
 
 It will also generate a detailed plot of every step of the pre-processing procedure prior to the stacking process of all the combined spectra.
 ![Alt text](./Images/Spec-Step.jpg?raw=true "Stacked spectra COSMOS field.")
+
 ###### "Line Fitting"
 
 ```python
