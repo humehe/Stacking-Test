@@ -238,8 +238,8 @@ Plot_Idp_Spc_Lne(
 Plot_Slc_Spc_Lne(
 		int_typ_spl    = 'sep_as'       ,stk_function   = 'avg-c-smt',
 		lmb_min        = 1200           ,lmb_max        = 1900,
-		stk_fct        = 'avg',
-		fit_type       = fitting_m      ,fit_fnct       = fitting_f,
+		stk_fct        = ['avg'],
+		fit_type       = 'lmfit'        ,fit_fnct       = 'gauss',
 		verbose        = True           ,autoaxis       = True,
 		pre_off_plt    = False          ,n_int_spt      = 4 ,
 		lower_shift     = 4             ,upper_shift    = 0 ,   #Foregorund
