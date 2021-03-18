@@ -173,22 +173,21 @@ To plot the generated composite spectra (_e.g. average, median weighted average_
 Plot_All_Spec_All_Int(
 			frgrnd_plt     = True,
 			bkgrnd_plt     = False,
-			n_int_spt      = n_int_splt_by    , int_typ_spl     = lst_spt_prp,
-			min_x_lim_Idp  = lambda_low       , max_x_lim_Idp   = lambda_hgh,
-			plt_ind_spec   = plot_spectra_idv , plt_cnt_stk_spc = plot_spectra_stk,
+			n_int_spt      = 4                , int_typ_spl     = 'sep_as',
+			min_x_lim_Idp  = 1200             , max_x_lim_Idp   = 1900,
+			plt_ind_spec   = False            , plt_cnt_stk_spc = False,
 			wgt_typ        = weight_type,
 			autoaxis_Idp   = False            , aaxs_Idp_ml_y   = True, 
 			min_y_lim_Idp  = 0.5              , max_y_lim_Idp   = 2.0,
 			lower_shift    = 0                , upper_shift     = 0, 
 			only_stt_tbl   = False            , 
 			SNR_lines      = None             , show_legends    = True,
-			max_sep        = max_red_sep      ,
-			mlt_stk_fct    = plt_fit_stk_fct  ,
-			fpt_foreground = fit_plt_fg       ,fpt_background   = fit_plt_bg,
-			plt_stk_med    = plot_stack_med   ,plt_stk_avg      = plot_stack_avg  ,plt_stk_avw = plot_stack_avw)
-
+			max_sep        = 23               ,
+			mlt_stk_fct    = 'avg'            ,
+			fpt_foreground = True             ,fpt_background   = False,
+			plt_stk_med    = True             ,plt_stk_avg      = True ,plt_stk_avw = True)
 ```
-This will generate and save a pdf plot file including the median, average, and weighted average in the upper panel and an histogram of the number of spectra combined per wavelength element in the lower panel.
+This will generate and save a pdf plot file (```~/Example/Stack_Results/COSMOS/PLOTS/RESULTS/```) including the median, average, and weighted average in the upper panel and an histogram of the number of spectra combined per wavelength element in the lower panel.
 
 ![Alt text](./Images/Stacked.jpg?raw=true "Stacked spectra computed COSMOS field.")
 
