@@ -1,5 +1,5 @@
 # VSAT-1D
-The Valparaíso Stacking Analysis Tools (VSAT) provides a series of tools for selecting, stacking and anlysing 1D spectra. It is intended for stacking samples of sepctra belonging to large extragalactic catalogues by selecting subsamples from this catalogues according to their available properties (_e.g. redshift, stellar mass, star formatiion rate_) being possible to generate weighted composite spectra. However it is possible to use VSAT on smaller datasets containing any kind of astronomical object.
+The Valparaíso Stacking Analysis Tool (VSAT) provides a series of tools for selecting, stacking and anlysing 1D spectra. It is intended for stacking samples of sepctra belonging to large extragalactic catalogues by selecting subsamples from this catalogues according to their available properties (_e.g. redshift, stellar mass, star formatiion rate_) being possible to generate diverse (_e.g. median, average, weighted averaage, histogram_) composite spectra. However it is possible to use VSAT on smaller datasets containing any kind of astronomical object.
 
 ![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
 
@@ -9,7 +9,7 @@ The Valparaíso Stacking Analysis Tools (VSAT) provides a series of tools for se
    - Location of the input catalogue and spectral data. 
    - Parameters for selecting subsamples of galaxies according to their physical properties.
    - Stacking and Boootstrap parameters.
-   - Location of the resulting products of the stacking analyses _e.g. tables, plots, pre stacking processed spectra and stacked spectra_.
+   - Location of the resulting products of the stacking analyses _e.g. tables, plots, pre-stacking processed spectra and stacked spectra_.
 
 2. Fnc_Stk_Mth.py:
    - Math functions (e.g. cosmological constants, gaussian, lorentzian and voigt profiles for line emmision/absorption fitting) needed throughout the stacking analysis.
@@ -37,31 +37,32 @@ The Valparaíso Stacking Analysis Tools (VSAT) provides a series of tools for se
 
 9. Lines_Dictionary.py
    - Contains a list of identified emmission and absorption lines.
+
 ## Parameters
 It is possible to pre-processes the spectra before combining them to create a composite spectrum. This includes continuum substraction/normalization, smoothing, line masking and wavelength shift. The final composite spectra can be then re-processed to fit the continuum and smooth it. Param.py file contains all the parameters needed in each step of the stacking analysis and used in the Example section. 
 
 ###### "Pre-Processing Continuum"
-**pre_continuum** (_bool_) enables the continuum fitting prior to the stacking, 
+**pre_continuum** (_bool, optiional_) enables the continuum fitting prior to the stacking, 
 **pre_cont_typ** sets the continuum fitting type: ```fit```,```ratio``` or ```difference```, **pre_cont_funct** sets the fitting function: ```legendre```, ```chebyshev```, ```spline1``` or ```spline3``` and **pre_cont_order**  sets the polynomial order.
 
 ###### "Pre-Processing Smoothing"
-**pre_smooth** (_bool_) enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
+**pre_smooth** (_bool, optiional_) enables the smoothing, **pre_smooth_shape** selects the smothing kernel (_i.e. gaussian,boxcar,mexican_) and **pre_smooth_size** sets the size in pixel units.
 
 ###### "Pre-Processing MASKING"
-**pre_mask**  (_bool_) enables spectra masking (after smooothing), **pre_msk_abs_lines** (_bool_) enables line masking from a list of lines included in Lines_Dictionary.py, **pre_mask_type** sets the replacement value for masking ```NaN``` for numoy NaN, a constant value ```constant``` or continuum values extracted from the previously continuum fit ```continuum```, **pre_mask_cte_val**  sets tthe constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_blue_regn** (_bool_) enables masking of a region of the sepctrum delimited by **pre_mask_blue_regn_int** and **pre_mask_blue_regn_fnl**.
+**pre_mask**  (_bool_) enables spectra masking (after smooothing), **pre_msk_abs_lines** (_bool_) enables line masking from a list of lines included in Lines_Dictionary.py, **pre_mask_type** sets the replacement value for masking: ```NaN``` for numpy NaN, ```constant```  for a constant value or ```continuum``` to use continuum values extracted from the previously continuum fit spectrum, **pre_mask_cte_val**  sets the constant value if ```constant``` is selected, **pre_mask_lw** sets the width around the line center for line masking and **pre_mask_blue_regn** (_bool_) enables masking of a region of the sepctrum delimited by **pre_mask_blue_regn_int** and **pre_mask_blue_regn_fnl**.
 
 ###### "Sigma-Clip"
 **sigma_clipping** (_bool_) enables sigma cliipping for stacking, **sigma_cut** sets the _n-sigma_ parameter for clipping, **sigma_cen_fct** sets the central function for clipping: ```mean```or ```median``` and **sigma_msk_fill_val** sets the substitute value for clipped value: 
 ```np.nan``` or ```value```.
 
 ###### #Weighting"
-**weight_type** 'cont-flux-med' sets the weight type to geneerate the average weigthing stacked spectra, (_e.g._ ```cont-flux-sum```,```cont-flux-med```, ```cont-flux-avg``` or ```None```), **weight_cnt_flux_get** (_bool_) will get the continuum in a region delimeted by **weight_cnt_flux_lmb_0** and **weight_cnt_flux_lmb_n**. If **weight_type** == ```None``` wights will be set to unity.
+**weight_type** 'cont-flux-med' sets the weight type to generate the average weigthing stacked spectra, (_e.g._ ```cont-flux-sum```,```cont-flux-med```, ```cont-flux-avg``` or ```None```), **weight_cnt_flux_get** (_bool_) will get the continuum in a region delimeted by **weight_cnt_flux_lmb_0** and **weight_cnt_flux_lmb_n**. If **weight_type** == ```None``` wights will be set to unity.
 
 ###### "Noise Files"
-**spectra_noise** (_bool_) includes Noise files in the Stacks.
+**spectra_noise** (_bool, optiional_) includes noise files in the stacking analysis.
 
 ###### "Stacks Post Processing "
-**post_continuum**  and **post_smooth** parameters similar to ***pre_continuum***  and ***pre_smooth*** parameters for spectra pre-processing.
+**post_continuum** and **post_smooth** (_bool, optiional_) their parameters are similar to ***pre_continuum***  and ***pre_smooth*** parameters for spectra pre-processing.
 
 ![Alt text](./Images/step.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Lines Dictionary
