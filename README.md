@@ -156,8 +156,8 @@ This will generate the following fits files in the results directory (```~/Examp
 
 It will also generate ```*-c.fits```and ```*-smt.fits```files if ```pst_cnt``` and ```smt_spc_pst ``` are set to ```True```.
 
-Auxiliiary files generated during the stacking process are saved in ```~/Example/Stack_Results/COSMOS/STACKS/LAST-FITS/RESULTS```
-and can be deleted.
+Auxiliary files generated during the stacking process are saved in ```~/Example/Stack_Results/COSMOS/STACKS/LAST-FITS/RESULTS```
+and can be deleted. These files include a copy of the original spectra, continuum corrected, smoothed and interpolated spectra, continuum fit log files and .tex files with the spectra used in the stacking process. Notice that a same file can be used in differeent stackings and hence the -int.fits files include a number of the interpolated version.
 
 ###### "Stats"
 Statistical values from the stacked galaxies can be obtained and saved in tables (```~/Example/Stack_Results/COSMOS/TABLES/STATS```) through:
