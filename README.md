@@ -236,6 +236,17 @@ Plot_Idp_Spc_Lne(
 		ivl_fts_hdr     = False
 					)
 ```
+
+All the line initial and fitted parameters (line center, amplitude, line width) will be saved in the corresponding composite fits header. For example for Lyman alpha the following headers will be created:
+
+ - L05_CGLC=    1207.832434368174 / Lya1215.7 Ctr  1GF Crctlmfit
+ - L05_AGLC=  -0.4166563657612596 / Lya1215.7 Amp  1GF Crctlmfit
+ - L05_SGLC=    3.475333003707025 / Lya1215.7 Sigm 1GF Crctlmfit
+ - L05_FGLC=    8.183783820286921 / Lya1215.7 FWHM 1GF Crctlmfit
+ - L05_WGLC=         3.6296469195 / Lya1215.7 EW   1GF Crctlmfit                   
+
+L05 corresponds to the line identifier for fits headers purpooses and defined in the Line_Dictionarry.py file.
+
 ![Alt text](./Images/LINE-FIT-COSMOS-avg-c-smt-G-Ind-Splt.jpg?raw=true "Stacked spectra COSMOS field.")	
 ```python
 Plot_Slc_Spc_Lne(
@@ -329,10 +340,10 @@ for tbl_2b_btstr in tables:
 
 ```
 
-This process will create into the ```~/BOOTSTRAP/STACKS/``` directory three diferent subdirectories: ```~/BOOTSTRAP/STACKS/LAST-FITS``` containig all the files used to generate stacked boootstrap in each repetition with a similar structure similar to  ```~/Example/Stack_Results/COSMOS/STACKS/RESULTS/``` directory and described above in the **Stacking** section
-```~/BOOTSTRAP/STACKS/STATS-STR``` contains all the stacked boootstrap repetitions (_e.g. FILE_NAME-BS-1-stk-avg.fits, FILE_NAME-BS-2-stk-avg.fits, ... FILE_NAME-BS-N-stk-avg.fits_) and ```~/BOOTSTRAP/STACKS/STATS-BST``` contains the bootsrap stacked spectra considering all the _N_ stacked boootstrap repetitions.
-This process will create into the ```~/BOOTSTRAP/STACKS/``` directory three diferent subdirectories: ```~/BOOTSTRAP/STACKS/LAST-FITS``` containig all the files used to generate stacked boootstrap in each repetition with a similar structure similar to```~/BOOTSTRAP/STACKS/STATS-STR``` contains all the stacked boootstrap repetitions (_e.g. FILE_NAME-BS-1-stk-avg.fits, FILE_NAME-BS-2-stk-avg.fits, ... FILE_NAME-BS-N-stk-avg.fits_) and ```~/BOOTSTRAP/STACKS/STATS-BST``` contains the bootsrap stacked spectra considering all the _N_ stacked boootstrap repetitions.
-This process will create into the ```~/BOOTSTRAP/STACKS/``` directory three diferent subdirectories: ```~/BOOTSTRAP/STACKS/LAST-FITS``` containig all the files used to generate stacked boootstrap in each repetition with a similar structure similar to   ```~/BOOTSTRAP/STACKS/STATS-STR``` contains all the stacked boootstrap repetitions (_e.g. FILE_NAME-BS-1-stk-avg.fits, FILE_NAME-BS-2-stk-avg.fits, ... FILE_NAME-BS-N-stk-avg.fits_) and ```~/BOOTSTRAP/STACKS/STATS-BST``` contains the bootsrap stacked spectra considering all the _N_ stacked boootstrap repetitions.
+This process will create into the ```~/BOOTSTRAP/STACKS/``` directory three diferent subdirectories: 
+ - ```~/BOOTSTRAP/STACKS/LAST-FITS``` contains all the files used to generate stacked boootstrap in each repetition with a similar structure similar to  ```~/Example/Stack_Results/COSMOS/STACKS/RESULTS/``` directory and described above in the **Stacking** section.
+ - ```~/BOOTSTRAP/STACKS/STATS-STR``` contains all the stacked boootstrap repetitions (_e.g. FILE_NAME-BS-1-stk-avg.fits, FILE_NAME-BS-2-stk-avg.fits, ... FILE_NAME-BS-N-stk-avg.fits_) stacked boootstrap repetitions.
+ - ```~/BOOTSTRAP/STACKS/STATS-BST``` contains the bootsrap stacked spectra considering all the _N_ stacked boootstrap repetitions.
 
 Finally, to plot the Stacked spectra including the CIs generated thorugh the BS process; first we define:
 
@@ -375,6 +386,44 @@ for element in itertools.product(separation,bs_function_s):
 ```
 ![Alt text](./Images/P_Fg_COSMOS_BS_MST_100_med-c-smt-1150-1900.jpg?raw=true "Stacked spectra COSMOS field.")	
 
+This plot will be saved in ```~/Example/Stack_Results/COSMOS/BOOTSTRAP/PLOTS/RESULTS/```.
+**Notice that this plots is only useful to visualize the distribution of spectra generated through the bootstrap.** To properly generate CIs of the emission/absorption EW lines measured above, all the bootstrapped spectra should be fitted to obtain a distribution of EW. This can be easily done with:
+
+```
+import Lines_Dictionary
+LINES = Lines_Dictionary.LINES_PLT_BG
+
+prefixF  = 'P_Fg_' + CAT_PARENT + '_0-40-ss-zf_B-3-44-ss-zf_F-3-44-ss-sep_as-'
+prefix   = prefixF
+function = 'med-c-smt'
+
+bs_iteration_num = 2
+fitting_m        = 'lmfit' 
+fitting_f        = 'gauss' 
+
+pb = ProgressBar(bs_iteration_num)
+pb.start()
+for strap in range(1,bs_iteration_num+1):
+	pb.update(strap)
+	spec_test   = str_bst_stk + prefix + '0-23' + '-BS-'  + str(strap) + '-stk-' + function +'.fits'		
+	spec_test_0 = res_stk_res + prefix + '0-23' + '-stk-' + function   + '.fits'		
+	Stk_Fit_Lines(spec_test,
+		lmb_min      = 1200,
+		lmb_max      = 1900,
+		plt_fit      = True,
+		verbose      = True,
+		stk_function = function,
+		fit_type     = 'lmfit',
+		fit_fnct     = 'gauss',
+		pre_off_plt  = True,
+		org_spc_fle  = spec_test_0,
+		ivl_fts_hdr  = True)
+pb.finish()
+```
+If ```ivl_fts_hdr=True``` then the initial guess values will be read from the fits files headers, otherwise they will be set by the defualt line quantities defined in the Line_Dictionary.py file .
+This will generate individual plots for each line profile fitted, located in ```~/Example/Stack_Results/COSMOS/BOOTSTRAP/PLOTS/INDIVIDUAL-BS/```.
+
+As explained above all the fitted parameters (_i.e. line properties (amplitude, sigma, line center), fitted values_) are saved in the corresponding compoosite spectra.
 ## Dependencies
 Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
  - [astropy](https://www.astropy.org)
