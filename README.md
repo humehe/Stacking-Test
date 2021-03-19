@@ -90,7 +90,8 @@ VSAT uses lmfit for line fitting and by default a simple gaussian, however it is
 ![Alt text](./Images/FitMultiple.jpg?raw=true "Pre-processing of stacked spetra.")
 ## Example
 
-Download the Example.zip file which include a catalogue and spectra. Then by simple running ```python Example.py``` will complete all the following steps below.
+The following example will stack a sample of 102 galaxies belonging to the cosmos field. The sample of spectra can be downloaded from the 
+[zenodo repository](10.5281/zenodo.4624030). Then by simple running ```python Example.py``` will complete all the following steps below.
 
 ###### "Stacking"
 The following snippet will stack galaxies from the COSMOS field. 
