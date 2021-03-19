@@ -1,30 +1,24 @@
-import math, sys, os, shutil, string, cmath
-import numpy as np
-import bottleneck as bn
 import pandas as pd
+from astropy import table as aptbl
 
-import astropy
-from astropy.coordinates import SkyCoord
-from astropy import cosmology
-from astropy.cosmology import FlatLambdaCDM
-from astropy.io import ascii
-import astropy
-from astropy import stats 
-from astropy.io import fits
-from astropy import table
-from astropy import convolution
-
-from termcolor import colored
 from Fnc_Stk_Dir import *
 
-#from Fnc_Stk_Spc import *
-#from Fnc_Stk_Utl import *
-
 ####Fnc_Stk_Tbl####
+def Clean_table(Cl_tbl_ipt,header):
+	print
+	print 'Cleaning table: '
+	print Cl_tbl_ipt
+	Cl_tbl_opt = str(Cl_tbl_ipt.split(tbl_ext_ipt,1)[0]) + '_U'+tbl_ext_opt
+	obs = aptbl.Table.read(Cl_tbl_ipt, format=tbl_format_ipt)
+	unique_by_name = aptbl.unique(obs, keys=[header])
+	unique_by_name.write(Cl_tbl_opt,  format=tbl_format_opt,overwrite=True)
+	print 'Cleaned table: '
+	print Cl_tbl_opt
+	return Cl_tbl_opt
+	
 def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 	bs_func     = kwargs.get('bs_func',None)
 	ref_cat_2br = kwargs.get('ref_cat_2br',False)
-	#Random_Vars = kwargs.get('Random_Vars',False)
 
 	if 'BS_MST' in table_name:
 		print
@@ -37,7 +31,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 		print colored('Reference catalogue table: ' + str(ref_cat_2br),'yellow')
 		print
 		print format_tbl
-		ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+		ftbl = aptbl.Table.read(table_name, format=format_tbl)
 		if bs_func == '_med':
 			print '1: ' + bs_func
 			c1  = ftbl['bs_spc_file_med']
@@ -81,7 +75,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 		print 'PRP'
 		print colored(ref_cat_2br,'green')
 		print
-		ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+		ftbl = aptbl.Table.read(table_name, format=format_tbl)
 		c1   = ftbl['id_F']
 		c2   = ftbl['z_F']
 		c3   = ftbl['zf_F']
@@ -120,7 +114,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 		print '_PRP_MRP'
 		print colored(ref_cat_2br,'green')
 		print
-		ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+		ftbl = aptbl.Table.read(table_name, format=format_tbl)
 		c1   = ftbl['id_F']
 		c2   = ftbl['z_F']
 		c3   = ftbl['zf_F']
@@ -159,9 +153,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 
 		PHI_slice_new = []
 		for j,angle_item in enumerate(c26):
-			#print angle_item
 			if angle_item>90:
-				#print j,angle_item,180-angle_item
 				PHI_slice_new.append(abs((180-angle_item)-90))
 			else:
 				PHI_slice_new.append(abs(angle_item-90))
@@ -171,7 +163,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 			print
 			print colored('Adding PHI Corrected Column!','yellow')
 			print
-			ftbl_Mdf					= astropy.table.Table()
+			ftbl_Mdf					= aptbl.Table()
 
 			ftbl_Mdf['id_F']			= c1 
 			ftbl_Mdf['z_F']				= c2 
@@ -210,7 +202,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 			ftbl_Mdf['n_F']				= c32
 			ftbl_Mdf['q_F']				= c33
 
-			ftbl_Mdf.write(table_name, format=tbl_format_opt,overwrite=True)#'ascii.fixed_width_two_line')	
+			ftbl_Mdf.write(table_name, format=tbl_format_opt,overwrite=True)
 			print
 			print colored('Modified Table: ','green')
 			print colored(table_name,'green')
@@ -229,7 +221,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 		print 'PRP'
 		print colored(ref_cat_2br,'green')
 		print
-		ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+		ftbl = aptbl.Table.read(table_name, format=format_tbl)
 		c1   = ftbl['ident']
 		c2   = ftbl['z_spec']
 		c3   = ftbl['zflags']
@@ -268,7 +260,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 		print '_PRP_MRP'
 		print colored(ref_cat_2br,'green')
 		print
-		ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+		ftbl = aptbl.Table.read(table_name, format=format_tbl)
 		c1   = ftbl['ident_1']
 		c2   = ftbl['z_spec']
 		c3   = ftbl['zflags']
@@ -296,8 +288,8 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 		c24  = ftbl['L_nuv_rest']
 		c25  = ftbl['magi']
 
-		c26  = c25#abs(ftbl['PHI'])
-		c27  = c25#ftbl['PHI_ABS']
+		c26  = c25
+		c27  = c25
 		c28  = ftbl['re']
 		c29  = ftbl['n']
 		c30  = ftbl['q']
@@ -307,9 +299,7 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 
 		PHI_slice_new = []
 		for j,angle_item in enumerate(c26):
-			#print angle_item
 			if angle_item>90:
-				#print j,angle_item,180-angle_item
 				PHI_slice_new.append(abs((180-angle_item)-90))
 			else:
 				PHI_slice_new.append(abs(angle_item-90))
@@ -319,13 +309,39 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 				c11,c12,c13,c14,c15,c16,c17,c18,c19,c20,
 				c21,c22,c23,c24,c25,c26,c27,c28,c29,c30,
 				c31,c32,c33)
+	elif '_pairs' in table_name:
+		print
+		print colored('Reading table: ','green')
+		print colored(table_name,'green')
+		print colored(ref_cat_2br,'green')
+		print
+		ftbl = aptbl.Table.read(table_name, format=format_tbl)
+		c1   = ftbl['id_B']
+		c2   = ftbl['z_B']
+		c3   = ftbl['zf_B']
+		c4   = ftbl['magi_B']
+		c5   = ftbl['id_F']
+		c6   = ftbl['z_F']
+		c7   = ftbl['zf_F']
+		c8   = ftbl['magi_F']
+		c9   = ftbl['DELTAZ']
+		c10  = ftbl['SEP_arcsec']
+		c11  = ftbl['arcsec/kpc']
+		c12  = ftbl['SEP_kpc']
+		c13  = ftbl['NEW_RA']
+		c14  = ftbl['NEW_DEC']
+		c15  = ftbl['spc_f_F']
+		c16  = ftbl['spc_f_n_F']
+		c17  = ftbl['spc_f_B']
+		c18  = ftbl['spc_f_n_B']
+		return(ftbl,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,c17,c18)
 	else:
 		print
 		print colored('Reading table: ','green')
 		print colored(table_name,'green')
 		print colored(ref_cat_2br,'green')
 		print
-		ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+		ftbl = aptbl.Table.read(table_name, format=format_tbl)
 		c1  = ftbl['id_F']
 		c2  = ftbl['z_F']
 		c3  = ftbl['zf_F']
@@ -340,28 +356,15 @@ def readtable_fg_bg_glx(table_name,format_tbl,*args, **kwargs):
 		c12 = ftbl['spc_f_n_F']
 		c13 = ftbl['spc_f_B']
 		c14 = ftbl['spc_f_n_B']
-
-		#if Random_Vars == False:
-		 #pass
-		#elif Random_Vars == 'z_F':
-			#c2  = ftbl['RND_z_F']
-			#c7  = ftbl['RND_DELTAZ']
-		#elif Random_Vars == 'SEP_arcsec':
-			#c8  = ftbl['RND_SEP_arcsec']
-		#elif Random_Vars == 'Both':
-			#c2  = ftbl['RND_z_F']
-			#c7  = ftbl['RND_DELTAZ']
-			#c8  = ftbl['RND_SEP_arcsec']
 		return(ftbl,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14)
 
 def readtable_fg_bg_glx_cdf(table_name,format_tbl,*args, **kwargs):
 	cdf2bobt_lne = kwargs.get('cdf2bobt_lne',None)
-	#Random_Vars = kwargs.get('Random_Vars',False)
 	print
 	print colored('Reading table: ','green')
 	print colored(table_name,'green')
 	print
-	ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+	ftbl = aptbl.Table.read(table_name, format=format_tbl)
 	if 'gaussM.csv' in table_name:
 		try:
 			c1    = ftbl[cdf2bobt_lne + '_CGL1LC']
@@ -425,13 +428,12 @@ def readtable_fg_bg_glx_cdf(table_name,format_tbl,*args, **kwargs):
 				c11)
 
 def readtable_Lit(table_name,format_tbl,*args, **kwargs):
-	#Random_Vars = kwargs.get('Random_Vars',False)
 	print table_name
 	print
 	print colored('Reading Literature table: ','yellow')
 	print colored(table_name,'yellow')
 	print	
-	ftbl = astropy.table.Table.read(table_name, format=format_tbl)
+	ftbl = aptbl.Table.read(table_name, format=format_tbl)
 	return ftbl
 
 def Confident_Intervals(table_name,format_tbl,*args, **kwargs):
@@ -476,11 +478,6 @@ def Confident_Intervals(table_name,format_tbl,*args, **kwargs):
 		sgm_cdf_err  = cdf_lne[9]
 		ch2_cdf      = cdf_lne[10]
 		ch2r_cdf     = cdf_lne[11]
-
-    #bn.nansum(np.array(img_stat)     , axis =0)#np.nansum(np.array(img_stat)   , axis=0)#
-	#bn.nanmean(np.array(img_stat)    , axis=0)#np.nanmean(np.array(img_stat)  , axis=0) #
-	#bn.nanmedian(np.array(img_stat)  , axis=0)#np.nanmedian(np.array(img_stat), axis=0) #
-	#bn.nanstd(np.array(img_stat)     , axis=0)#np.nanstd(np.array(img_stat)   , axis=0) #
 	if rmv_uft_spc == True:
 		indx_msk_uf = (np.where(np.asarray(ewd_cdf)==999999.99999)[0])
 		indx_msk_uf = np.asarray(indx_msk_uf)
@@ -534,12 +531,11 @@ def stats_table(tbl_stt_in,format_tbl,*args, **kwargs):
 	tbl_stt_out = stt_dir_res + (str(tbl_stt_in.split('.csv',1)[0])).split('/')[-1] + '-stt.csv'
 	ftbl_stt.to_csv(tbl_stt_out)
 
-	ftbl_stt_c    = astropy.table.Table.read(tbl_stt_out, format='csv')
+	ftbl_stt_c    = aptbl.Table.read(tbl_stt_out, format='csv')
 	tbl_stt_out_c = stt_dir_res + (str(tbl_stt_in.split('.csv',1)[0])).split('/')[-1] + '-stt.dat'
 	ftbl_stt_c.write(tbl_stt_out_c,  format='ascii.fixed_width_two_line',overwrite=True)
 
 	print colored('Stat file: '+str(tbl_stt_out_c),'green')
 
 	return tbl_stt_out_c
-
-####Fnc_Stk_Utl####
+####Fnc_Stk_Tbl####

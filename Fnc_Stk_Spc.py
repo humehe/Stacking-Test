@@ -1,47 +1,16 @@
-import math, sys, os, shutil, string, cmath
-import numpy as np
+import sys, os
 import bottleneck as bn
-import pandas as pd
+#import astropy
+from astropy import convolution as apcvl
 
-import astropy
-from astropy.coordinates import SkyCoord
-from astropy import cosmology
-from astropy.cosmology import FlatLambdaCDM
-from astropy.io import ascii
-import astropy
-from astropy import stats 
-from astropy.io import fits
-from astropy import table
-from astropy import convolution
-
-from numpy import mean,median
-
-from decimal import *
-from progressbar import *               # just a simple progress bar
-from os.path import expanduser
-from itertools import tee, islice, chain, izip
+#import scipy
+#from scipy import stats
 from pysynphot import observation
 from pysynphot import spectrum
-from termcolor import colored
-from pandas import DataFrame
-
-import scipy
-from scipy import stats
-from scipy.ndimage.filters import gaussian_filter
-from scipy.ndimage.filters import gaussian_filter1d
-from scipy import signal
-from scipy.constants import physical_constants
-import scipy.optimize as opt
-import warnings
-from scipy.optimize import OptimizeWarning
-import scipy.integrate as integrate
-from scipy.special import wofz
 
 import pyraf
 from pyraf import iraf
-
-import logging
-import itertools
+from pyraf.iraf import continuum as pyfcnt
 
 from Fnc_Stk_Fts import *
 from Fnc_Stk_Mth import *
@@ -51,6 +20,423 @@ import Lines_Dictionary
 LINES = Lines_Dictionary.LINES_STK #FOR MASKING##
 
 ####Fnc_Stk_Spc####
+def Shift_Spectra(spec_ifn,redshift_ref,id_ref,*args, **kwargs):
+
+	shft_ref   = kwargs.get('shft_ref', 'rf')
+	redshift_0 = kwargs.get('redshift_0',redshift_ref)
+	id_0       = kwargs.get('id_0',id_ref)
+
+	sel_pre_shf = kwargs.get('sel_pre_shf',True)
+	sel_pre_cnt = kwargs.get('sel_pre_cnt',True)
+	sel_pre_msk = kwargs.get('sel_pre_msk',False)
+
+	Header_Get_Add(spec_ifn,'CD1_1'  ,5.355)
+	Header_Get_Add(spec_ifn,'CD2_2'  ,5.355)
+	Header_Get_Add(spec_ifn,'CDELT1' ,5.355)
+
+	lmbstp0fg  = Header_Get_Add(spec_ifn,'CDELT1',5.355)
+	lambda0fg  = Header_Get_Add(spec_ifn,'CRVAL1',3510.71)
+
+	pre_shft_spec = Spectra_x_y(spec_ifn)
+	pre_shft_lmbd = pre_shft_spec[0]
+
+	spec_ofn   = str(spec_ifn.split('.fits',1)[0])   +'-s2-' + str(shft_ref) + '.fits'
+	hdulist_fg = fits.open(spec_ifn)
+	intens_fg  = hdulist_fg[0].data
+
+	lambda_fg2fg   = np.around(lambdashifted(lambda0fg ,redshift_ref),decimals=2)
+	lmbstp_fg2fg   = np.around(lambdashifted(lmbstp0fg ,redshift_ref),decimals=3)
+
+	os.system('cp ' + spec_ifn   + ' ' + spec_ofn)
+	Header_History_Step(spec_ifn,spec_ofn)
+
+	Header_Updt(spec_ofn,'CRVAL1',lambda_fg2fg)
+	Header_Updt(spec_ofn,'CDELT1',lmbstp_fg2fg)
+	Header_Updt(spec_ofn,'CD2_2' ,lmbstp_fg2fg)
+	Header_Updt(spec_ofn,'CD1_1' ,lmbstp_fg2fg)
+
+	Header_Get_Add(spec_ofn,'ID_0'   ,int(id_0)   ,header_comment='ID')
+	Header_Get_Add(spec_ofn,'ID_REF' ,int(id_ref) ,header_comment='ID Reference')
+ 	Header_Get_Add(spec_ofn,'Z_0'    ,redshift_0  ,header_comment='Redshift')
+	Header_Get_Add(spec_ofn,'Z_REF'  ,redshift_ref,header_comment='Redshift Reference')
+
+	return spec_ofn
+
+def Shift_Spectra_Cat(spc_cat_itn,*args, **kwargs):
+	from Fnc_Stk_Spc import Spectra_Cont_IRAF
+	sel_pre_shf = kwargs.get('sel_pre_shf',True)
+	sel_pre_cnt = kwargs.get('sel_pre_cnt',True)
+	sel_pre_msk = kwargs.get('sel_pre_msk',False)
+	sfx_tbl_otp = kwargs.get('sfx_tbl_otp','')
+	verbose     = kwargs.get('verbose'    ,False)
+	
+
+	print
+	print colored('Spectra shifted      :'+str(sel_pre_shf),'yellow')
+	print colored('Spectra cont fitted  :'+str(sel_pre_cnt),'yellow')
+	print colored('Spectra masked       :'+str(sel_pre_msk),'yellow')
+	print
+
+	sel_cnt_typ     = kwargs.get('sel_cnt_typ'     ,'ratio')   # Continuum fitting type fit,ratio,difference
+	sel_cnt_lns     = kwargs.get('sel_cnt_lns'     ,'*')       # Image lines to be fit
+	sel_cnt_fnc     = kwargs.get('sel_cnt_fnc'     ,'spline3') # Fitting function: legendre, chebyshev, spline1, spline3
+	sel_cnt_ord     = kwargs.get('sel_cnt_ord'     ,49)        # Order Polynomial / num pieces spline
+	sel_cnt_ovr     = kwargs.get('sel_cnt_ovr'     ,'yes')     # Override previous norm spec
+	sel_cnt_rpl     = kwargs.get('sel_cnt_rpl'     ,'no')      # Replace rejected points by fit?
+	sel_cnt_lrj     = kwargs.get('sel_cnt_lrj'     ,3)         # Low rejection in sigma of fit
+	sel_cnt_hrj     = kwargs.get('sel_cnt_hrj'     ,3)         # High rejection in sigma of fit
+
+	sel_msk_type    = kwargs.get('sel_msk_type'    ,'NaN')
+	sel_msk_cte_val = kwargs.get('sel_msk_cte_val' ,1)
+	sel_msk_abs_lne = kwargs.get('sel_msk_abs_lne' ,False)
+	sel_msk_spc_rgn = kwargs.get('sel_msk_spc_rgn' ,False)
+	sel_msk_lmb_min = kwargs.get('sel_msk_lmb_min' ,500)
+	sel_msk_lmb_max = kwargs.get('sel_msk_lmb_max' ,1210)
+
+	print
+	print colored('Shifting spectra files.','yellow')
+	print colored('Reading table : ' + spc_cat_itn,'green')
+	print
+
+	cat          = readtable_fg_bg_glx(spc_cat_itn,tbl_format_ipt,**kwargs)
+
+	if 'PRP' in spc_cat_itn:
+		tbl_cat_M        = cat[0]
+		ident_fg_glx_M   = cat[5]
+		z_fg_glx_M       = cat[6]
+		z_f_fg_glx_M     = cat[7]
+		magi_fg_glx_M    = cat[8]
+		deltaz_fg_glx_M  = cat[9]
+		sepas_fg_glx_M   = cat[10]
+	else:
+		tbl_cat_M        = cat[0]
+		ident_fg_glx_M   = cat[1]
+		z_fg_glx_M       = cat[2]
+		z_f_fg_glx_M     = cat[3]
+		magi_fg_glx_M    = cat[4]
+		deltaz_fg_glx_M  = cat[9]
+		sepas_fg_glx_M   = cat[10]
+
+	tbl_cat_M.sort('z_F')
+	name_sorted = (spc_cat_itn.split('.'+tbl_format_ipt,1)[0])+'-sorted'+'.'+tbl_format_ipt
+	print
+	print colored('Input Catalogue sorted by z_F','yellow')
+	print colored(name_sorted,'green')
+	print
+	tbl_cat_M.write(name_sorted, format=tbl_format_opt, overwrite=True)
+
+	widgets  = ['Evaluating pairs for '+ str(len(ident_fg_glx_M)) + ' foreground galaxies: ',
+	Percentage(), ' ', Bar(marker='>',left='[',right=']'),
+	' ', ETA(), ' ', FileTransferSpeed()]
+	pbar1    = ProgressBar(widgets=widgets, maxval=len(ident_fg_glx_M))
+	pbar1.start()
+
+	for foregorund_galaxy in range(len(ident_fg_glx_M)):
+		print
+		pbar1.update(foregorund_galaxy)
+
+		id_fg           = ident_fg_glx_M[foregorund_galaxy]
+		z_fg            = z_fg_glx_M[foregorund_galaxy]
+		z_f_fg          = z_f_fg_glx_M[foregorund_galaxy]
+		magi_fg         = magi_fg_glx_M[foregorund_galaxy]
+		
+		if verbose == True:
+			print ''
+			print 'Foreground galaxy: ',foregorund_galaxy+1,'/',len(ident_fg_glx_M)
+			print
+			print ident_fg_glx_M[foregorund_galaxy],z_fg_glx_M[foregorund_galaxy],z_f_fg_glx_M[foregorund_galaxy],magi_fg_glx_M[foregorund_galaxy]
+			print id_fg,z_fg,z_f_fg,magi_fg
+		elif verbose == False:
+			pass
+
+		print
+		print colored(par_dir_res+'/' +str(id_fg)+'/'+str(id_fg)+'_pairs' + sfx_tbl_otp + tbl_ext_ipt,'magenta')
+		print 
+		fg_bg_glx      = readtable_fg_bg_glx(par_dir_res+'/' +str(id_fg)+'/'+str(id_fg)+'_pairs' + sfx_tbl_otp + tbl_ext_ipt,tbl_format_ipt)
+		
+		tbl_fg_bg_glx  = fg_bg_glx[0]
+
+		ident_bg_glx_p = fg_bg_glx[1]
+		z_bg_glx       = fg_bg_glx[2]
+		z_f_bg_glx     = fg_bg_glx[3]
+		magi_bg_glx    = fg_bg_glx[4]
+
+		ident_fg_glx_p = fg_bg_glx[5]
+		z_fg_glx       = fg_bg_glx[6]
+		z_f_fg_glx     = fg_bg_glx[7]
+		magi_fg_glx    = fg_bg_glx[8]
+
+		deltaz_bg_glx  = fg_bg_glx[9]
+		sepas_bg_glx   = fg_bg_glx[10]
+		sepkpc_bg_glx  = fg_bg_glx[12]
+
+		spc_f_fg_glx   = fg_bg_glx[15]
+		spc_f_n_fg_glx = fg_bg_glx[16]
+		spc_f_bg_glx   = fg_bg_glx[17]
+		spc_f_n_bg_glx = fg_bg_glx[18]
+
+		if (len(ident_bg_glx_p) >= 2):
+			subdir        = par_dir_res + '/' + str(id_fg) +'/'
+			dest_dir_fr   = par_frg_dir + str(rad_sep[0][0]) + '-' + str(rad_sep[0][-1]) + '/'
+
+			specfile_fg   = subdir + str(spc_f_fg_glx[0])
+			specfile_n_fg = subdir + str(spc_f_n_fg_glx[0])
+
+			if sel_pre_cnt == True:
+				spc_ipt_cnt = specfile_fg
+			elif sel_pre_cnt == False:
+				pass
+
+			if sel_pre_msk == True and sel_pre_cnt == True:
+				spc_ipt_msk = str(specfile_fg.split('.fits',1)[0]) + '-c.fits'
+ 	 		elif sel_pre_msk == True and sel_pre_cnt == False:
+				spc_ipt_msk = specfile_fg
+			else:
+				pass
+
+ 			if sel_pre_shf == True and sel_pre_msk == True and sel_pre_cnt == True:
+				spc_ipt_shf     = str(specfile_fg.split('.fits',1)[0]) + '-c-m.fits'
+				spc_ipt_shf_fit = str(specfile_fg.split('.fits',1)[0]) + '-c-f.fits'
+
+			elif sel_pre_shf == True and sel_pre_msk == True and sel_pre_cnt == False:
+				spc_ipt_shf     = str(specfile_fg.split('.fits',1)[0]) + '-m.fits'
+				spc_ipt_shf_fit = spc_ipt_shf
+
+			elif sel_pre_shf == True and sel_pre_msk == False and sel_pre_cnt == True:
+				spc_ipt_shf     = str(specfile_fg.split('.fits',1)[0]) + '-c.fits'
+				spc_ipt_shf_fit = str(specfile_fg.split('.fits',1)[0]) + '-c-f.fits'
+
+			elif sel_pre_shf == True and sel_pre_msk == False and sel_pre_cnt == False:
+				spc_ipt_shf     = specfile_fg
+				spc_ipt_shf_fit = spc_ipt_shf 
+
+			else:
+				pass
+
+			if sel_pre_cnt == True:
+				spc_opt_cnt  = Spectra_Cont_IRAF(spc_ipt_cnt,subdir + 'log_cont_' + str(id_fg),
+								Cont_type_IRAF     = sel_cnt_typ,Cont_lines_IRAF    = sel_cnt_lns,
+								Cont_funct_IRAF    = sel_cnt_fnc,Cont_order_IRAF    = sel_cnt_ord,
+								Cont_override_IRAF = sel_cnt_ovr,Cont_replace_IRAF  = sel_cnt_rpl,
+								Cont_low_rej_IRAF  = sel_cnt_lrj,Cont_high_rej_IRAF = sel_cnt_hrj)
+
+				Header_Add(spc_opt_cnt[0],'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				Header_Add(spc_opt_cnt[1],'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				Header_Add(specfile_fg   ,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				os.system ('cp ' + str(spc_opt_cnt[0]) + ' ' + dest_dir_fr)
+				os.system ('cp ' + str(spc_opt_cnt[1]) + ' ' + dest_dir_fr)
+				os.system ('cp ' + specfile_fg         + ' ' + dest_dir_fr)
+
+			elif sel_pre_cnt == True and spectra_noise == True:
+				Header_Add(specfile_n_fg ,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				os.system ('cp ' + specfile_n_fg       + ' ' + dest_dir_fr)
+			elif sel_pre_cnt == False:
+				pass
+
+			if sel_pre_msk == True:
+				spc_opt_msk = Spectra_Masking(spc_ipt_msk,msk_typ=sel_msk_type,rshft_corr=z_fg,
+								rshft_corr_direct=False,msk_abs_lne=sel_msk_abs_lne,
+								msk_spc_rgn=sel_msk_spc_rgn,msk_lmb_min=sel_msk_lmb_min,msk_lmb_max=sel_msk_lmb_max)
+				Header_Add(spc_opt_msk  ,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				Header_Add(specfile_fg  ,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				os.system ('cp ' + spc_opt_msk	 + ' ' + dest_dir_fr)
+				os.system ('cp ' + specfile_fg   + ' ' + dest_dir_fr)
+			elif sel_pre_msk == True and spectra_noise == True:
+				Header_Add(specfile_n_fg,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				os.system ('cp ' + specfile_n_fg + ' ' + dest_dir_fr)
+			elif sel_pre_msk == False:
+				pass
+
+			if sel_pre_shf == True:
+				spc_opt_shf     = Shift_Spectra(spc_ipt_shf    ,z_fg,id_fg)
+				spc_opt_shf_fit = Shift_Spectra(spc_ipt_shf_fit,z_fg,id_fg)
+
+				Header_Add(spc_opt_shf    ,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				Header_Add(spc_opt_shf    ,'SHT_FN0',str((spc_ipt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file pre-shift')
+				Header_Add(spc_opt_shf    ,'SHT_FNS',str((spc_opt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file post-shift')
+
+
+				Header_Add(spc_opt_shf_fit,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				Header_Add(spc_opt_shf_fit,'SHT_FN0',str((spc_ipt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file pre-shift')
+				Header_Add(spc_opt_shf_fit,'SHT_FNS',str((spc_opt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file post-shift')
+
+				Header_Add(specfile_fg    ,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+
+				os.system ('cp ' + spc_opt_shf     + ' ' + dest_dir_fr)
+				os.system ('cp ' + spc_opt_shf_fit + ' ' + dest_dir_fr)
+				os.system ('cp ' + spc_ipt_shf     + ' ' + dest_dir_fr)
+				os.system ('cp ' + spc_ipt_shf_fit + ' ' + dest_dir_fr)
+
+				os.system ('cp ' + specfile_fg     + ' ' + dest_dir_fr)
+			elif sel_pre_shf == True and spectra_noise == True:
+				specfile_n_fg_s = Shift_Spectra(specfile_n_fg  ,z_fg,id_fg)
+
+				Header_Add(specfile_n_fg  ,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+				Header_Add(specfile_n_fg_s,'MAG_I',magi_fg,header_comment='i-band mag VUDS')
+
+				os.system ('cp ' + specfile_n_fg   + ' ' + dest_dir_fr)
+				os.system ('cp ' + specfile_n_fg_s + ' ' + dest_dir_fr)	
+			elif sel_pre_shf == False:	
+				pass
+
+			print
+			widgets = ['Shifting background galaxies spectra: ' + str(len(ident_fg_glx_p)-1) + ', paired with foreground galaxy: '+ str(id_fg) + ' ', 
+			Percentage(), ' ', Bar(marker='*',left='[',right=']'),
+			' ', ETA(), ' ', FileTransferSpeed()]
+			pbar    = ProgressBar(widgets=widgets, maxval=len(ident_bg_glx_p))
+			pbar.start()
+			
+			for background_galaxy in range(1,len(ident_bg_glx_p)):
+				pbar.update(background_galaxy)
+
+				dest_dir_bk      = par_bkg_dir + str(rad_sep[0][0]) + '-' + str(rad_sep[0][-1]) + '/'
+
+				specfile_bg      = subdir + str(spc_f_bg_glx[background_galaxy])
+				specfile_n_bg    = subdir + str(spc_f_n_bg_glx[background_galaxy])
+
+				id_bg           = ident_bg_glx_p[background_galaxy]
+				z_bg            = z_bg_glx[background_galaxy]
+				z_f_bg          = z_f_bg_glx[background_galaxy]
+				magi_bg         = magi_bg_glx[background_galaxy]
+
+				if verbose == True:
+					print 
+					print colored('Background galaxy to be shifted: ','yellow')
+					print background_galaxy,ident_bg_glx_p[background_galaxy],z_bg,sepas_bg_glx[background_galaxy],deltaz_bg_glx[background_galaxy],magi_bg_glx[background_galaxy]
+					print 
+				elif verbose == False:
+					pass
+
+				if os.path.isfile(specfile_bg) or os.path.isfile(specfile_n_bg): 
+
+					if sel_pre_cnt == True:
+						spc_ipt_cnt = specfile_bg
+					elif sel_pre_cnt == False:
+						pass
+
+					if sel_pre_msk == True and sel_pre_cnt == True:
+						spc_ipt_msk = str(specfile_bg.split('.fits',1)[0]) + '-c.fits'
+		 	 		elif sel_pre_msk == True and sel_pre_cnt == False:
+						spc_ipt_msk = specfile_bg
+					else:
+						pass
+
+		 			if sel_pre_shf == True and sel_pre_msk == True and sel_pre_cnt == True:
+						spc_ipt_shf     = str(specfile_bg.split('.fits',1)[0]) + '-c-m.fits'
+						spc_ipt_shf_fit = str(specfile_bg.split('.fits',1)[0]) + '-c-f.fits'
+
+					elif sel_pre_shf == True and sel_pre_msk == True and sel_pre_cnt == False:
+						spc_ipt_shf     = str(specfile_bg.split('.fits',1)[0]) + '-m.fits'
+						spc_ipt_shf_fit = spc_ipt_shf
+
+					elif sel_pre_shf == True and sel_pre_msk == False and sel_pre_cnt == True:
+						spc_ipt_shf     = str(specfile_bg.split('.fits',1)[0]) + '-c.fits'
+						spc_ipt_shf_fit = str(specfile_bg.split('.fits',1)[0]) + '-c-f.fits'
+
+					elif sel_pre_shf == True and sel_pre_msk == False and sel_pre_cnt == False:
+						spc_ipt_shf     = specfile_bg
+						spc_ipt_shf_fit = spc_ipt_shf
+
+					else:
+						pass
+
+					if sel_pre_cnt == True:
+						spc_opt_cnt = Spectra_Cont_IRAF(spc_ipt_cnt,subdir + 'log_cont_' + str(id_fg),
+										Cont_type_IRAF     = sel_cnt_typ,Cont_lines_IRAF    = sel_cnt_lns,
+										Cont_funct_IRAF    = sel_cnt_fnc,Cont_order_IRAF    = sel_cnt_ord,
+										Cont_override_IRAF = sel_cnt_ovr,Cont_replace_IRAF  = sel_cnt_rpl,
+										Cont_low_rej_IRAF  = sel_cnt_lrj,Cont_high_rej_IRAF = sel_cnt_hrj)
+
+						os.system ('cp ' + str(spc_opt_cnt[0]) + ' ' + dest_dir_bk)
+						Header_Add(spc_opt_cnt[0],'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(spc_opt_cnt[1],'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(specfile_bg   ,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						os.system ('cp ' + str(spc_opt_cnt[1]) + ' ' + dest_dir_bk)
+						os.system ('cp ' + specfile_bg         + ' ' + dest_dir_bk)
+					elif sel_pre_cnt == True and spectra_noise == True:
+
+						Header_Add(specfile_n_bg ,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+					elif sel_pre_cnt == False:
+						pass
+
+					if sel_pre_msk == True:
+						spc_opt_msk = Spectra_Masking(spc_ipt_msk,msk_typ=sel_msk_type,rshft_corr=z_bg,
+										rshft_corr_direct=False,msk_abs_lne=sel_msk_abs_lne,
+										msk_spc_rgn=sel_msk_spc_rgn,msk_lmb_min=sel_msk_lmb_min,msk_lmb_max=sel_msk_lmb_max)
+						Header_Add(spc_opt_msk  ,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(specfile_bg  ,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						os.system ('cp ' + spc_opt_msk	 + ' ' + dest_dir_bk)
+						os.system ('cp ' + specfile_bg   + ' ' + dest_dir_bk)
+					elif sel_pre_msk == True and spectra_noise == True:
+						Header_Add(specfile_n_bg,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						os.system ('cp ' + specfile_n_bg + ' ' + dest_dir_bk)
+					elif sel_pre_msk == False:
+						pass
+
+					if sel_pre_shf == True:
+						spc_opt_shf1     = Shift_Spectra(spc_ipt_shf    ,z_fg,id_fg,shft_ref=id_fg,id_0=id_bg,redshift_0=z_bg)
+						spc_opt_shf1_fit = Shift_Spectra(spc_ipt_shf_fit,z_fg,id_fg,shft_ref=id_fg,id_0=id_bg,redshift_0=z_bg)
+
+						spc_opt_shf2     = Shift_Spectra(spc_ipt_shf    ,z_bg,id_bg)
+						spc_opt_shf2_fit = Shift_Spectra(spc_ipt_shf_fit,z_bg,id_bg)
+
+						Header_Add(spc_opt_shf1    ,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(spc_opt_shf1    ,'SHT_FN0',str((spc_ipt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]) ,header_comment='Spec file pre-shift')
+						Header_Add(spc_opt_shf1    ,'SHT_FNS',str((spc_opt_shf1_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file post-shift')
+
+						Header_Add(spc_opt_shf1_fit,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(spc_opt_shf1_fit,'SHT_FN0',str((spc_ipt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]) ,header_comment='Spec file pre-shift')
+						Header_Add(spc_opt_shf1_fit,'SHT_FNS',str((spc_opt_shf1_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file post-shift')
+
+						Header_Add(spc_opt_shf2    ,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(spc_opt_shf2    ,'SHT_FN0',str((spc_ipt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]) ,header_comment='Spec file pre-shift')
+						Header_Add(spc_opt_shf2    ,'SHT_FNS',str((spc_opt_shf2_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file post-shift')
+
+						Header_Add(spc_opt_shf2_fit,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(spc_opt_shf2_fit,'SHT_FN0',str((spc_ipt_shf_fit.rsplit('/',1)[1]).rsplit('.',1)[0]) ,header_comment='Spec file pre-shift')
+						Header_Add(spc_opt_shf2_fit,'SHT_FNS',str((spc_opt_shf2_fit.rsplit('/',1)[1]).rsplit('.',1)[0]),header_comment='Spec file post-shift')
+
+						Header_Add(specfile_bg  ,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+
+						os.system ('cp ' + spc_opt_shf1      + ' ' + dest_dir_bk)
+						os.system ('cp ' + spc_opt_shf1_fit  + ' ' + dest_dir_bk)
+						os.system ('cp ' + spc_opt_shf2      + ' ' + dest_dir_bk)
+						os.system ('cp ' + spc_opt_shf2_fit  + ' ' + dest_dir_bk)
+						os.system ('cp ' + spc_ipt_shf       + ' ' + dest_dir_bk)
+						os.system ('cp ' + spc_ipt_shf_fit   + ' ' + dest_dir_bk)
+
+						os.system ('cp ' + specfile_bg       + ' ' + dest_dir_bk)
+
+					if sel_pre_shf == True and spectra_noise == True:
+						spc_opt_shf3     = Shift_Spectra(specfile_n_bg,z_fg,id_fg,shft_ref=id_fg,id_0=id_bg,redshift_0=z_bg)
+						spc_opt_shf4     = Shift_Spectra(specfile_n_bg,z_bg,id_bg)
+
+						Header_Add(spc_opt_shf3,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(spc_opt_shf4,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+						Header_Add(specfile_n_bg,'MAG_I',magi_bg,header_comment='i-band mag VUDS')
+
+						os.system ('cp ' + spc_opt_shf3      + ' ' + dest_dir_bk)
+						os.system ('cp ' + spc_opt_shf4      + ' ' + dest_dir_bk)
+						os.system ('cp ' + specfile_n_bg     + ' ' + dest_dir_bk)
+ 
+					elif sel_pre_shf == False:	
+						pass
+				elif not os.path.isfile(specfile_bg):
+					print
+					print 'No Spectra File exists: ',specfile_bg
+
+				elif not os.path.isfile(specfile_n_bg):
+					print
+					print 'No Spectra File (noise) exists: ',specfile_n_bg
+
+			pbar.finish()
+
+		elif len(ident_bg_glx_p) == 1:
+			print
+			print 'NO BACKGROUND GALAXIES NEARBY'
+
+	pbar1.finish()
+
 def rebin_spec(wave, specin, wavnew,*args, **kwargs):
 	#http://pysynphot.readthedocs.io/en/latest/ref_api.html#module-pysynphot.observation
 	#http://pysynphot.readthedocs.io/en/latest/ref_api.html#pysynphot.observation.Observation.validate_overlap
@@ -177,9 +563,9 @@ def Spectra_Masking(mask_ifn,msk_typ,*args, **kwargs):
 	rshft_corr_direct = kwargs.get('rshft_corr_direct',False)
 
 	msk_abs_lne       = kwargs.get('msk_abs_lne'  ,False)
-	msk_blu_rgn       = kwargs.get('msk_blu_rgn'  ,False)
-	blu_lmb_min       = kwargs.get('blu_lmb_min'  ,500)
-	blu_lmb_max       = kwargs.get('blu_lmb_max'  ,1200)
+	msk_spc_rgn       = kwargs.get('msk_spc_rgn'  ,False)
+	msk_lmb_min       = kwargs.get('msk_lmb_min'  ,500)
+	msk_lmb_max       = kwargs.get('msk_lmb_max'  ,1200)
 	rwt_file          = kwargs.get('rwt_file'     ,False)
 	msk_cte_val       = kwargs.get('msk_cte_val'  ,0)
 
@@ -214,24 +600,24 @@ def Spectra_Masking(mask_ifn,msk_typ,*args, **kwargs):
 				pass
 	elif msk_abs_lne == False:
 		pass
-	if msk_blu_rgn == True:
+	if msk_spc_rgn == True:
 		if rshft_corr_direct == True:
-			blu_lmb_min = blu_lmb_min * (rshft_corr)
-			blu_lmb_max = blu_lmb_max * (rshft_corr)
+			msk_lmb_min = msk_lmb_min * (rshft_corr)
+			msk_lmb_max = msk_lmb_max * (rshft_corr)
 		elif rshft_corr_direct == False:
-			blu_lmb_min = blu_lmb_min * (1+rshft_corr)
-			blu_lmb_max = blu_lmb_max * (1+rshft_corr)
-		if (org_spec[0][0]<blu_lmb_min<org_spec[0][-1]) and (org_spec[0][0]<blu_lmb_max<org_spec[0][-1]):
-			Spectra_x_y_Updt(mask_ofn,msk_typ,blu_lmb_min,blu_lmb_max,'lambda',cnt_val=msk_cte_val,spfn_i_2=str(mask_ifn .split('.fits',1)[0]) + '-c-f.fits')
-		elif (org_spec[0][0]>blu_lmb_min<org_spec[0][-1]) and (org_spec[0][0]<blu_lmb_max<org_spec[0][-1]):
-			blu_lmb_min = org_spec[0][0]
-			Spectra_x_y_Updt(mask_ofn,msk_typ,blu_lmb_min,blu_lmb_max,'lambda',cnt_val=msk_cte_val,spfn_i_2=str(mask_ifn .split('.fits',1)[0]) + '-c-f.fits')
-		elif (org_spec[0][0]<blu_lmb_min<org_spec[0][-1]) and (org_spec[0][0]<blu_lmb_max>org_spec[0][-1]):
-			blu_lmb_max = org_spec[0][-1]
-			Spectra_x_y_Updt(mask_ofn,msk_typ,blu_lmb_min,blu_lmb_max,'lambda',cnt_val=msk_cte_val,spfn_i_2=str(mask_ifn .split('.fits',1)[0]) + '-c-f.fits')
+			msk_lmb_min = msk_lmb_min * (1+rshft_corr)
+			msk_lmb_max = msk_lmb_max * (1+rshft_corr)
+		if (org_spec[0][0]<msk_lmb_min<org_spec[0][-1]) and (org_spec[0][0]<msk_lmb_max<org_spec[0][-1]):
+			Spectra_x_y_Updt(mask_ofn,msk_typ,msk_lmb_min,msk_lmb_max,'lambda',cnt_val=msk_cte_val,spfn_i_2=str(mask_ifn .split('.fits',1)[0]) + '-c-f.fits')
+		elif (org_spec[0][0]>msk_lmb_min<org_spec[0][-1]) and (org_spec[0][0]<msk_lmb_max<org_spec[0][-1]):
+			msk_lmb_min = org_spec[0][0]
+			Spectra_x_y_Updt(mask_ofn,msk_typ,msk_lmb_min,msk_lmb_max,'lambda',cnt_val=msk_cte_val,spfn_i_2=str(mask_ifn .split('.fits',1)[0]) + '-c-f.fits')
+		elif (org_spec[0][0]<msk_lmb_min<org_spec[0][-1]) and (org_spec[0][0]<msk_lmb_max>org_spec[0][-1]):
+			msk_lmb_max = org_spec[0][-1]
+			Spectra_x_y_Updt(mask_ofn,msk_typ,msk_lmb_min,msk_lmb_max,'lambda',cnt_val=msk_cte_val,spfn_i_2=str(mask_ifn .split('.fits',1)[0]) + '-c-f.fits')
 		else:
 			pass		
-	elif msk_blu_rgn == False:
+	elif msk_spc_rgn == False:
 		pass
 	return mask_ofn
 
@@ -250,21 +636,21 @@ def Spectra_Cont_IRAF(Cont_ip_sfn_IRAF,Cont_log_IRAF,*args, **kwargs):
 		os.system('rm ' + str(Cont_op_sfn_IRAF_1))
 	else:
 		pass
-	iraf.continuum.input    = Cont_ip_sfn_IRAF
-	iraf.continuum.output   = Cont_op_sfn_IRAF_1
-	iraf.continuum.type     = Cont_type_IRAF
-	iraf.continuum.lines    = Cont_lines_IRAF
-	iraf.continuum.band     = 1
-	iraf.continuum.logfile  = Cont_log_IRAF
-	iraf.continuum.function = Cont_funct_IRAF
-	iraf.continuum.order    = Cont_order_IRAF
-	iraf.continuum.replace  = Cont_replace_IRAF
-	iraf.continuum.low_rej  = Cont_low_rej_IRAF
-	iraf.continuum.high_rej = Cont_high_rej_IRAF
-	iraf.continuum.override = Cont_override_IRAF
-	iraf.continuum.interac  = 'no'
-	iraf.continuum.mode     = 'h'
-	iraf.continuum()
+	pyfcnt.input    = Cont_ip_sfn_IRAF
+	pyfcnt.output   = Cont_op_sfn_IRAF_1
+	pyfcnt.type     = Cont_type_IRAF
+	pyfcnt.lines    = Cont_lines_IRAF
+	pyfcnt.band     = 1
+	pyfcnt.logfile  = Cont_log_IRAF
+	pyfcnt.function = Cont_funct_IRAF
+	pyfcnt.order    = Cont_order_IRAF
+	pyfcnt.replace  = Cont_replace_IRAF
+	pyfcnt.low_rej  = Cont_low_rej_IRAF
+	pyfcnt.high_rej = Cont_high_rej_IRAF
+	pyfcnt.override = Cont_override_IRAF
+	pyfcnt.interac  = 'no'
+	pyfcnt.mode     = 'h'
+	pyfcnt()
 
 	Header_Get_Add(Cont_op_sfn_IRAF_1,'CNT_TYP',Cont_type_IRAF    ,header_comment='Continuum IRAF type')
 	Header_Get_Add(Cont_op_sfn_IRAF_1,'CNT_FIT',Cont_funct_IRAF   ,header_comment='Continuum IRAF function')
@@ -291,9 +677,9 @@ def Spectra_Cont_IRAF(Cont_ip_sfn_IRAF,Cont_log_IRAF,*args, **kwargs):
 	else:
 		pass
 
-	iraf.continuum.output   = Cont_op_sfn_IRAF_2
-	iraf.continuum.type     = 'fit'
-	iraf.continuum()
+	pyfcnt.output   = Cont_op_sfn_IRAF_2
+	pyfcnt.type     = 'fit'
+	pyfcnt()
 
 	Header_Get_Add(Cont_op_sfn_IRAF_2,'CNT_TYP',Cont_type_IRAF    ,header_comment='Continuum IRAF type')
 	Header_Get_Add(Cont_op_sfn_IRAF_2,'CNT_FIT',Cont_funct_IRAF   ,header_comment='Continuum IRAF function')
@@ -336,12 +722,12 @@ def Spectra_Smooth(spc_ipf_smt,krnl_typ_smt,krnl_sz_smt,*args,**kwargs):
 	if krnl_typ_smt == 'gaussian':
 		grid_krnl = astpy_conv_gaus_1dkernel(krnl_sz_smt)
 	elif krnl_typ_smt == 'boxcar':
-		grid_krnl = astropy.convolution.Box1DKernel(krnl_sz_smt)
+		grid_krnl = apcvl.Box1DKernel(krnl_sz_smt)
 	elif pkrnl_typ_smt == 'mexican':
-		grid_krnl = astropy.convolution.MexicanHat1DKernel(krnl_sz_smt)
+		grid_krnl = apcvl.MexicanHat1DKernel(krnl_sz_smt)
 
-	#http://docs.astropy.org/en/stable/api/astropy.convolution.convolve.html
-	spc_pst_smt = astropy.convolution.convolve(spc2bsmth[1], grid_krnl)#,boundary='extend') #fill wrap extend
+	#http://docs.astropy.org/en/stable/api/apcvl.convolve.html
+	spc_pst_smt = apcvl.convolve(spc2bsmth[1], grid_krnl)#,boundary='extend') #fill wrap extend
 
 	Wrt_FITS_File(spc_pst_smt,spc_opf_smt)
 
@@ -608,4 +994,6 @@ def get_last_lambda_item(spc_ifn_lastlambdaitem,*args, **kwargs):
 	info = Spectra_x_y(spc_ifn_lastlambdaitem)
 	return info[0][-1]
 ####Fnc_Stk_Spc####
+
+
 

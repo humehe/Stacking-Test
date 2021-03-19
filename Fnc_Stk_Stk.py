@@ -1,41 +1,14 @@
-import math, sys, os, shutil, string, cmath
-import numpy as np
 import bottleneck as bn
-import pandas as pd
+#import astropy
+#from astropy import stats 
+from astropy import table as aptbl
+from astropy import stats as apsts
+#import itertools
+from itertools import chain as itchn
+from itertools import product as itpdc
 
-import astropy
-from astropy.coordinates import SkyCoord
-from astropy import cosmology
-from astropy.cosmology import FlatLambdaCDM
-from astropy.io import ascii
-import astropy
-from astropy import stats 
-from astropy.io import fits
-from astropy import table
-from astropy import convolution
-from numpy import mean,median
-
-from decimal import *
-from progressbar import *               # just a simple progress bar
-from os.path import expanduser
-from itertools import tee, islice, chain, izip
-from termcolor import colored
-from pandas import DataFrame
-
-import scipy
-from scipy import stats
-from scipy.ndimage.filters import gaussian_filter
-from scipy.ndimage.filters import gaussian_filter1d
-from scipy import signal
-from scipy.constants import physical_constants
-import scipy.optimize as opt
-import warnings
-from scipy.optimize import OptimizeWarning
+#from termcolor import colored
 import scipy.integrate as integrate
-from scipy.special import wofz
-
-import logging
-import itertools
 
 from Fnc_Stk_Fts import *
 from Fnc_Stk_Mth import *
@@ -43,11 +16,12 @@ from Fnc_Stk_Spc import *
 from Fnc_Stk_Dir import *
 from Fnc_Stk_Utl import *
 from Fnc_Stk_Tbl import *
+from Fnc_Stk_Plt import *
 
 ####Fnc_Stk_Stk####
 def monotonic(x):
-    dx = np.diff(x)
-    return np.all(dx <= 0) or np.all(dx >= 0)
+	dx = np.diff(x)
+	return np.all(dx <= 0) or np.all(dx >= 0)
 
 def Stk_Fit_Lines(specfile,*args,**kwargs):
 	dest_dir      = kwargs.get('dest_dir',None)
@@ -153,7 +127,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 				bottom 	= (16/25.4)/fysize, 
 				right 	= 1 - (4/25.4)/fxsize, 
 				top 	= 1 - (4/25.4)/fysize)
-			plt.subplots_adjust(hspace=0)#,wspace=0)
+			plt.subplots_adjust(hspace=0)
 
 			#f.suptitle('An overall title', size=20)
 			gs0 = gridspec.GridSpec(1, 1)
@@ -176,21 +150,17 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 			ax110.yaxis.set_tick_params(which='both',labelsize=16,direction='in',color='black',bottom=True,top=True,left=True,right=True)
 			ax110.xaxis.set_tick_params(which='both',labelsize=16,direction='in',color='black',bottom=True,top=True,left=True,right=True)
 
-			minorLocator_x   = plt.MultipleLocator(0.5)
-			majorLocator_x   = plt.MultipleLocator(5)
-			#minorLocator_y   = plt.MultipleLocator(0.1)
-			#majorLocator_y   = plt.MultipleLocator(0.5)
+			minorLocator_x   = plt.MultipleLocator(1)
+			majorLocator_x   = plt.MultipleLocator(10)
 			ax110.xaxis.set_minor_locator(minorLocator_x)
 			ax110.xaxis.set_major_locator(majorLocator_x)
-			#ax110.yaxis.set_minor_locator(minorLocator_y)
-			#ax110.yaxis.set_major_locator(majorLocator_y)
 			plt.tick_params(which='both', width=0.7)
 			plt.tick_params(which='major', length=5)
 			plt.tick_params(which='minor', length=2)
 			ax110.minorticks_on()
 
 			plt.xlabel('$\lambda$',fontsize=16)
-			plt.ylabel('F$_\lambda$ (ergs/sec/cm$^{2}/\AA$)',fontsize=16)
+			plt.ylabel('F$_\lambda$ (ergs/sec/cm$^{2}/\mathrm{\AA}$)',fontsize=16)
 
 			if 'Bg' in specfile:
 				colors = "bgrcmykw"
@@ -214,7 +184,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						L2_0  = Header_Get(org_spc_fle,str(LINES[5][lines])+'_WP_0')        #LINES-2 Wdt-Plt  1GF-IntVal      WIDTH-PLT
 						L7_0  = Header_Get(org_spc_fle,str(LINES[5][lines])+'_CF_0')        #LINES-7 Ctr Fit Bnds  1GF-IntVal CTR-FIT-BNDS
 						L8_0  = Header_Get(org_spc_fle,str(LINES[5][lines])+'_CO_0')        #LINES-8 Ctr Fit Ofst  1GF-IntVal CTR-OFFSET
-						#L10_0 = Header_Get(org_spc_fle,str(LINES[5][lines])+'_AF_0')        #LINES-8 Ctr Fit Ofst  1GF-IntVal LNE_AMP_BNDS
+						#L10_0 = Header_Get(org_spc_fle,str(LINES[5][lines])+'_AF_0')       #LINES-8 Ctr Fit Ofst  1GF-IntVal LNE_AMP_BNDS
 						print
 						print colored('Initial fit variables from fits header!','yellow')
 						print colored('Headers:','yellow')
@@ -226,7 +196,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						#print colored(str(LINES[5][lines])+'_AF_0' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','yellow')
 					except ValueError:
 						print
-						print colored('Headers containing initial fit variables not found!','yellow')
+						print colored('Headers containing initial fit variables NOT found!','yellow')
 						print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 						print colored('Headers:','yellow')
 						print
@@ -243,7 +213,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 					except KeyError:
 						print
-						print colored('Header not found!','yellow')
+						print colored('Header NOT found!','yellow')
 						print colored('Adding Header with default valuee 0.001:','yellow')
 						print colored(str(LINES[5][lines])+'_AF_0' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','yellow')
 						Header_Get_Add(org_spc_fle,str(LINES[5][lines])+'_AF_0',0.001,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' LINES-10 Amp Fit Bnds  1GF-IntVal')
@@ -271,6 +241,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 				print str(LINES[5][lines])+'_AF_0' + ': ' + str(L10_0)
 
 				#####################################################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#####################################################
+
 				########################################################LINE-FIT#######################################################
 				if   'Dbl' in   LINES[3][lines] and fit_fnct=='gauss' and fit_type == 'lmfit' and mke_lne_fit == True and uft_lne_vls == False:
 					fit_typ = 'G'
@@ -324,7 +295,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except ValueError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -355,7 +326,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored('1: ' + LINES[3][lines-2]  + '-' + str(LINES[0][lines-2]),'cyan')							
 							print colored(str(LINES[5][lines-2])+'_AF01' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','cyan')
@@ -410,9 +381,9 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					########################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#########################
 					##################################################CENTRAL GAUSSIAN-1###################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 
 					lmb_max_lim_line_ft = (LINES[0][lines-2]+L8_1) + MSK_NTMS*L1_1
-					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 
 					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+ 20#L2_1 + 10
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
@@ -436,17 +407,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print
-					print specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med)
-					print specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med)
-					print
-					'''
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 				
@@ -460,8 +420,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						try:
 							gmodel_0           = Model(func_1D_Gaussian)
 							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*L7_1), max=X0_f2DG + (X0_f2DG*L7_1))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))
 							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_0             = gmodel_0.make_params()							
 							result_0_1         = gmodel_0.fit(inten_glx[mask_ft],pars_0,
@@ -518,15 +477,14 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-0) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-0) values will NOT be added to the fits headers!','cyan')
 							print
 						#################################################CENTRAL GAUSSIAN-1-0##################################################
 						#################################################CENTRAL GAUSSIAN-1-C##################################################
 						try:
 							gmodel_O           = Model(func_1D_Gaussian_O)
 							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*L7_1), max=X0_f2DG+(X0_f2DG*L7_1))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1) , max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1) , max=A_f2DG  + (A_f2DG*L10_1))
 							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
 							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
 							pars_O             = gmodel_O.make_params()
@@ -560,23 +518,17 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								print
 								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 								print
-								lmb_min_lim_line_ft = (CTRE_G_O_1-L8_1) - MSK_NTMS*L1_1 #IT WAS LINE CTR - LINE OFFSET
+								lmb_min_lim_line_ft = (CTRE_G_O_1-L8_1) - MSK_NTMS*L1_1 
 								lmb_max_lim_line_ft = (CTRE_G_O_1+L8_1) + MSK_NTMS*L1_1
-								#lmb_min_lim_line    = (CTRE_G_O-L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#-20#L2_1 - 10
-								#lmb_max_lim_line    = (CTRE_G_O+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+20#L2_1 + 10
-								#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 								mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
 							else:
 								pass
 							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
+							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 
 							gmodel_C           = Model(func_1D_Gaussian)
 							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*L7_1), max=X0_f2DG+(X0_f2DG*L7_1))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1) , max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1) , max=A_f2DG  + (A_f2DG*L10_1))
 							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_C             = gmodel_C.make_params()
 							result_C_1         = gmodel_C.fit(inten_glx[mask_ft],pars_C,
@@ -720,7 +672,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-C & CTR-1-O) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-C & CTR-1-O) values will NOT be added to the fits headers!','cyan')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -754,66 +706,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('1-CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 						try:
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-2])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_1=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGF0')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGF0')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGF0')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGF0')#,float(EW_0)     ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGF0')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGF0')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGF0')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGF0')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGF0')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGF0')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLO')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLO')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLO')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLO')#,float(EW_O)      ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLO')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_OFSO')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLO')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLO')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLO')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLO')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLO')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_OFSO')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLC')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLC')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SGLC')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLC')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLC')#,float(EW_C)      ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLC')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CLEC')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_ALEC')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SLEC')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLC')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLC')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SGLC')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLC')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLC')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLC')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CLEC')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_ALEC')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SLEC')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Chi2 Reduced 1GF' + str(fit_type))							#quit()
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CHGL')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CRGL')
 					print
 					print colored(str(LINES[0][lines-2])+'-'+str(LINES[3][lines-2])+'-CTR','cyan')
 					print
@@ -828,9 +780,9 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					##################################################CENTRAL GAUSSIAN-1###################################################
 					##################################################CENTRAL GAUSSIAN-2###################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] 
 					lmb_max_lim_line_ft = (LINES[0][lines-1]+L8_2) + MSK_NTMS*LINES[1][lines-1]
-					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#- 20#L2_2 - 10 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#- 20#L2_2 - 10 
 					lmb_max_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+ 20#L2_2 + 10
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
@@ -852,14 +804,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								label='Original Spectrum')
 					elif pre_off_plt == False:
 						pass
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med) 
-					print specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med)
-					'''
+
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 					##################################################CENTRAL GAUSSIAN-2###################################################
@@ -872,8 +817,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						try:
 							gmodel_0           = Model(func_1D_Gaussian)
 							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG+(X0_f2DG*L7_2))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))
 							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_0             = gmodel_0.make_params()							
 							result_0_2         = gmodel_0.fit(inten_glx[mask_ft],pars_0,
@@ -930,15 +874,14 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-0) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-0) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-2-0##################################################
 						#################################################CENTRAL GAUSSIAN-2-C##################################################
 						try:
 							gmodel_O           = Model(func_1D_Gaussian_O)
 							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG  , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG + (X0_f2DG*L7_2))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))
 							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
 							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
 							pars_O             = gmodel_O.make_params()
@@ -972,7 +915,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								print
 								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 								print
-								lmb_min_lim_line_ft = (CTRE_G_O_2-L8_2) - MSK_NTMS*LINES[1][lines-1] #IT WAS LINE CTR - LINE OFFSET
+								lmb_min_lim_line_ft = (CTRE_G_O_2-L8_2) - MSK_NTMS*LINES[1][lines-1] 
 								lmb_max_lim_line_ft = (CTRE_G_O_2+L8_2) + MSK_NTMS*LINES[1][lines-1]
 								#lmb_min_lim_line    = (CTRE_G_O-L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#-20#L2_2 - 10
 								#lmb_max_lim_line    = (CTRE_G_O+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+20#L2_2 + 10
@@ -981,14 +924,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							else:
 								pass
 							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
+							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 
 							gmodel_C           = Model(func_1D_Gaussian)
 							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*(X0_f2DG*L7_2)), max=X0_f2DG + (X0_f2DG*(X0_f2DG*L7_2)))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG *(A_f2DG*L10_2)), max=A_f2DG  + (A_f2DG*(A_f2DG*L10_2)))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG *(A_f2DG*L10_2)), max=A_f2DG  + (A_f2DG*(A_f2DG*L10_2)))
 							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_C             = gmodel_C.make_params()
 							result_C_2         = gmodel_C.fit(inten_glx[mask_ft],pars_C,
@@ -1135,7 +1075,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-C & CTR_O) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-C & CTR_O) values will NOT be added to the fits headers!','magenta')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -1169,66 +1109,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('0 CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 						try:
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-1])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_2=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGF0')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGF0')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGF0')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGF0')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGF0')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGF0')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGF0')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGF0')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGF0')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGF0')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLO')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLO')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLO')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLO')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLO')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_OFSO')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLO')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLO')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLO')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLO')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLO')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_OFSO')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLC')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLC')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SGLC')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLC')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLC')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLC')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CLEC')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_ALEC')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SLEC')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLC')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLC')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SGLC')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLC')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLC')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLC')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CLEC')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_ALEC')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SLEC')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CHGL')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CRGL')
 					print
 					print colored(str(LINES[0][lines-1])+'-'+str(LINES[3][lines-1])+'-CTR','magenta')
 					print
@@ -1245,13 +1185,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					###############################################COMPUTING TOTAL AREA###############################################
 					print colored('Computing Flux Area','yellow')
 					###############################################COMPUTING TOTAL AREA###############################################
-					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')
+					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')
+					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')
 
-					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')
+					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')
+					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')
 
 					print
 					print colored('Computing Areas using info from fits headers.','yellow')
@@ -1307,7 +1247,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_EGM1',float(EWE_C)   ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  C1-C2 Crct' + str(fit_type))
 					else:
 						print
-						print colored('The Areas values will not be updated to the fits headers!','magenta')
+						print colored('The Areas values will NOT be updated to the fits headers!','magenta')
 						print
 					#############################################ADDING AREA TO FTIS HEADER#############################################
 				elif 'Dbl' in LINES[3][lines] and fit_fnct=='gaussM' and fit_type == 'lmfit' and mke_lne_fit == True and uft_lne_vls == False:
@@ -1362,7 +1302,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -1425,7 +1365,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored('1: ' + LINES[3][lines]  + '-' + str(LINES[0][lines]),'cyan')							
 							print colored(str(LINES[5][lines])+'_AM01' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','cyan')
@@ -1439,11 +1379,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						################FOR CASES WHERE KLINE WIIDHT ==0################
 						if L1_1  == 0:
-							L1_1  = 1#LINES[1][lines]
+							L1_1  = 1
 						else:
 							pass
 						if L1_2  == 0:
-							L1_2  = 1#LINES[1][lines]
+							L1_2  = 1
 						else:
 							pass
 						################FOR CASES WHERE KLINE WIIDHT ==0################
@@ -1479,9 +1419,9 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored(str(LINES[5][lines-1])+'_AF02' + ': ' + str(L10_2),'magenta')
 					print
 					#####################################################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#####################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 
 					lmb_max_lim_line_ft = (LINES[0][lines-2]+L8_1) + MSK_NTMS*L1_1
-					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 
 					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+ 20#L2_1 + 10
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
@@ -1505,17 +1445,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print
-					print specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med)
-					print specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med)
-					print
-					'''
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 				
@@ -1529,8 +1458,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						try:
 							gmodel_0           = Model(func_1D_Gaussian)
 							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*L7_1), max=X0_f2DG + (X0_f2DG*L7_1))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))
 							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_0             = gmodel_0.make_params()							
 							result_0_1         = gmodel_0.fit(inten_glx[mask_ft],pars_0,
@@ -1587,15 +1515,14 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-0) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-0) values will NOT be added to the fits headers!','cyan')
 							print
 						#################################################CENTRAL GAUSSIAN-1-0##################################################
 						#################################################CENTRAL GAUSSIAN-1-C##################################################
 						try:
 							gmodel_O           = Model(func_1D_Gaussian_O)
 							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG  , min=X0_f2DG - (X0_f2DG*L7_1), max=X0_f2DG + (X0_f2DG*L7_1))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))
 							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
 							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
 							pars_O             = gmodel_O.make_params()
@@ -1629,22 +1556,16 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								print
 								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 								print
-								lmb_min_lim_line_ft = (CTRE_G_O_1-L8_1) - MSK_NTMS*L1_1 #IT WAS LINE CTR - LINE OFFSET
+								lmb_min_lim_line_ft = (CTRE_G_O_1-L8_1) - MSK_NTMS*L1_1 
 								lmb_max_lim_line_ft = (CTRE_G_O_1+L8_1) + MSK_NTMS*L1_1
-								#lmb_min_lim_line    = (CTRE_G_O-L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#-20#L2_1 - 10
-								#lmb_max_lim_line    = (CTRE_G_O+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+20#L2_1 + 10
-								#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 								mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
 							else:
 								pass
 							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
+							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 
 							gmodel_C           = Model(func_1D_Gaussian)
 							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG, min=X0_f2DG - (X0_f2DG*(X0_f2DG*L7_1)), max=X0_f2DG + (X0_f2DG*(X0_f2DG*L7_1)))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
 							gmodel_C.set_param_hint('A'    , value=A_f2DG , min=A_f2DG  - (A_f2DG*(A_f2DG*L10_1)) , max=A_f2DG  + (A_f2DG*(A_f2DG*L10_1)))
 							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_C             = gmodel_C.make_params()
@@ -1790,7 +1711,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-C & CTR-1-O) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-C & CTR-1-O) values will NOT be added to the fits headers!','cyan')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -1824,66 +1745,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('1-CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 						try:
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM01')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM01')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM01')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM01')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM01')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO1')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO1')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO1')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO1')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO1')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO1')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC1')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC1')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC1')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM1')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM1')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-2])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_1=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')
 					print
 					print colored(str(LINES[0][lines-2])+'-'+str(LINES[3][lines-2])+'-CTR','cyan')
 					print colored('From: '+str(LINES[3][lines])+'-CTR','cyan')
@@ -1898,10 +1819,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored(str(CTRE_G_C_1)+', '+str(AMPL_G_C_1)+', '+str(SGMA_G_C_1),'cyan')
 					print
 					##################################################CENTRAL GAUSSIAN-1###################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] 
 					lmb_max_lim_line_ft = (LINES[0][lines-1]+L8_2) + MSK_NTMS*LINES[1][lines-1]
-					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#- 20#L2_2 - 10 ##IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+ 20#L2_2 + 10
+					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2
+					lmb_max_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
@@ -1923,15 +1844,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med)
-					print specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med)
-					'''
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 					##################################################CENTRAL GAUSSIAN-2###################################################
@@ -1944,7 +1856,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						try:
 							gmodel_0           = Model(func_1D_Gaussian)
 							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG + (X0_f2DG*L7_2))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
 							gmodel_0.set_param_hint('A'    , value=A_f2DG  , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))
 							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_0             = gmodel_0.make_params()							
@@ -2002,14 +1913,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-2-0) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-2-0) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-2-0##################################################
 						#################################################CENTRAL GAUSSIAN-2-C##################################################
 						try:
 							gmodel_O           = Model(func_1D_Gaussian_O)
 							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG + (X0_f2DG*L7_2))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
 							gmodel_O.set_param_hint('A'     , value=A_f2DG  , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))
 							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
 							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
@@ -2044,22 +1954,16 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								print
 								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 								print
-								lmb_min_lim_line_ft = (CTRE_G_O_2-L8_2) - MSK_NTMS*LINES[1][lines-1] #IT WAS LINE CTR - LINE OFFSET
+								lmb_min_lim_line_ft = (CTRE_G_O_2-L8_2) - MSK_NTMS*LINES[1][lines-1] 
 								lmb_max_lim_line_ft = (CTRE_G_O_2+L8_2) + MSK_NTMS*LINES[1][lines-1]
-								#lmb_min_lim_line    = (CTRE_G_O-L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#-20#L2_2 - 10
-								#lmb_max_lim_line    = (CTRE_G_O+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+20#L2_2 + 10
-								#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 								mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
 							else:
 								pass
 							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
+							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 
 							gmodel_C           = Model(func_1D_Gaussian)
 							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG, min=X0_f2DG - (X0_f2DG*(X0_f2DG*L7_2)), max=X0_f2DG + (X0_f2DG*(X0_f2DG*L7_2)))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
 							gmodel_C.set_param_hint('A'    , value=A_f2DG , min=A_f2DG  - (A_f2DG*(A_f2DG*L10_2)) , max=A_f2DG  + (A_f2DG*(A_f2DG*L10_2)))
 							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_C             = gmodel_C.make_params()
@@ -2206,7 +2110,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-2-C & CTR-2-O) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-2-C & CTR-2-O) values will NOT be added to the fits headers!','magenta')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -2242,66 +2146,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored(LINES[3][lines],'yellow')
 						print
 						try:
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM02')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM02')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM02')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM02')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM02')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO2')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO2')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO2')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO2')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO2')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO2')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC2')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC2')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC2')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM2')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM2')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-1])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_2=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')
 					print
 					print colored(str(LINES[0][lines-1])+'-'+str(LINES[3][lines-1])+'-CTR','magenta')
 					print colored('From '+str(LINES[3][lines])+'-CTR','cyan')
@@ -2324,7 +2228,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 							mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -2365,8 +2269,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						X0_f2DG_indx_PRE       = np.where(inten_glx[mask_ft_pre]==(max(inten_glx[mask_ft_pre])))[0]
 						x_a = lambda_glx[mask_ft_pre][X0_f2DG_indx_PRE]
 						y_a = inten_glx[mask_ft_pre][X0_f2DG_indx_PRE]
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET -
-	 					try:
+						try:
 							print
 							print colored('1-Fitting gaussian before line','cyan')
 							print
@@ -2387,8 +2290,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							
 							gmodel_C_PRE           = Model(func_1D_Gaussian_Emm)
 							gmodel_C_PRE.set_param_hint('X_0'  , value=X0_f2DG_PRE , min=X0_f2DG_PRE-(X0_f2DG_PRE*LINES[7][lines]), max=X0_f2DG_PRE+(X0_f2DG_PRE*LINES[7][lines]))
-							#gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG_PRE  , min=A_f2DG_PRE -(A_f2DG_PRE*LINES[10][lines]), max=A_f2DG_PRE +(A_f2DG_PRE*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG_PRE  , min=A_f2DG_PRE -(A_f2DG_PRE*LINES[10][lines]), max=A_f2DG_PRE +(A_f2DG_PRE*LINES[10][lines]))
 							gmodel_C_PRE.set_param_hint('SIGMA', value=SIGMA_f2DG_PRE)
 							pars_C_PRE             = gmodel_C_PRE.make_params()
 							result_C_PRE           = gmodel_C_PRE.fit(inten_glx[mask_ft_pre],pars_C_PRE,
@@ -2447,8 +2349,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							W_C_PR1    = integrate.quad(lambda x: AMPL_G_C_PRE*np.exp(-((x)**2)/(2*SGMA_G_C_PRE**2)), x_a, np.inf)
 							EW_C_PR1   = np.round(abs(np.asarray(W_C_PR1[0])),10)
 							EWE_C_PR1  = np.round(abs(np.asarray(W_C_PR1[1])),10)
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET +
-						#except (RuntimeError,ValueError,TypeError):
 						except (RuntimeError,ValueError,TypeError):
 							print colored('RuntimeError','cyan')
 							popt_C_PRE, pcov_C_PRE  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
@@ -2495,7 +2395,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (PRE) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PRE) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -2510,33 +2410,30 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print colored('Initial Guess Values for line Fitting will NOT be recorded!','yellow')
 							print
 							pass
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET -						
 					elif fix_pre_gau == True or (fix_pre_gau == False and pre_shf_lim<=0):
 						try:
 							print
 							print colored('1 PRE-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							#chisqr_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHML')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							#redchi_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRML')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
-							CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM1')#,float(FWHM_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM1')#,float(EW_C_PRE)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM1')#,float(EWE_C_PRE)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME1')#,float(CTRE_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME1')#,float(AMPL_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME1')#,float(SGMA_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')
+							AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')
+							SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')
+							FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM1')
+							EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM1')
+							EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM1')
+							CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME1')
+							AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME1')
+							SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME1')
 							
-							x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM1')#,float(x_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR X1 COO')
-							y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM1')#,float(y_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR Y1 COO')
+							x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM1')
+							y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM1')
 							
-							pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM1')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM1')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM1')
+							pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM1')
 							
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!' ,'yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!' ,'yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CGM1','yellow')
 							print colored ('Gotta Fit first before fixing a component (PRE)!','yellow')
@@ -2576,7 +2473,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 							mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -2619,12 +2516,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						y_b = inten_glx[mask_ft_pst][X0_f2DG_indx_PST]
 						try:
 							print colored('2-Fitting gaussian after line','cyan')
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET
 							X0_f2DG_indx_PST       = np.where(inten_glx[mask_ft_pst]==(max(inten_glx[mask_ft_pst])))[0]
 							A_f2DG_PST             = (max(inten_glx[mask_ft_pst])-1)
 							X0_f2DG_PST            = LINES[0][lines] + pst_shf_ctr#
 							SIGMA_f2DG_PST         = SIGMA_f2DG/2
-							initial_guess_C_PST    = (X0_f2DG_PST,A_f2DG_PST,SIGMA_f2DG_PST)#,max(inten_glx[mask_ft_pst])-1)
+							initial_guess_C_PST    = (X0_f2DG_PST,A_f2DG_PST,SIGMA_f2DG_PST)
 							
 							print
 							print colored('Initial Guess Values PST : ','cyan')
@@ -2633,7 +2529,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							
 							gmodel_C_PST           = Model(func_1D_Gaussian_Emm)
 							gmodel_C_PST.set_param_hint('X_0'  , value=X0_f2DG_PST , min=X0_f2DG_PST-(X0_f2DG_PST*LINES[7][lines]), max=X0_f2DG_PST+(X0_f2DG_PST*LINES[7][lines]))
-							#gmodel_C_PST.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
 							gmodel_C_PST.set_param_hint('A'    , value=A_f2DG_PST  , min=A_f2DG_PST -(A_f2DG_PST*LINES[10][lines]), max=A_f2DG_PST +(A_f2DG_PST*LINES[10][lines]))#min=A_f2DG_PST-0.001, max=A_f2DG_PST)
 							gmodel_C_PST.set_param_hint('SIGMA', value=SIGMA_f2DG_PST)
 							pars_C_PST             = gmodel_C_PST.make_params()
@@ -2692,7 +2587,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							W_C_PS2    = integrate.quad(lambda x: AMPL_G_C_PST*np.exp(-((x)**2)/(2*SGMA_G_C_PST**2)), -np.inf, x_b)
 							EW_C_PS2   = np.round(abs(np.asarray(W_C_PS2[0])),10)
 							EWE_C_PS2  = np.round(abs(np.asarray(W_C_PS2[1])),10)
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET +
 						except (RuntimeError,ValueError,TypeError):
 							print colored('RuntimeError','cyan')
 							popt_C_PST, pcov_C_PST  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
@@ -2734,7 +2628,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							Header_Add(specfile_glx,str(LINES[5][lines])+'_YAM2',float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
 						else:
 							print
-							print colored('The fit (PST) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PST) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -2749,30 +2643,29 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print colored('Initial Guess Values for line Fitting will NOT be recorded!','yellow')
 							print
 							pass
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET -
 					elif fix_pst_gau == True or (fix_pst_gau == False and pst_shf_lim<=0):
 						try:
 							print
 							print colored('2 PST-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM2')#,float(FWHM_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM2')#,float(EW_C_PST)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM2')#,float(EWE_C_PST)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')#,float(CTRE_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')#,float(AMPL_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')#,float(SGMA_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')
+							AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')
+							SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')
+							FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM2')
+							EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM2')
+							EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM2')
+							CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')
+							AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')
+							SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')
 							
-							x_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM2')#,float(x_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-							y_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM2')#,float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
+							x_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM2')
+							y_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM2')
 							
-							pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM2')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM2')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM2')
+							pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM2')
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -2814,7 +2707,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								print
 								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 								print
-								lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+								lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 								lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 								mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 								mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -2862,12 +2755,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							y_c = inten_glx[mask_ft_mdl][X0_f2DG_indx_MDL]
 							try:
 								print colored('3-Fitting gaussian between lines','green')
-								#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET
 								X0_f2DG_indx_MDL       = np.where(inten_glx[mask_ft_mdl]==(max(inten_glx[mask_ft_mdl])))[0]
 								A_f2DG_MDL             = (max(inten_glx[mask_ft_mdl])-1)
-								X0_f2DG_MDL            = LINES[0][lines] + mdl_shf_ctr#
+								X0_f2DG_MDL            = LINES[0][lines] + mdl_shf_ctr
 								SIGMA_f2DG_MDL         = SIGMA_f2DG/2
-								initial_guess_C_MDL    = (X0_f2DG_MDL,A_f2DG_MDL,SIGMA_f2DG_MDL)#,max(inten_glx[mask_ft_mdl])-1)
+								initial_guess_C_MDL    = (X0_f2DG_MDL,A_f2DG_MDL,SIGMA_f2DG_MDL)
 								
 								print
 								print colored('Initial Guess Values MDL : ','green')
@@ -2876,7 +2768,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								
 								gmodel_C_MDL           = Model(func_1D_Gaussian_Emm)
 								gmodel_C_MDL.set_param_hint('X_0'  , value=X0_f2DG_MDL , min=X0_f2DG_MDL-(X0_f2DG_MDL*LINES[7][lines]), max=X0_f2DG_MDL+(X0_f2DG_MDL*LINES[7][lines]))
-								#gmodel_C_MDL.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
 								gmodel_C_MDL.set_param_hint('A'    , value=A_f2DG_MDL  , min=A_f2DG_MDL -(A_f2DG_MDL*LINES[10][lines]), max=A_f2DG_MDL +(A_f2DG_MDL*LINES[10][lines]))#min=A_f2DG_MDL-0.001, max=A_f2DG_MDL)
 								gmodel_C_MDL.set_param_hint('SIGMA', value=SIGMA_f2DG_MDL)
 								pars_C_MDL             = gmodel_C_MDL.make_params()
@@ -2935,7 +2826,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								W_C_PS3    = integrate.quad(lambda x: AMPL_G_C_MDL*np.exp(-((x)**2)/(2*SGMA_G_C_MDL**2)), -np.inf, x_c)
 								EW_C_PS3   = np.round(abs(np.asarray(W_C_PS3[0])),10)
 								EWE_C_PS3  = np.round(abs(np.asarray(W_C_PS3[1])),10)
-								#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET +
 							except (RuntimeError,ValueError,TypeError):
 								print colored('RuntimeError','green')
 								popt_C_MDL, pcov_C_MDL  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
@@ -2998,7 +2888,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							Header_Add(specfile_glx,str(LINES[5][lines])+'_YAM3',float(y_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' MDL GAU-LNR Y3 COO')
 						else:
 							print
-							print colored('The fit (MDL) values will not be added to the fits headers!','green')
+							print colored('The fit (MDL) values will NOT be added to the fits headers!','green')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -3013,32 +2903,31 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print colored('Initial Guess Values for line Fitting will NOT be recorded!','yellow')
 							print
 							pass
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET -
-					elif fix_mdl_gau == True:# or (fix_mdl_gau == False and mdl_shf_lim<=0):
+					elif fix_mdl_gau == True:
 						try:
 							print
 							print colored('3- MDL-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							CTRE_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')#,float(CTRE_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')#,float(AMPL_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')#,float(SGMA_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM3')#,float(FWHM_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_MDL       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM3')#,float(EW_C_MDL)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_MDL      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM3')#,float(EWE_C_MDL)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')#,float(CTRE_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')#,float(AMPL_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')#,float(SGMA_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')
+							AMPL_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')
+							SGMA_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')
+							FWHM_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM3')
+							EW_C_MDL       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM3')
+							EWE_C_MDL      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM3')
+							CTRE_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')
+							AMPL_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')
+							SGMA_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')
 							
-							x_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM3')#,float(x_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-							y_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM3')#,float(y_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
-							EW_C_PS3       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WRM3')#,float(EW_C_PS3),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PST' + str(fit_type))
-							EWE_C_PS3      = Header_Get(specfile_glx,str(LINES[5][lines])+'_ERM3')#,float(EWE_C_PS3),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
+							x_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM3')
+							y_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM3')
+							EW_C_PS3       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WRM3')
+							EWE_C_PS3      = Header_Get(specfile_glx,str(LINES[5][lines])+'_ERM3')
 							
-							mdl_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM3')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							mdl_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM3')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							mdl_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM3')
+							mdl_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM3')
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -3088,25 +2977,25 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					#############################################COMPUTING LINEAR AREA###################################################
 					###############################################COMPUTING TOTAL AREA###############################################
-					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')
+					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')
+					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')
 
-					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')
+					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')
+					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')
 
-					CTRE_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')
+					AMPL_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')
+					SGMA_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')
 
-					CTRE_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')
+					AMPL_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')
+					SGMA_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')
 
-					CTRE_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')#,float(CTRE_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')#,float(AMPL_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')
+					AMPL_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')
+					SGMA_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')
 
 					print
 					print colored('Computing Areas using info from fits headers.','yellow')
@@ -3204,7 +3093,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 
 					else:
 						print
-						print colored('The Areas values will not be updated to the fits headers!','magenta')
+						print colored('The Areas values will NOT be updated to the fits headers!','magenta')
 						print
 					#############################################ADDING AREA TO FTIS HEADER#############################################
 					#################################DEFINE AREA FOR LATER ON SUBSTRACT OFFSET FOR PLOTING###############################
@@ -3213,7 +3102,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 						print
-						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 						lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 						mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 						mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -3272,10 +3161,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					from lmfit import Model
 
-					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines]  #IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines]  
 					lmb_max_lim_line_ft = (LINES[0][lines]+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
-					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#- 20#LINES[2][lines] - 10  #IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+ 20#LINES[2][lines] + 10
+					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines] 
+					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
@@ -3295,22 +3184,12 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med)
-					print specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med)
-					'''
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 					try:
 						gmodel_0           = Model(func_1D_Gaussian)
 						gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-						#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+						gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))
 						gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
 						pars_0             = gmodel_0.make_params()							
 						result_0           = gmodel_0.fit(inten_glx[mask_ft],pars_0,
@@ -3365,13 +3244,12 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_EGF0',float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
 					else:
 						print
-						print colored('The fit values will not be added to the fits headers!','magenta')
+						print colored('The fit values will NOT be added to the fits headers!','magenta')
 						print
 					try:
 						gmodel_O           = Model(func_1D_Gaussian_O)
 						gmodel_O.set_param_hint('X_0'   , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-						#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+						gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))
 						gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
 						gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
 						pars_O             = gmodel_O.make_params()
@@ -3405,7 +3283,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_O-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_O-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_O+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							#lmb_min_lim_line    = (CTRE_G_O-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#-20#LINES[2][lines] - 10
 							#lmb_max_lim_line    = (CTRE_G_O+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+20#LINES[2][lines] + 10
@@ -3415,14 +3293,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							pass
 						#####################################################################################################################
 
-						inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O #MENOS OFFSET
-						A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-						initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
+						initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 
 						gmodel_C           = Model(func_1D_Gaussian)
 						gmodel_C.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-						#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+						gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))
 						gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
 						pars_C             = gmodel_C.make_params()
 						result_C           = gmodel_C.fit(inten_glx[mask_ft],pars_C,
@@ -3574,13 +3449,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_CRGL',float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
 					else:
 						print
-						print colored('The fit values will not be added to the fits headers!','magenta')
+						print colored('The fit values will NOT be added to the fits headers!','magenta')
 						print
 						pass
 
 					###############################################COMPUTING TOTAL AREA###############################################
-					Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLC')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type)
-					Header_Get(specfile_glx,str(LINES[5][lines])+'_SGLC')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type)
+					Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLC')
+					Header_Get(specfile_glx,str(LINES[5][lines])+'_SGLC')
 
 					print colored('Computing Flux Area','yellow')
 					print
@@ -3608,7 +3483,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_WGLC',float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_EGLC',float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
 						print
-						print colored('The LINEAR AND TOTAL Areas values will not be updated to the fits headers!','magenta')
+						print colored('The LINEAR AND TOTAL Areas values will NOT be updated to the fits headers!','magenta')
 						print
 					else:
 						pass
@@ -3630,7 +3505,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							L2_0  = Header_Get(org_spc_fle,str(LINES[5][lines])+'_WP_0')        #LINES-2 Wdt-Plt  1GF-IntVal      WIDTH-PLT
 							L7_0  = Header_Get(org_spc_fle,str(LINES[5][lines])+'_CF_0')        #LINES-7 Ctr Fit Bnds  1GF-IntVal CTR-FIT-BNDS
 							L8_0  = Header_Get(org_spc_fle,str(LINES[5][lines])+'_CO_0')        #LINES-8 Ctr Fit Ofst  1GF-IntVal CTR-OFFSET
-							L10_0 = Header_Get(org_spc_fle,str(LINES[5][lines])+'_AF_0')       #LINES-8 Ctr Fit Ofst  1GF-IntVal LNE_AMP_BNDS
+							L10_0 = Header_Get(org_spc_fle,str(LINES[5][lines])+'_AF_0')        #LINES-8 Ctr Fit Ofst  1GF-IntVal LNE_AMP_BNDS
 							print
 							print colored('Initial fit variables from fits header!','yellow')
 							print colored('Headers:','yellow')
@@ -3644,7 +3519,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except ValueError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -3663,7 +3538,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored(str(LINES[5][lines])+'_AF_0' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','yellow')
 							Header_Get_Add(org_spc_fle,str(LINES[5][lines])+'_AF_0',0.001,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' LINES-10 Amp Fit Bnds  1GF-IntVal')
@@ -3694,10 +3569,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 
 					#####################################################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#####################################################
 
-					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 					lmb_max_lim_line_ft = (LINES[0][lines]+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
-					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#- 20#LINES[2][lines] - 10 ##IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+ 20#LINES[2][lines] + 10
+					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]
+					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
@@ -3717,15 +3592,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med) 
-					print specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med)
-					''' 
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 				
@@ -3738,8 +3604,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						try:
 							gmodel_0           = Model(func_1D_Gaussian)
 							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))
 							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_0             = gmodel_0.make_params()							
 							result_0           = gmodel_0.fit(inten_glx[mask_ft],pars_0,
@@ -3796,15 +3661,14 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-0) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-0) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-0##################################################
 						#################################################CENTRAL GAUSSIAN-C##################################################
 						try:
 							gmodel_O           = Model(func_1D_Gaussian_O)
 							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))
 							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
 							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
 							pars_O             = gmodel_O.make_params()
@@ -3838,7 +3702,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								print
 								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 								print
-								lmb_min_lim_line_ft = (CTRE_G_O-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+								lmb_min_lim_line_ft = (CTRE_G_O-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 								lmb_max_lim_line_ft = (CTRE_G_O+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 								#lmb_min_lim_line    = (CTRE_G_O-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#-20#LINES[2][lines] - 10
 								#lmb_max_lim_line    = (CTRE_G_O+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+20#LINES[2][lines] + 10
@@ -3849,14 +3713,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							#####################################################################################################################
 
 							
-							A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
+							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 
 							gmodel_C           = Model(func_1D_Gaussian)
 							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))
 							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
 							pars_C             = gmodel_C.make_params()
 							result_C           = gmodel_C.fit(inten_glx[mask_ft],pars_C,
@@ -4004,7 +3865,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-C & CTR_O) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-C & CTR_O) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-C##################################################					
 					elif fix_ctr_gau == True:
@@ -4012,66 +3873,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('0 CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 						try:
-							CTRE_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF0M')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF0M')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF0M')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF0M')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF0M')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF0M')
+							AMPL_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF0M')
+							FWHM_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF0M')
+							EW_0        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF0M')
+							EWE_0       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF0M')
 
-							CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLOM')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALOM')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLOM')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLOM')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELOM')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFOM')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLOM')
+							AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALOM')
+							FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLOM')
+							EW_O        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLOM')
+							EWE_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELOM')
+							OFST_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFOM')
 
-							CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLCM')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLCM')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELCM')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CECM')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AECM')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SECM')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')
+							AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')
+							SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')
+							FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLCM')
+							EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLCM')
+							EWE_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELCM')
+							CTRE_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CECM')
+							AMPL_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AECM')
+							SGMA_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SECM')
 
-							chisqr_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHLM')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRLM')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHLM')
+							redchi_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRLM')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGF0')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGF0')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGF0')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGF0')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGF0')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGF0')
+							AMPL_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGF0')
+							FWHM_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGF0')
+							EW_0        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGF0')
+							EWE_0       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGF0')
 
-							CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGLO')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLO')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGLO')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGLO')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGLO')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFSO')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGLO')
+							AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLO')
+							FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGLO')
+							EW_O        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGLO')
+							EWE_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGLO')
+							OFST_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFSO')
 
-							CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGLC')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLC')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGLC')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGLC')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGLC')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGLC')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLEC')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALEC')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLEC')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGLC')
+							AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLC')
+							SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGLC')
+							FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGLC')
+							EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGLC')
+							EWE_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGLC')
+							CTRE_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLEC')
+							AMPL_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALEC')
+							SGMA_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLEC')
 
-							chisqr_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))							#quit()
+							chisqr_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHGL')
+							redchi_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRGL')
 					print
 					print colored(str(LINES[0][lines])+'-'+str(LINES[3][lines])+'-CTR','green')
 					print
@@ -4092,7 +3953,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 							mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -4126,8 +3987,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						X0_f2DG_indx_PRE       = np.where(inten_glx[mask_ft_pre]==(max(inten_glx[mask_ft_pre])))[0]
 						x_a = lambda_glx[mask_ft_pre][X0_f2DG_indx_PRE]
 						y_a = inten_glx[mask_ft_pre][X0_f2DG_indx_PRE]
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET -
-	 					try:
+						try:
 							print
 							print colored('1-Fitting gaussian before line','cyan')
 							print
@@ -4147,8 +4007,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 
 							gmodel_C_PRE           = Model(func_1D_Gaussian_Emm)
 							gmodel_C_PRE.set_param_hint('X_0'  , value=X0_f2DG_PRE , min=X0_f2DG_PRE-(X0_f2DG_PRE*LINES[7][lines]), max=X0_f2DG_PRE+(X0_f2DG_PRE*LINES[7][lines]))
-							#gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG_PRE  , min=A_f2DG_PRE -(A_f2DG_PRE*LINES[10][lines]), max=A_f2DG_PRE +(A_f2DG_PRE*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
+							gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG_PRE  , min=A_f2DG_PRE -(A_f2DG_PRE*LINES[10][lines]), max=A_f2DG_PRE +(A_f2DG_PRE*LINES[10][lines]))
 							gmodel_C_PRE.set_param_hint('SIGMA', value=SIGMA_f2DG_PRE)
 							pars_C_PRE             = gmodel_C_PRE.make_params()
 							result_C_PRE           = gmodel_C_PRE.fit(inten_glx[mask_ft_pre],pars_C_PRE,
@@ -4258,7 +4117,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (PRE) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PRE) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -4273,35 +4132,34 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print colored('Initial Guess Values for line Fitting will NOT be recorded!','yellow')
 							print
 							pass
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET -						
 					elif fix_pre_gau == True:
 						try:
 							print
 							print colored('1 PRE-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							chisqr_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
-							CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL1')#,float(FWHM_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL1')#,float(EW_C_PRE)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL1')#,float(EWE_C_PRE)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE1')#,float(CTRE_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE1')#,float(AMPL_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE1')#,float(SGMA_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							chisqr_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHGL')
+							redchi_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRGL')
+							CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')
+							AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')
+							SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')
+							FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL1')
+							EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL1')
+							EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL1')
+							CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE1')
+							AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE1')
+							SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE1')
 
-							x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA1')#,float(x_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR X1 COO')
-							y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA1')#,float(y_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR Y1 COO')
-							EW_C_PR1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPR1')#,float(EW_C_PR1),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PRE' + str(fit_type))
-							EWE_C_PR1      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPR1')#,float(EWE_C_PR1),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PRE' + str(fit_type))
+							x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA1')
+							y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA1')
+							EW_C_PR1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPR1')
+							EWE_C_PR1      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPR1')
 
-							pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GS1')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GC1')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GS1')
+							pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GC1')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!' ,'yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!' ,'yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (PRE)!','yellow')
@@ -4342,7 +4200,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 							mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -4378,12 +4236,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						y_b = inten_glx[mask_ft_pst][X0_f2DG_indx_PST]
 						try:
 							print colored('2-Fitting gaussian after line','cyan')
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET
 							X0_f2DG_indx_PST       = np.where(inten_glx[mask_ft_pst]==(max(inten_glx[mask_ft_pst])))[0]
 							A_f2DG_PST             = (max(inten_glx[mask_ft_pst])-1)
-							X0_f2DG_PST            = X0_f2DG+pst_shf_ctr#+2.5#lambda_glx[mask_ft_pst][X0_f2DG_indx_PST]#X0_f2DG+pst_shf_lim#+SIGMA_f2DG/2#pst_shf_lim#lambda_glx[mask_ft_pst][X0_f2DG_indx_PST]#X0_f2DG+20
+							X0_f2DG_PST            = X0_f2DG+pst_shf_ctr
 							SIGMA_f2DG_PST         = SIGMA_f2DG/2
-							initial_guess_C_PST    = (X0_f2DG_PST,A_f2DG_PST,SIGMA_f2DG_PST)#,max(inten_glx[mask_ft_pst])-1)
+							initial_guess_C_PST    = (X0_f2DG_PST,A_f2DG_PST,SIGMA_f2DG_PST)
 
 							print
 							print colored('Initial Guess Values PST : ','cyan')
@@ -4392,7 +4249,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 
 							gmodel_C_PST           = Model(func_1D_Gaussian_Emm)
 							gmodel_C_PST.set_param_hint('X_0'  , value=X0_f2DG_PST , min=X0_f2DG_PST-(X0_f2DG_PST*LINES[7][lines]), max=X0_f2DG_PST+(X0_f2DG_PST*LINES[7][lines]))
-							#gmodel_C_PST.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
 							gmodel_C_PST.set_param_hint('A'    , value=A_f2DG_PST  , min=A_f2DG_PST -(A_f2DG_PST*LINES[10][lines]), max=A_f2DG_PST +(A_f2DG_PST*LINES[10][lines]))#min=A_f2DG_PST-0.001, max=A_f2DG_PST)
 							gmodel_C_PST.set_param_hint('SIGMA', value=SIGMA_f2DG_PST)
 							pars_C_PST             = gmodel_C_PST.make_params()
@@ -4451,7 +4307,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							W_C_PS2    = integrate.quad(lambda x: AMPL_G_C_PST*np.exp(-((x)**2)/(2*SGMA_G_C_PST**2)), -np.inf, x_b)
 							EW_C_PS2   = np.round(abs(np.asarray(W_C_PS2[0])),10)
 							EWE_C_PS2  = np.round(abs(np.asarray(W_C_PS2[1])),10)
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET +
 						except (RuntimeError,ValueError,TypeError):
 							print colored('RuntimeError','cyan')
 							popt_C_PST, pcov_C_PST  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
@@ -4499,7 +4354,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							#Header_Add(specfile_glx,str(LINES[5][lines])+'_EPS2',float(EWE_C_PS2),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
 						else:
 							print
-							print colored('The fit (PST) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PST) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -4520,26 +4375,26 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('2 PST-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL2')#,float(FWHM_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL2')#,float(EW_C_PST)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL2')#,float(EWE_C_PST)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE2')#,float(CTRE_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE2')#,float(AMPL_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE2')#,float(SGMA_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')
+							AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')
+							SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')
+							FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL2')
+							EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL2')
+							EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL2')
+							CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE2')
+							AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE2')
+							SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE2')
 
-							x_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA2')#,float(x_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-							y_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA2')#,float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
-							EW_C_PS2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPS2')#,float(EW_C_PS2),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PST' + str(fit_type))
-							EWE_C_PS2   = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPS2')#,float(EWE_C_PS2),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
+							x_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA2')
+							y_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA2')
+							EW_C_PS2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPS2')
+							EWE_C_PS2   = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPS2')
 
-							pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GS2')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GC2')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GS2')
+							pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GC2')
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -4591,17 +4446,17 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					#############################################COMPUTING LINEAR AREA##################################################
 					################################################COMPUTING TOTAL AREA################################################
-					CTRE_G_C_PRE = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_PRE = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_PRE = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_PRE = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')
+					AMPL_G_C_PRE = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')
+					SGMA_G_C_PRE = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')
 
-					CTRE_G_C     = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C     = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C     = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C     = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')
+					AMPL_G_C     = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')
+					SGMA_G_C     = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')
 
-					CTRE_G_C_PST = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_PST = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_PST = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_PST = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')
+					AMPL_G_C_PST = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')
+					SGMA_G_C_PST = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')
 
 					print
 					print colored('Computing Areas using info from fits headers.','yellow')
@@ -4697,7 +4552,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_WETT',float(EWMT)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE TOT' + str(fit_type))
 					else:
 						print
-						print colored('The LINEAR AND TOTAL Areas values will not be updated to the fits headers!','magenta')
+						print colored('The LINEAR AND TOTAL Areas values will NOT be updated to the fits headers!','magenta')
 						print
 					#############################################ADDING AREA TO FTIS HEADER#############################################						
 					#################################DEFINE AREA FOR LATER ON SUBSTRACT OFFSET FOR PLOTING###############################
@@ -4706,7 +4561,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 						print
-						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 						lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 						mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 						mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -4791,7 +4646,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except ValueError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -4822,7 +4677,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored('1: ' + LINES[3][lines-2]  + '-' + str(LINES[0][lines-2]),'cyan')							
 							print colored(str(LINES[5][lines-2])+'_AF01' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','cyan')
@@ -4877,9 +4732,9 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					########################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#########################
 					##################################################CENTRAL GAUSSIAN-1###################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 
 					lmb_max_lim_line_ft = (LINES[0][lines-2]+L8_1) + MSK_NTMS*L1_1
-					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 
 					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+ 20#L2_1 + 10
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
@@ -4903,17 +4758,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print
-					print specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med)
-					print specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med)
-					print
-					'''
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 				
@@ -4924,58 +4768,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('1-0-Fitting Central line','cyan')
 						print
 						#################################################CENTRAL GAUSSIAN-1-0##################################################
-						'''
-						try:
-							gmodel_0           = Model(func_1D_Gaussian)
-							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*L7_1), max=X0_f2DG + (X0_f2DG*L7_1))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_0             = gmodel_0.make_params()							
-							result_0_1         = gmodel_0.fit(inten_glx[mask_ft],pars_0,
-													X=lambda_glx[mask_ft],
-													X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_0_1         = result_0_1.params['X_0'].value
-							AMPL_G_0_1         = result_0_1.params['A'].value
-							SGMA_G_0_1         = abs(result_0_1.params['SIGMA'].value)
-							FWHM_G_0_1         = lw_sgma2fwhm(SGMA_G_0_1)
-							W_0_1              = integrate.quad(lambda x: AMPL_G_0_1*np.exp(-((x)**2)/(2*SGMA_G_0_1**2)), -np.inf, np.inf)
-							EW_0_1             = np.round(abs(np.asarray(W_0_1[0])),10)
-							EWE_0_1            = np.round(abs(np.asarray(W_0_1[1])),10)
-							data_fitted_0      = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_0_1,AMPL_G_0_1,SGMA_G_0_1)
-
-							CTRE_G_0_1_E       = result_0_1.params['X_0'].stderr
-							AMPL_G_0_1_E       = result_0_1.params['A'].stderr
-							SGMA_G_0_1_E       = result_0_1.params['SIGMA'].stderr
-
-							CTRE_G_0_1_cor     = result_0_1.params['X_0'].correl
-							AMPL_G_0_1_cor     = result_0_1.params['A'].correl
-							SGMA_G_0_1_cor     = result_0_1.params['SIGMA'].correl
-
-							chisqr_0_1         = result_0_1.chisqr
-							redchi_0_1         = result_0_1.redchi
-						except (RuntimeError,ValueError,TypeError):
-							popt_0, pcov_0   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_0           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_0         = 999999.99999
-							AMPL_G_0         = 999999.99999
-							SGMA_G_0         = 999999.99999
-							FWHM_G_0         = 999999.99999
-							EW_0             = 999999.99999
-							EWE_0            = 999999.99999
-
-							CTRE_G_0_E      = 999999.99999
-							AMPL_G_0_E      = 999999.99999
-							SGMA_G_0_E      = 999999.99999
-
-							CTRE_G_0_cor    = 999999.99999
-							AMPL_G_0_cor    = 999999.99999
-							SGMA_G_0_cor    = 999999.99999
-
-							chisqr_0        = 999999.99999
-							redchi_0        = 999999.99999
-						'''
 						popt_0_1, pcov_0_1   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_0_1             = [999999.99999,999999.99999,999999.99999]
 						CTRE_G_0_1           = 999999.99999
@@ -5008,165 +4800,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-0) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-0) values will NOT be added to the fits headers!','cyan')
 							print
 						#################################################CENTRAL GAUSSIAN-1-0##################################################
 						#################################################CENTRAL GAUSSIAN-1-C##################################################
-						'''
-						try:
-							gmodel_O           = Model(func_1D_Gaussian_O)
-							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*L7_1), max=X0_f2DG+(X0_f2DG*L7_1))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1) , max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
-							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
-							pars_O             = gmodel_O.make_params()
-
-							result_O_1         = gmodel_O.fit(inten_glx[mask_ft],pars_O,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,OFFSET=max(inten_glx[mask_ft])-1,
-													nan_policy = 'omit')
-							CTRE_G_O_1         = result_O_1.params['X_0'].value
-							AMPL_G_O_1         = result_O_1.params['A'].value
-							SGMA_G_O_1         = abs(result_O_1.params['SIGMA'].value)
-							OFST_G_O_1         = abs(result_O_1.params['OFFSET'].value)
-							FWHM_G_O_1         = lw_sgma2fwhm(SGMA_G_O_1)
-							W_O_1              = integrate.quad(lambda x: AMPL_G_O_1*np.exp(-((x)**2)/(2*SGMA_G_O_1**2)), -np.inf, np.inf)
-							EW_O_1             = np.round(abs(np.asarray(W_O_1[0])),10)
-							EWE_O_1            = np.round(abs(np.asarray(W_O_1[1])),10)
-							data_fitted_O_1    = func_1D_Gaussian_O((lambda_glx[mask_ft]),CTRE_G_O_1,AMPL_G_O_1,SGMA_G_O_1,OFST_G_O_1)
-
-							CTRE_G_O_E         = result_O_1.params['X_0'].stderr
-							AMPL_G_O_E         = result_O_1.params['A'].stderr
-							SGMA_G_O_E         = result_O_1.params['SIGMA'].stderr
-
-							CTRE_G_O_cor       = result_O_1.params['X_0'].correl
-							AMPL_G_O_cor       = result_O_1.params['A'].correl
-							SGMA_G_O_cor       = result_O_1.params['SIGMA'].correl
-
-							chisqr_O_1         = result_O_1.chisqr
-							redchi_O_1         = result_O_1.redchi
-							
-							#####################################################################################################################
-							if ofs_ctr_fit == True:
-								print
-								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
-								print
-								lmb_min_lim_line_ft = (CTRE_G_O_1-L8_1) - MSK_NTMS*L1_1 #IT WAS LINE CTR - LINE OFFSET
-								lmb_max_lim_line_ft = (CTRE_G_O_1+L8_1) + MSK_NTMS*L1_1
-								#lmb_min_lim_line    = (CTRE_G_O-L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#-20#L2_1 - 10
-								#lmb_max_lim_line    = (CTRE_G_O+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+20#L2_1 + 10
-								#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
-								mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-							else:
-								pass
-							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
-
-							gmodel_C           = Model(func_1D_Gaussian)
-							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*L7_1), max=X0_f2DG+(X0_f2DG*L7_1))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1) , max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_C             = gmodel_C.make_params()
-							result_C_1         = gmodel_C.fit(inten_glx[mask_ft],pars_C,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_C_1         = result_C_1.params['X_0'].value
-							AMPL_G_C_1         = result_C_1.params['A'].value
-							SGMA_G_C_1         = abs(result_C_1.params['SIGMA'].value)
-							FWHM_G_C_1         = lw_sgma2fwhm(SGMA_G_C_1)
-
-							W_C_1              = integrate.quad(lambda x: AMPL_G_C_1*np.exp(-((x)**2)/(2*SGMA_G_C_1**2)), -np.inf, np.inf)
-							EW_C_1             = np.round(abs(np.asarray(W_C_1[0])),10)
-							EWE_C_1            = np.round(abs(np.asarray(W_C_1[1])),10)
-							data_fitted_C_1    = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_C_1,AMPL_G_C_1,SGMA_G_C_1)
-
-							CTRE_G_C_1_E         = result_C_1.params['X_0'].stderr
-							AMPL_G_C_1_E         = result_C_1.params['A'].stderr
-							SGMA_G_C_1_E         = result_C_1.params['SIGMA'].stderr
-
-							CTRE_G_C_1_cor       = result_C_1.params['X_0'].correl
-							AMPL_G_C_1_cor       = result_C_1.params['A'].correl
-							SGMA_G_C_1_cor       = result_C_1.params['SIGMA'].correl
-
-							AMPL_SNR_1           = AMPL_G_C_1
-							CTRE_SNR_1           = CTRE_G_C_1
-							SGMA_SNR_1           = abs(SGMA_G_C_1)
-
-							if CTRE_G_C_1_E == None:
-								CTRE_G_C_1_E = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_1_E == None:
-								AMPL_G_C_1_E = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_1_E == None:
-								SGMA_G_C_1_E = 999999.99999
-							else:
-								pass
-							if CTRE_G_C_1_cor == None:
-								CTRE_G_C_1_cor = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_1_cor == None:
-								AMPL_G_C_1_cor = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_1_cor == None:
-								SGMA_G_C_1_cor = 999999.99999
-							else:
-								pass
-							chisqr_C_1      = result_C_1.chisqr
-							redchi_C_1      = result_C_1.redchi
-							##inten_glx[mask_ft] = inten_glx[mask_ft] + OFST_G_O #OFFSET +
-						except (RuntimeError,ValueError,TypeError):
-							print colored('RuntimeError','cyan')
-							popt_C_1, pcov_C_1 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_C_1           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_C_1         = 999999.99999
-							AMPL_G_C_1         = 999999.99999
-							SGMA_G_C_1         = 999999.99999
-							FWHM_G_C_1         = 999999.99999
-							EW_C_1             = 999999.99999
-							EWE_C_1            = 999999.99999
-
-							CTRE_G_C_1_E       = 999999.99999
-							AMPL_G_C_1_E       = 999999.99999
-							SGMA_G_C_1_E       = 999999.99999
-							CTRE_G_C_1_cor     = 999999.99999
-							AMPL_G_C_1_cor     = 999999.99999
-							SGMA_G_C_1_cor     = 999999.99999
-							chisqr_C_1         = 999999.99999
-							redchi_C_1         = 999999.99999
-
-							popt_O_1 ,pcov_O_1 = [999999.99999,999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999,999999.99999]
-							perr_O_1           = [999999.99999,999999.99999,999999.99999,999999.99999]
-							CTRE_G_O_1         = 999999.99999
-							AMPL_G_O_1         = 999999.99999
-							SGMA_G_O_1         = 999999.99999
-							OFST_G_O_1         = 999999.99999
-							FWHM_G_O_1         = 999999.99999
-							EW_O_1             = 999999.99999
-							EWE_O_1            = 999999.99999
-
-							CTRE_G_O_1_E      = 999999.99999
-							AMPL_G_O_1_E      = 999999.99999
-							SGMA_G_O_1_E      = 999999.99999
-							CTRE_G_O_1_cor    = 999999.99999
-							AMPL_G_O_1_cor    = 999999.99999
-							SGMA_G_O_1_cor    = 999999.99999
-							OFST_G_O_1_cor    = 999999.99999
-							chisqr_O_1        = 999999.99999
-							redchi_O_1        = 999999.99999
-
-							AMPL_SNR_1        = 999999.99999
-							CTRE_SNR_1        = 999999.99999
-							SGMA_SNR_1        = 999999.99999
-						'''
+						print
 						print colored('Clean Line','cyan')
+						print
 						popt_C_1, pcov_C_1 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_C_1           = [999999.99999,999999.99999,999999.99999]
 						CTRE_G_C_1         = 999999.99999
@@ -5252,7 +4892,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-C & CTR-1-O) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-C & CTR-1-O) values will NOT be added to the fits headers!','cyan')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -5286,66 +4926,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('1st CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 						try:
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-2])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_1=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGF0')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGF0')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGF0')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGF0')#,float(EW_0)     ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGF0')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGF0')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGF0')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGF0')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGF0')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGF0')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLO')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLO')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLO')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLO')#,float(EW_O)      ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLO')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_OFSO')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLO')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLO')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLO')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLO')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLO')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_OFSO')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLC')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLC')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SGLC')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLC')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLC')#,float(EW_C)      ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLC')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CLEC')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_ALEC')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SLEC')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CGLC')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_AGLC')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SGLC')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_FGLC')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_WGLC')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_EGLC')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CLEC')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_ALEC')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_SLEC')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + ' Chi2 Reduced 1GF' + str(fit_type))							#quit()
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CHGL')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines-2])+'_CRGL')
 					print
 					print colored(str(LINES[0][lines-2])+'-'+str(LINES[3][lines-2])+'-CTR','cyan')
 					print
@@ -5360,9 +5000,9 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					##################################################CENTRAL GAUSSIAN-1###################################################
 					##################################################CENTRAL GAUSSIAN-2###################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] 
 					lmb_max_lim_line_ft = (LINES[0][lines-1]+L8_2) + MSK_NTMS*LINES[1][lines-1]
-					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#- 20#L2_2 - 10 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#- 20#L2_2 - 10 
 					lmb_max_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+ 20#L2_2 + 10
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
@@ -5384,14 +5024,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								label='Original Spectrum')
 					elif pre_off_plt == False:
 						pass
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med)
-					print specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med)
-					''' 
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 					##################################################CENTRAL GAUSSIAN-2###################################################
@@ -5401,58 +5033,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('2-0-Fitting Central line','magenta')
 						print
 						#################################################CENTRAL GAUSSIAN-2-0##################################################
-						'''
-						try:
-							gmodel_0           = Model(func_1D_Gaussian)
-							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG+(X0_f2DG*L7_2))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_0             = gmodel_0.make_params()							
-							result_0_2         = gmodel_0.fit(inten_glx[mask_ft],pars_0,
-													X=lambda_glx[mask_ft],
-													X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_0_2         = result_0_2.params['X_0'].value
-							AMPL_G_0_2         = result_0_2.params['A'].value
-							SGMA_G_0_2         = abs(result_0_2.params['SIGMA'].value)
-							FWHM_G_0           = lw_sgma2fwhm(SGMA_G_0_2)
-							W_0_2              = integrate.quad(lambda x: AMPL_G_0_2*np.exp(-((x)**2)/(2*SGMA_G_0_2**2)), -np.inf, np.inf)
-							EW_0_2             = np.round(abs(np.asarray(W_0_2[0])),10)
-							EWE_0_2            = np.round(abs(np.asarray(W_0_2[1])),10)
-							data_fitted_0_2    = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_0_2,AMPL_G_0_2,SGMA_G_0_2)
-
-							CTRE_G_0_2_E       = result_0_2.params['X_0'].stderr
-							AMPL_G_0_2_E       = result_0_2.params['A'].stderr
-							SGMA_G_0_2_E       = result_0_2.params['SIGMA'].stderr
-
-							CTRE_G_0_2_cor     = result_0_2.params['X_0'].correl
-							AMPL_G_0_2_cor     = result_0_2.params['A'].correl
-							SGMA_G_0_2_cor     = result_0_2.params['SIGMA'].correl
-
-							chisqr_0           = result_0_2.chisqr
-							redchi_0           = result_0_2.redchi
-						except (RuntimeError,ValueError,TypeError):
-							popt_0, pcov_0   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_0           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_0_2         = 999999.99999
-							AMPL_G_0_2         = 999999.99999
-							SGMA_G_0_2         = 999999.99999
-							FWHM_G_0         = 999999.99999
-							EW_0_2             = 999999.99999
-							EWE_0_2            = 999999.99999
-
-							CTRE_G_0_2_E      = 999999.99999
-							AMPL_G_0_2_E      = 999999.99999
-							SGMA_G_0_2_E      = 999999.99999
-
-							CTRE_G_0_2_cor    = 999999.99999
-							AMPL_G_0_2_cor    = 999999.99999
-							SGMA_G_0_2_cor    = 999999.99999
-
-							chisqr_0        = 999999.99999
-							redchi_0        = 999999.99999
-						'''
 						popt_0, pcov_0   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_0           = [999999.99999,999999.99999,999999.99999]
 						CTRE_G_0_2         = 999999.99999
@@ -5485,164 +5065,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-0) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-0) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-2-0##################################################
 						#################################################CENTRAL GAUSSIAN-2-C##################################################
-						'''
-						try:
-							gmodel_O           = Model(func_1D_Gaussian_O)
-							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG  , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG + (X0_f2DG*L7_2))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
-							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
-							pars_O             = gmodel_O.make_params()
-
-							result_O_2         = gmodel_O.fit(inten_glx[mask_ft],pars_O,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,OFFSET=max(inten_glx[mask_ft])-1,
-													nan_policy = 'omit')
-							CTRE_G_O_2         = result_O_2.params['X_0'].value
-							AMPL_G_O_2         = result_O_2.params['A'].value
-							SGMA_G_O_2         = abs(result_O_2.params['SIGMA'].value)
-							OFST_G_O_2         = abs(result_O_2.params['OFFSET'].value)
-							FWHM_G_O_2         = lw_sgma2fwhm(SGMA_G_O_2)
-							W_O_2              = integrate.quad(lambda x: AMPL_G_O_2*np.exp(-((x)**2)/(2*SGMA_G_O_2**2)), -np.inf, np.inf)
-							EW_O_2             = np.round(abs(np.asarray(W_O_2[0])),10)
-							EWE_O_2            = np.round(abs(np.asarray(W_O_2[1])),10)
-							data_fitted_O_2    = func_1D_Gaussian_O((lambda_glx[mask_ft]),CTRE_G_O_2,AMPL_G_O_2,SGMA_G_O_2,OFST_G_O_2)
-
-							CTRE_G_O_2_E       = result_O_2.params['X_0'].stderr
-							AMPL_G_O_2_E       = result_O_2.params['A'].stderr
-							SGMA_G_O_E         = result_O_2.params['SIGMA'].stderr
-
-							CTRE_G_O_2_cor     = result_O_2.params['X_0'].correl
-							AMPL_G_O_2_cor     = result_O_2.params['A'].correl
-							SGMA_G_O_cor       = result_O_2.params['SIGMA'].correl
-
-							chisqr_O_2         = result_O_2.chisqr
-							redchi_O_2         = result_O_2.redchi
-							
-							#####################################################################################################################
-							if ofs_ctr_fit == True:
-								print
-								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
-								print
-								lmb_min_lim_line_ft = (CTRE_G_O_2-L8_2) - MSK_NTMS*LINES[1][lines-1] #IT WAS LINE CTR - LINE OFFSET
-								lmb_max_lim_line_ft = (CTRE_G_O_2+L8_2) + MSK_NTMS*LINES[1][lines-1]
-								#lmb_min_lim_line    = (CTRE_G_O-L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#-20#L2_2 - 10
-								#lmb_max_lim_line    = (CTRE_G_O+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+20#L2_2 + 10
-								#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
-								mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-							else:
-								pass
-							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
-
-							gmodel_C           = Model(func_1D_Gaussian)
-							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*(X0_f2DG*L7_2)), max=X0_f2DG + (X0_f2DG*(X0_f2DG*L7_2)))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG *(A_f2DG*L10_2)), max=A_f2DG  + (A_f2DG*(A_f2DG*L10_2)))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_C             = gmodel_C.make_params()
-							result_C_2         = gmodel_C.fit(inten_glx[mask_ft],pars_C,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_C_2         = result_C_2.params['X_0'].value
-							AMPL_G_C_2         = result_C_2.params['A'].value
-							SGMA_G_C_2         = abs(result_C_2.params['SIGMA'].value)
-							FWHM_G_C_2         = lw_sgma2fwhm(SGMA_G_C_2)
-
-							W_C_2              = integrate.quad(lambda x: AMPL_G_C_2*np.exp(-((x)**2)/(2*SGMA_G_C_2**2)), -np.inf, np.inf)
-							EW_C_2             = np.round(abs(np.asarray(W_C_2[0])),10)
-							EWE_C_2            = np.round(abs(np.asarray(W_C_2[1])),10)
-							data_fitted_C      = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_C_2,AMPL_G_C_2,SGMA_G_C_2)
-
-							CTRE_G_C_2_E       = result_C_2.params['X_0'].stderr
-							AMPL_G_C_2_E       = result_C_2.params['A'].stderr
-							SGMA_G_C_2_E       = result_C_2.params['SIGMA'].stderr
-
-							CTRE_G_C_2_cor     = result_C_2.params['X_0'].correl
-							AMPL_G_C_2_cor     = result_C_2.params['A'].correl
-							SGMA_G_C_2_cor     = result_C_2.params['SIGMA'].correl
-
-							AMPL_SNR_2           = AMPL_G_C_2
-							CTRE_SNR_2           = CTRE_G_C_2
-							SGMA_SNR_2           = abs(SGMA_G_C_2)
-
-							if CTRE_G_C_2_E == None:
-								CTRE_G_C_2_E = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_2_E == None:
-								AMPL_G_C_2_E = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_2_E == None:
-								SGMA_G_C_2_E = 999999.99999
-							else:
-								pass
-							if CTRE_G_C_2_cor == None:
-								CTRE_G_C_2_cor = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_2_cor == None:
-								AMPL_G_C_2_cor = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_2_cor == None:
-								SGMA_G_C_2_cor = 999999.99999
-							else:
-								pass
-							chisqr_C_2        = result_C_2.chisqr
-							redchi_C_2        = result_C_2.redchi
-							##inten_glx[mask_ft] = inten_glx[mask_ft] + OFST_G_O #OFFSET +
-						except (RuntimeError,ValueError,TypeError):
-							print colored('RuntimeError','cyan')
-							popt_C_2, pcov_C_2 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_C_2           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_C_2         = 999999.99999
-							AMPL_G_C_2         = 999999.99999
-							SGMA_G_C_2         = 999999.99999
-							FWHM_G_C_2         = 999999.99999
-							EW_C_2             = 999999.99999
-							EWE_C_2            = 999999.99999
-
-							CTRE_G_C_2_E       = 999999.99999
-							AMPL_G_C_2_E       = 999999.99999
-							SGMA_G_C_2_E       = 999999.99999
-							CTRE_G_C_2_cor     = 999999.99999
-							AMPL_G_C_2_cor     = 999999.99999
-							SGMA_G_C_2_cor     = 999999.99999
-							chisqr_C_2         = 999999.99999
-							redchi_C_2         = 999999.99999
-
-							popt_O_2 ,pcov_O_2 = [999999.99999,999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999,999999.99999]
-							perr_O_2           = [999999.99999,999999.99999,999999.99999,999999.99999]
-							CTRE_G_O_2         = 999999.99999
-							AMPL_G_O_2         = 999999.99999
-							SGMA_G_O_2         = 999999.99999
-							OFST_G_O_2         = 999999.99999
-							FWHM_G_O_2         = 999999.99999
-							EW_O_2             = 999999.99999
-							EWE_O_2            = 999999.99999
-
-							CTRE_G_O_2_E       = 999999.99999
-							AMPL_G_O_2_E       = 999999.99999
-							SGMA_G_O_2_E       = 999999.99999
-							CTRE_G_O_2_cor     = 999999.99999
-							AMPL_G_O_2_cor     = 999999.99999
-							SGMA_G_O_2_cor     = 999999.99999
-							OFST_G_O_2_cor     = 999999.99999
-							chisqr_O_2         = 999999.99999
-							redchi_O_2         = 999999.99999
-
-							AMPL_SNR_2         = 999999.99999
-							CTRE_SNR_2         = 999999.99999
-							SGMA_SNR_2         = 999999.99999
-						'''
 						print colored('Clean Line','cyan')
 						popt_C_2, pcov_C_2 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_C_2           = [999999.99999,999999.99999,999999.99999]
@@ -5728,7 +5154,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-C & CTR_O) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-C & CTR_O) values will NOT be added to the fits headers!','magenta')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -5762,66 +5188,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('2nd CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 						try:
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-1])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_2=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGF0')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGF0')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGF0')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGF0')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGF0')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGF0')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGF0')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGF0')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGF0')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGF0')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLO')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLO')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLO')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLO')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLO')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_OFSO')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLO')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLO')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLO')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLO')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLO')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_OFSO')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLC')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLC')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SGLC')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLC')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLC')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLC')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CLEC')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_ALEC')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SLEC')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CGLC')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_AGLC')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SGLC')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_FGLC')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_WGLC')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_EGLC')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CLEC')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_ALEC')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_SLEC')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CHGL')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines-1])+'_CRGL')
 					print
 					print colored(str(LINES[0][lines-1])+'-'+str(LINES[3][lines-1])+'-CTR','magenta')
 					print
@@ -5838,13 +5264,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					###############################################COMPUTING TOTAL AREA###############################################
 					print colored('Computing Flux Area','yellow')
 					###############################################COMPUTING TOTAL AREA###############################################
-					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')
+					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')
+					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')
 
-					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')
+					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')
+					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')
 
 					print
 					print colored('Computing Areas using info from fits headers.','yellow')
@@ -5900,7 +5326,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_EGM1',float(EWE_C)   ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  C1-C2 Crct' + str(fit_type))
 					else:
 						print
-						print colored('The Areas values will not be updated to the fits headers!','magenta')
+						print colored('The Areas values will NOT be updated to the fits headers!','magenta')
 						print
 					#############################################ADDING AREA TO FTIS HEADER#############################################
 				elif 'Dbl' in LINES[3][lines] and fit_fnct=='gaussM' and fit_type == 'lmfit' and uft_lne_vls == True:
@@ -5956,7 +5382,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -6019,7 +5445,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored('1: ' + LINES[3][lines]  + '-' + str(LINES[0][lines]),'cyan')							
 							print colored(str(LINES[5][lines])+'_AM01' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','cyan')
@@ -6073,9 +5499,9 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored(str(LINES[5][lines-1])+'_AF02' + ': ' + str(L10_2),'magenta')
 					print
 					#####################################################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#####################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 
 					lmb_max_lim_line_ft = (LINES[0][lines-2]+L8_1) + MSK_NTMS*L1_1
-					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 
 					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+ 20#L2_1 + 10
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
@@ -6099,17 +5525,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-2]) + str(LINES[0][lines-2]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print
-					print specfile_glx,str(LINES[5][lines-2])+'_NHT',float(hsw_nmb_med)
-					print specfile_glx,str(LINES[5][lines-2])+'_NHW',float(hsw_nmb_med)
-					print
-					'''
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 				
@@ -6120,58 +5535,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('1-0-Fitting Central line','cyan')
 						print
 						#################################################CENTRAL GAUSSIAN-1-0##################################################
-						'''
-						try:
-							gmodel_0           = Model(func_1D_Gaussian)
-							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG - (X0_f2DG*L7_1), max=X0_f2DG + (X0_f2DG*L7_1))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_0             = gmodel_0.make_params()							
-							result_0_1         = gmodel_0.fit(inten_glx[mask_ft],pars_0,
-													X=lambda_glx[mask_ft],
-													X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_0_1         = result_0_1.params['X_0'].value
-							AMPL_G_0_1         = result_0_1.params['A'].value
-							SGMA_G_0_1         = abs(result_0_1.params['SIGMA'].value)
-							FWHM_G_0_1         = lw_sgma2fwhm(SGMA_G_0_1)
-							W_0_1              = integrate.quad(lambda x: AMPL_G_0_1*np.exp(-((x)**2)/(2*SGMA_G_0_1**2)), -np.inf, np.inf)
-							EW_0_1             = np.round(abs(np.asarray(W_0_1[0])),10)
-							EWE_0_1            = np.round(abs(np.asarray(W_0_1[1])),10)
-							data_fitted_0      = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_0_1,AMPL_G_0_1,SGMA_G_0_1)
-
-							CTRE_G_0_1_E       = result_0_1.params['X_0'].stderr
-							AMPL_G_0_1_E       = result_0_1.params['A'].stderr
-							SGMA_G_0_1_E       = result_0_1.params['SIGMA'].stderr
-
-							CTRE_G_0_1_cor     = result_0_1.params['X_0'].correl
-							AMPL_G_0_1_cor     = result_0_1.params['A'].correl
-							SGMA_G_0_1_cor     = result_0_1.params['SIGMA'].correl
-
-							chisqr_0_1         = result_0_1.chisqr
-							redchi_0_1         = result_0_1.redchi
-						except (RuntimeError,ValueError,TypeError):
-							popt_0, pcov_0   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_0           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_0         = 999999.99999
-							AMPL_G_0         = 999999.99999
-							SGMA_G_0         = 999999.99999
-							FWHM_G_0         = 999999.99999
-							EW_0             = 999999.99999
-							EWE_0            = 999999.99999
-
-							CTRE_G_0_E      = 999999.99999
-							AMPL_G_0_E      = 999999.99999
-							SGMA_G_0_E      = 999999.99999
-
-							CTRE_G_0_cor    = 999999.99999
-							AMPL_G_0_cor    = 999999.99999
-							SGMA_G_0_cor    = 999999.99999
-
-							chisqr_0        = 999999.99999
-							redchi_0        = 999999.99999
-						'''
 						popt_0_1, pcov_0_1   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_0_1           = [999999.99999,999999.99999,999999.99999]
 						CTRE_G_0_1         = 999999.99999
@@ -6202,163 +5565,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-0) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-0) values will NOT be added to the fits headers!','cyan')
 							print
 						#################################################CENTRAL GAUSSIAN-1-0##################################################
 						#################################################CENTRAL GAUSSIAN-1-C##################################################
-						'''
-						try:
-							gmodel_O           = Model(func_1D_Gaussian_O)
-							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG  , min=X0_f2DG - (X0_f2DG*L7_1), max=X0_f2DG + (X0_f2DG*L7_1))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*L10_1), max=A_f2DG  + (A_f2DG*L10_1))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
-							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
-							pars_O             = gmodel_O.make_params()
-
-							result_O_1         = gmodel_O.fit(inten_glx[mask_ft],pars_O,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,OFFSET=max(inten_glx[mask_ft])-1,
-													nan_policy = 'omit')
-							CTRE_G_O_1         = result_O_1.params['X_0'].value
-							AMPL_G_O_1         = result_O_1.params['A'].value
-							SGMA_G_O_1         = abs(result_O_1.params['SIGMA'].value)
-							OFST_G_O_1         = abs(result_O_1.params['OFFSET'].value)
-							FWHM_G_O_1         = lw_sgma2fwhm(SGMA_G_O_1)
-							W_O_1              = integrate.quad(lambda x: AMPL_G_O_1*np.exp(-((x)**2)/(2*SGMA_G_O_1**2)), -np.inf, np.inf)
-							EW_O_1             = np.round(abs(np.asarray(W_O_1[0])),10)
-							EWE_O_1            = np.round(abs(np.asarray(W_O_1[1])),10)
-							data_fitted_O_1    = func_1D_Gaussian_O((lambda_glx[mask_ft]),CTRE_G_O_1,AMPL_G_O_1,SGMA_G_O_1,OFST_G_O_1)
-
-							CTRE_G_O_E         = result_O_1.params['X_0'].stderr
-							AMPL_G_O_E         = result_O_1.params['A'].stderr
-							SGMA_G_O_E         = result_O_1.params['SIGMA'].stderr
-
-							CTRE_G_O_cor       = result_O_1.params['X_0'].correl
-							AMPL_G_O_cor       = result_O_1.params['A'].correl
-							SGMA_G_O_cor       = result_O_1.params['SIGMA'].correl
-
-							chisqr_O_1         = result_O_1.chisqr
-							redchi_O_1         = result_O_1.redchi
-							
-							#####################################################################################################################
-							if ofs_ctr_fit == True:
-								print
-								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
-								print
-								lmb_min_lim_line_ft = (CTRE_G_O_1-L8_1) - MSK_NTMS*L1_1 #IT WAS LINE CTR - LINE OFFSET
-								lmb_max_lim_line_ft = (CTRE_G_O_1+L8_1) + MSK_NTMS*L1_1
-								#lmb_min_lim_line    = (CTRE_G_O-L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#-20#L2_1 - 10
-								#lmb_max_lim_line    = (CTRE_G_O+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+20#L2_1 + 10
-								#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
-								mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-							else:
-								pass
-							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
-
-							gmodel_C           = Model(func_1D_Gaussian)
-							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG, min=X0_f2DG - (X0_f2DG*(X0_f2DG*L7_1)), max=X0_f2DG + (X0_f2DG*(X0_f2DG*L7_1)))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('A'    , value=A_f2DG , min=A_f2DG  - (A_f2DG*(A_f2DG*L10_1)) , max=A_f2DG  + (A_f2DG*(A_f2DG*L10_1)))
-							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_C             = gmodel_C.make_params()
-							result_C_1         = gmodel_C.fit(inten_glx[mask_ft],pars_C,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_C_1         = result_C_1.params['X_0'].value
-							AMPL_G_C_1         = result_C_1.params['A'].value
-							SGMA_G_C_1         = abs(result_C_1.params['SIGMA'].value)
-							FWHM_G_C_1         = lw_sgma2fwhm(SGMA_G_C_1)
-							W_C_1              = integrate.quad(lambda x: AMPL_G_C_1*np.exp(-((x)**2)/(2*SGMA_G_C_1**2)), -np.inf, np.inf)
-							EW_C_1             = np.round(abs(np.asarray(W_C_1[0])),10)
-							EWE_C_1            = np.round(abs(np.asarray(W_C_1[1])),10)
-							data_fitted_C_1    = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_C_1,AMPL_G_C_1,SGMA_G_C_1)
-
-							CTRE_G_C_1_E         = result_C_1.params['X_0'].stderr
-							AMPL_G_C_1_E         = result_C_1.params['A'].stderr
-							SGMA_G_C_1_E         = result_C_1.params['SIGMA'].stderr
-
-							CTRE_G_C_1_cor       = result_C_1.params['X_0'].correl
-							AMPL_G_C_1_cor       = result_C_1.params['A'].correl
-							SGMA_G_C_1_cor       = result_C_1.params['SIGMA'].correl
-
-							AMPL_SNR_1           = AMPL_G_C_1
-							CTRE_SNR_1           = CTRE_G_C_1
-							SGMA_SNR_1           = abs(SGMA_G_C_1)
-
-							if CTRE_G_C_1_E == None:
-								CTRE_G_C_1_E = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_1_E == None:
-								AMPL_G_C_1_E = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_1_E == None:
-								SGMA_G_C_1_E = 999999.99999
-							else:
-								pass
-							if CTRE_G_C_1_cor == None:
-								CTRE_G_C_1_cor = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_1_cor == None:
-								AMPL_G_C_1_cor = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_1_cor == None:
-								SGMA_G_C_1_cor = 999999.99999
-							else:
-								pass
-							chisqr_C_1      = result_C_1.chisqr
-							redchi_C_1      = result_C_1.redchi
-							##inten_glx[mask_ft] = inten_glx[mask_ft] + OFST_G_O #OFFSET +
-						except (RuntimeError,ValueError,TypeError):
-							print colored('RuntimeError','cyan')
-							popt_C_1, pcov_C_1 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_C_1           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_C_1         = 999999.99999
-							AMPL_G_C_1         = 999999.99999
-							SGMA_G_C_1         = 999999.99999
-							FWHM_G_C_1         = 999999.99999
-							EW_C_1             = 999999.99999
-							EWE_C_1            = 999999.99999
-
-							CTRE_G_C_1_E       = 999999.99999
-							AMPL_G_C_1_E       = 999999.99999
-							SGMA_G_C_1_E       = 999999.99999
-							CTRE_G_C_1_cor     = 999999.99999
-							AMPL_G_C_1_cor     = 999999.99999
-							SGMA_G_C_1_cor     = 999999.99999
-							chisqr_C_1         = 999999.99999
-							redchi_C_1         = 999999.99999
-
-							popt_O_1 ,pcov_O_1 = [999999.99999,999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999,999999.99999]
-							perr_O_1           = [999999.99999,999999.99999,999999.99999,999999.99999]
-							CTRE_G_O_1         = 999999.99999
-							AMPL_G_O_1         = 999999.99999
-							SGMA_G_O_1         = 999999.99999
-							OFST_G_O_1         = 999999.99999
-							FWHM_G_O_1         = 999999.99999
-							EW_O_1             = 999999.99999
-							EWE_O_1            = 999999.99999
-
-							CTRE_G_O_1_E      = 999999.99999
-							AMPL_G_O_1_E      = 999999.99999
-							SGMA_G_O_1_E      = 999999.99999
-							CTRE_G_O_1_cor    = 999999.99999
-							AMPL_G_O_1_cor    = 999999.99999
-							SGMA_G_O_1_cor    = 999999.99999
-							OFST_G_O_1_cor    = 999999.99999
-							chisqr_O_1        = 999999.99999
-							redchi_O_1        = 999999.99999
-
-							AMPL_SNR_1        = 999999.99999
-							CTRE_SNR_1        = 999999.99999
-							SGMA_SNR_1        = 999999.99999
-						'''
 						popt_C_1, pcov_C_1 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_C_1           = [999999.99999,999999.99999,999999.99999]
 						CTRE_G_C_1         = 999999.99999
@@ -6442,7 +5652,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-1-C & CTR-1-O) values will not be added to the fits headers!','cyan')
+							print colored('The fit (CTR-1-C & CTR-1-O) values will NOT be added to the fits headers!','cyan')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -6476,66 +5686,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('1-CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 						try:
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM01')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM01')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM01')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM01')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM01')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO1')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO1')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO1')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO1')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO1')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO1')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC1')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC1')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC1')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM1')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM1')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-2])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_1=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+							CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')
+							AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')
+							FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')
+							EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')
+							EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')
 
-							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')
+							AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')
+							FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')
+							EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')
+							EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')
+							OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')
 
-							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')
+							AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')
+							SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')
+							FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')
+							EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')
+							EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')
+							CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')
+							AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')
+							SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')
 
-							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')
+							redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')
 					print
 					print colored(str(LINES[0][lines-2])+'-'+str(LINES[3][lines-2])+'-CTR','cyan')
 					print colored('From: '+str(LINES[3][lines])+'-CTR','cyan')
@@ -6550,14 +5760,14 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored(str(CTRE_G_C_1)+', '+str(AMPL_G_C_1)+', '+str(SGMA_G_C_1),'cyan')
 					print
 					##################################################CENTRAL GAUSSIAN-1###################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-1]+L8_2) - MSK_NTMS*LINES[1][lines-1] 
 					lmb_max_lim_line_ft = (LINES[0][lines-1]+L8_2) + MSK_NTMS*LINES[1][lines-1]
-					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#- 20#L2_2 - 10 ##IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+ 20#L2_2 + 10
+					lmb_min_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2
+					lmb_max_lim_line    = (LINES[0][lines-1]+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0] #+ ' ' + stk_function
+					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0] 
 					idx_ctr_ft_reg = np.abs(lambda_glx[mask_ft] - (LINES[0][lines-1]+L8_2)).argmin()
 
 					X0_f2DG    = (LINES[0][lines-1]+L8_2)
@@ -6575,15 +5785,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					elif pre_off_plt == False:
 						pass
 
-					'''
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print specfile_glx,str(LINES[5][lines-1])+'_NHT',float(hsw_nmb_med) 
-					print specfile_glx,str(LINES[5][lines-1])+'_NHW',float(hsw_nmb_med) 
-					'''
-
 					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
 					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
 					##################################################CENTRAL GAUSSIAN-2###################################################
@@ -6593,58 +5794,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('2-0-Fitting Central line','magenta')
 						print
 						#################################################CENTRAL GAUSSIAN-2-0##################################################
-						'''
-						try:
-							gmodel_0           = Model(func_1D_Gaussian)
-							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG + (X0_f2DG*L7_2))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG  , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))
-							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_0             = gmodel_0.make_params()							
-							result_0_2         = gmodel_0.fit(inten_glx[mask_ft],pars_0,
-													X=lambda_glx[mask_ft],
-													X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_0_2         = result_0_2.params['X_0'].value
-							AMPL_G_0_2         = result_0_2.params['A'].value
-							SGMA_G_0_2         = abs(result_0_2.params['SIGMA'].value)
-							FWHM_G_0           = lw_sgma2fwhm(SGMA_G_0_2)
-							W_0_2              = integrate.quad(lambda x: AMPL_G_0_2*np.exp(-((x)**2)/(2*SGMA_G_0_2**2)), -np.inf, np.inf)
-							EW_0_2             = np.round(abs(np.asarray(W_0_2[0])),10)
-							EWE_0_2            = np.round(abs(np.asarray(W_0_2[1])),10)
-							data_fitted_0_2    = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_0_2,AMPL_G_0_2,SGMA_G_0_2)
 
-							CTRE_G_0_2_E       = result_0_2.params['X_0'].stderr
-							AMPL_G_0_2_E       = result_0_2.params['A'].stderr
-							SGMA_G_0_2_E       = result_0_2.params['SIGMA'].stderr
-
-							CTRE_G_0_2_cor     = result_0_2.params['X_0'].correl
-							AMPL_G_0_2_cor     = result_0_2.params['A'].correl
-							SGMA_G_0_2_cor     = result_0_2.params['SIGMA'].correl
-
-							chisqr_0           = result_0_2.chisqr
-							redchi_0           = result_0_2.redchi
-						except (RuntimeError,ValueError,TypeError):
-							popt_0, pcov_0   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_0           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_0_2         = 999999.99999
-							AMPL_G_0_2         = 999999.99999
-							SGMA_G_0_2         = 999999.99999
-							FWHM_G_0         = 999999.99999
-							EW_0_2             = 999999.99999
-							EWE_0_2            = 999999.99999
-
-							CTRE_G_0_2_E      = 999999.99999
-							AMPL_G_0_2_E      = 999999.99999
-							SGMA_G_0_2_E      = 999999.99999
-
-							CTRE_G_0_2_cor    = 999999.99999
-							AMPL_G_0_2_cor    = 999999.99999
-							SGMA_G_0_2_cor    = 999999.99999
-
-							chisqr_0        = 999999.99999
-							redchi_0        = 999999.99999
-						'''
 						popt_0, pcov_0   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_0           = [999999.99999,999999.99999,999999.99999]
 						CTRE_G_0_2         = 999999.99999
@@ -6675,164 +5825,11 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-2-0) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-2-0) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-2-0##################################################
 						#################################################CENTRAL GAUSSIAN-2-C##################################################
-						'''
-						try:
-							gmodel_O           = Model(func_1D_Gaussian_O)
-							gmodel_O.set_param_hint('X_0'   , value=X0_f2DG , min=X0_f2DG - (X0_f2DG*L7_2), max=X0_f2DG + (X0_f2DG*L7_2))
-							#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_O.set_param_hint('A'     , value=A_f2DG  , min=A_f2DG  - (A_f2DG*L10_2), max=A_f2DG  + (A_f2DG*L10_2))
-							gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
-							gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
-							pars_O             = gmodel_O.make_params()
 
-							result_O_2         = gmodel_O.fit(inten_glx[mask_ft],pars_O,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,OFFSET=max(inten_glx[mask_ft])-1,
-													nan_policy = 'omit')
-							CTRE_G_O_2         = result_O_2.params['X_0'].value
-							AMPL_G_O_2         = result_O_2.params['A'].value
-							SGMA_G_O_2         = abs(result_O_2.params['SIGMA'].value)
-							OFST_G_O_2         = abs(result_O_2.params['OFFSET'].value)
-							FWHM_G_O_2         = lw_sgma2fwhm(SGMA_G_O_2)
-							W_O_2              = integrate.quad(lambda x: AMPL_G_O_2*np.exp(-((x)**2)/(2*SGMA_G_O_2**2)), -np.inf, np.inf)
-							EW_O_2             = np.round(abs(np.asarray(W_O_2[0])),10)
-							EWE_O_2            = np.round(abs(np.asarray(W_O_2[1])),10)
-							data_fitted_O_2    = func_1D_Gaussian_O((lambda_glx[mask_ft]),CTRE_G_O_2,AMPL_G_O_2,SGMA_G_O_2,OFST_G_O_2)
-
-							CTRE_G_O_2_E       = result_O_2.params['X_0'].stderr
-							AMPL_G_O_2_E       = result_O_2.params['A'].stderr
-							SGMA_G_O_E         = result_O_2.params['SIGMA'].stderr
-
-							CTRE_G_O_2_cor     = result_O_2.params['X_0'].correl
-							AMPL_G_O_2_cor     = result_O_2.params['A'].correl
-							SGMA_G_O_cor       = result_O_2.params['SIGMA'].correl
-
-							chisqr_O_2         = result_O_2.chisqr
-							redchi_O_2         = result_O_2.redchi
-							
-							#####################################################################################################################
-							if ofs_ctr_fit == True:
-								print
-								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
-								print
-								lmb_min_lim_line_ft = (CTRE_G_O_2-L8_2) - MSK_NTMS*LINES[1][lines-1] #IT WAS LINE CTR - LINE OFFSET
-								lmb_max_lim_line_ft = (CTRE_G_O_2+L8_2) + MSK_NTMS*LINES[1][lines-1]
-								#lmb_min_lim_line    = (CTRE_G_O-L8_2)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_2#-20#L2_2 - 10
-								#lmb_max_lim_line    = (CTRE_G_O+L8_2)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_2#+20#L2_2 + 10
-								#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
-								mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-							else:
-								pass
-							#####################################################################################################################
-							#A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-							#inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O ####OFFSET - SHOULD BE APPLIED TO BE IDENTICAL TO METHOD GAUSS?
-							initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
-
-							gmodel_C           = Model(func_1D_Gaussian)
-							gmodel_C.set_param_hint('X_0'  , value=X0_f2DG, min=X0_f2DG - (X0_f2DG*(X0_f2DG*L7_2)), max=X0_f2DG + (X0_f2DG*(X0_f2DG*L7_2)))
-							#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C.set_param_hint('A'    , value=A_f2DG , min=A_f2DG  - (A_f2DG*(A_f2DG*L10_2)) , max=A_f2DG  + (A_f2DG*(A_f2DG*L10_2)))
-							gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_C             = gmodel_C.make_params()
-							result_C_2         = gmodel_C.fit(inten_glx[mask_ft],pars_C,
-													X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_C_2         = result_C_2.params['X_0'].value
-							AMPL_G_C_2         = result_C_2.params['A'].value
-							SGMA_G_C_2         = abs(result_C_2.params['SIGMA'].value)
-							FWHM_G_C_2         = lw_sgma2fwhm(SGMA_G_C_2)
-
-							W_C_2              = integrate.quad(lambda x: AMPL_G_C_2*np.exp(-((x)**2)/(2*SGMA_G_C_2**2)), -np.inf, np.inf)
-							EW_C_2             = np.round(abs(np.asarray(W_C_2[0])),10)
-							EWE_C_2            = np.round(abs(np.asarray(W_C_2[1])),10)
-							data_fitted_C      = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_C_2,AMPL_G_C_2,SGMA_G_C_2)
-
-							CTRE_G_C_2_E       = result_C_2.params['X_0'].stderr
-							AMPL_G_C_2_E       = result_C_2.params['A'].stderr
-							SGMA_G_C_2_E       = result_C_2.params['SIGMA'].stderr
-
-							CTRE_G_C_2_cor     = result_C_2.params['X_0'].correl
-							AMPL_G_C_2_cor     = result_C_2.params['A'].correl
-							SGMA_G_C_2_cor     = result_C_2.params['SIGMA'].correl
-
-							AMPL_SNR_2           = AMPL_G_C_2
-							CTRE_SNR_2           = CTRE_G_C_2
-							SGMA_SNR_2           = abs(SGMA_G_C_2)
-
-							if CTRE_G_C_2_E == None:
-								CTRE_G_C_2_E = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_2_E == None:
-								AMPL_G_C_2_E = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_2_E == None:
-								SGMA_G_C_2_E = 999999.99999
-							else:
-								pass
-							if CTRE_G_C_2_cor == None:
-								CTRE_G_C_2_cor = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_2_cor == None:
-								AMPL_G_C_2_cor = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_2_cor == None:
-								SGMA_G_C_2_cor = 999999.99999
-							else:
-								pass
-							chisqr_C_2        = result_C_2.chisqr
-							redchi_C_2        = result_C_2.redchi
-							##inten_glx[mask_ft] = inten_glx[mask_ft] + OFST_G_O #OFFSET +
-						except (RuntimeError,ValueError,TypeError):
-							print colored('RuntimeError','cyan')
-							popt_C_2, pcov_C_2 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_C_2           = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_C_2         = 999999.99999
-							AMPL_G_C_2         = 999999.99999
-							SGMA_G_C_2         = 999999.99999
-							FWHM_G_C_2         = 999999.99999
-							EW_C_2             = 999999.99999
-							EWE_C_2            = 999999.99999
-
-							CTRE_G_C_2_E       = 999999.99999
-							AMPL_G_C_2_E       = 999999.99999
-							SGMA_G_C_2_E       = 999999.99999
-							CTRE_G_C_2_cor     = 999999.99999
-							AMPL_G_C_2_cor     = 999999.99999
-							SGMA_G_C_2_cor     = 999999.99999
-							chisqr_C_2         = 999999.99999
-							redchi_C_2         = 999999.99999
-
-							popt_O_2 ,pcov_O_2 = [999999.99999,999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999,999999.99999]
-							perr_O_2           = [999999.99999,999999.99999,999999.99999,999999.99999]
-							CTRE_G_O_2         = 999999.99999
-							AMPL_G_O_2         = 999999.99999
-							SGMA_G_O_2         = 999999.99999
-							OFST_G_O_2         = 999999.99999
-							FWHM_G_O_2         = 999999.99999
-							EW_O_2             = 999999.99999
-							EWE_O_2            = 999999.99999
-
-							CTRE_G_O_2_E       = 999999.99999
-							AMPL_G_O_2_E       = 999999.99999
-							SGMA_G_O_2_E       = 999999.99999
-							CTRE_G_O_2_cor     = 999999.99999
-							AMPL_G_O_2_cor     = 999999.99999
-							SGMA_G_O_2_cor     = 999999.99999
-							OFST_G_O_2_cor     = 999999.99999
-							chisqr_O_2         = 999999.99999
-							redchi_O_2         = 999999.99999
-
-							AMPL_SNR_2         = 999999.99999
-							CTRE_SNR_2         = 999999.99999
-							SGMA_SNR_2         = 999999.99999
-						'''
 						print colored('Cleaning Method','cyan')
 						popt_C_2, pcov_C_2 = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_C_2           = [999999.99999,999999.99999,999999.99999]
@@ -6918,7 +5915,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-2-C & CTR-2-O) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-2-C & CTR-2-O) values will NOT be added to the fits headers!','magenta')
 							print
 
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -6954,66 +5951,66 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored(LINES[3][lines],'yellow')
 						print
 						try:
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM02')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM02')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM02')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM02')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM02')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO2')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO2')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO2')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO2')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO2')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO2')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC2')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC2')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC2')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM2')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM2')
 
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines-1])+'_CF01','yellow')
 							print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
 							print colored ('Or UnFix (fix_ctr_gau_2=False) For Plotting!','yellow')
 							print colored ('Quitting!','yellow')
 							print
-							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
+							CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')
+							AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')
+							FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')
+							EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')
+							EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')
 
-							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
+							CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')
+							AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')
+							FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')
+							EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')
+							EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')
+							OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')
 
-							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')
+							AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')
+							SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')
+							FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')
+							EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')
+							EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')
+							CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')
+							AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')
+							SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')
 
-							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+							chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')
+							redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')
 					print
 					print colored(str(LINES[0][lines-1])+'-'+str(LINES[3][lines-1])+'-CTR','magenta')
 					print colored('From '+str(LINES[3][lines])+'-CTR','cyan')
@@ -7036,7 +6033,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 							mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -7077,111 +6074,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						X0_f2DG_indx_PRE       = np.where(inten_glx[mask_ft_pre]==(max(inten_glx[mask_ft_pre])))[0]
 						x_a = lambda_glx[mask_ft_pre][X0_f2DG_indx_PRE]
 						y_a = inten_glx[mask_ft_pre][X0_f2DG_indx_PRE]
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET -
-	 					'''
-	 					try:
-							print
-							print colored('1-Fitting gaussian before line','cyan')
-							print
-							X0_f2DG_indx_PRE       = np.where(inten_glx[mask_ft_pre]==(max(inten_glx[mask_ft_pre])))[0]
-							A_f2DG_PRE             = (max(inten_glx[mask_ft_pre])-1)
-							X0_f2DG_PRE            = LINES[0][lines] - pre_shf_ctr
-							SIGMA_f2DG_PRE         = SIGMA_f2DG/2.5
-							initial_guess_C_PRE    = (X0_f2DG_PRE,A_f2DG_PRE,SIGMA_f2DG_PRE)
-							
-							x_a = lambda_glx[mask_ft_pre][X0_f2DG_indx_PRE]
-							y_a = inten_glx[mask_ft_pre][X0_f2DG_indx_PRE]
-							
-							print
-							print colored('Initial Guess Values PRE : ','cyan')
-							print colored(initial_guess_C_PRE,'cyan')
-							print X0_f2DG,pre_shf_ctr,X0_f2DG-pre_shf_ctr
-							print
-							
-							gmodel_C_PRE           = Model(func_1D_Gaussian_Emm)
-							gmodel_C_PRE.set_param_hint('X_0'  , value=X0_f2DG_PRE , min=X0_f2DG_PRE-(X0_f2DG_PRE*LINES[7][lines]), max=X0_f2DG_PRE+(X0_f2DG_PRE*LINES[7][lines]))
-							#gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C_PRE.set_param_hint('A'    , value=A_f2DG_PRE  , min=A_f2DG_PRE -(A_f2DG_PRE*LINES[10][lines]), max=A_f2DG_PRE +(A_f2DG_PRE*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C_PRE.set_param_hint('SIGMA', value=SIGMA_f2DG_PRE)
-							pars_C_PRE             = gmodel_C_PRE.make_params()
-							result_C_PRE           = gmodel_C_PRE.fit(inten_glx[mask_ft_pre],pars_C_PRE,
-													X=lambda_glx[mask_ft_pre],X_0=X0_f2DG_PRE,A=A_f2DG_PRE,SIGMA=SIGMA_f2DG_PRE,
-													nan_policy = 'omit')
-							CTRE_G_C_PRE           = result_C_PRE.params['X_0'].value
-							AMPL_G_C_PRE           = result_C_PRE.params['A'].value
-							SGMA_G_C_PRE           = abs(result_C_PRE.params['SIGMA'].value)
-							FWHM_G_C_PRE           = lw_sgma2fwhm(SGMA_G_C_PRE)
 
-							W_C_PRE                = integrate.quad(lambda x: AMPL_G_C_PRE*np.exp(-((x)**2)/(2*SGMA_G_C_PRE**2)), -np.inf, np.inf)
-							EW_C_PRE               = np.round(abs(np.asarray(W_C_PRE[0])),10)
-							EWE_C_PRE              = np.round(abs(np.asarray(W_C_PRE[1])),10)
-							data_fitted_C_PRE      = func_1D_Gaussian_Emm((lambda_glx[mask_ft_pre]), CTRE_G_C_PRE,AMPL_G_C_PRE,SGMA_G_C_PRE)
-							
-							CTRE_G_C_PRE_E         = result_C_PRE.params['X_0'].stderr
-							AMPL_G_C_PRE_E         = result_C_PRE.params['A'].stderr
-							SGMA_G_C_PRE_E         = result_C_PRE.params['SIGMA'].stderr
-							
-							CTRE_G_C_PRE_cor       = result_C_PRE.params['X_0'].correl
-							AMPL_G_C_PRE_cor       = result_C_PRE.params['A'].correl
-							SGMA_G_C_PRE_cor       = result_C_PRE.params['SIGMA'].correl
-							
-							AMPL_SNR               = AMPL_G_C_PRE
-							CTRE_SNR               = CTRE_G_C_PRE
-							SGMA_SNR               = abs(SGMA_G_C_PRE)
-							
-							if CTRE_G_C_PRE_E == None or np.isnan(CTRE_G_C_PRE_E):
-								CTRE_G_C_PRE_E = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_PRE_E == None:
-								AMPL_G_C_PRE_E = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_PRE_E == None:
-								SGMA_G_C_PRE_E = 999999.99999
-							else:
-								pass
-							if CTRE_G_C_PRE_cor == None:
-								CTRE_G_C_PRE_cor = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_PRE_cor == None:
-								AMPL_G_C_PRE_cor = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_PRE_cor == None:
-								SGMA_G_C_PRE_cor = 999999.99999
-							else:
-								pass
-							chisqr_C_PRE           = result_C_PRE.chisqr
-							redchi_C_PRE           = result_C_PRE.redchi
-							
-							
-							W_C_PR1    = integrate.quad(lambda x: AMPL_G_C_PRE*np.exp(-((x)**2)/(2*SGMA_G_C_PRE**2)), x_a, np.inf)
-							EW_C_PR1   = np.round(abs(np.asarray(W_C_PR1[0])),10)
-							EWE_C_PR1  = np.round(abs(np.asarray(W_C_PR1[1])),10)
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET +
-						#except (RuntimeError,ValueError,TypeError):
-						except (RuntimeError,ValueError,TypeError):
-							print colored('RuntimeError','cyan')
-							popt_C_PRE, pcov_C_PRE  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_C_PRE          = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_C_PRE        = 999999.99999
-							AMPL_G_C_PRE        = 999999.99999
-							SGMA_G_C_PRE        = 999999.99999
-							FWHM_G_C_PRE        = 999999.99999
-							EW_C_PRE            = 999999.99999
-							EWE_C_PRE           = 999999.99999
-							
-							CTRE_G_C_PRE_E      = 999999.99999
-							AMPL_G_C_PRE_E      = 999999.99999
-							SGMA_G_C_PRE_E      = 999999.99999
-							CTRE_G_C_PRE_cor    = 999999.99999
-							AMPL_G_C_PRE_cor    = 999999.99999
-							SGMA_G_C_PRE_cor    = 999999.99999
-							chisqr_C_PRE        = 999999.99999
-							redchi_C_PRE        = 999999.99999
-						'''
 						print colored('Cleaning Method','cyan')
 						popt_C_PRE, pcov_C_PRE  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_C_PRE          = [999999.99999,999999.99999,999999.99999]
@@ -7221,7 +6114,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (PRE) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PRE) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -7236,33 +6129,32 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print colored('Initial Guess Values for line Fitting will NOT be recorded!','yellow')
 							print
 							pass
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET -						
 					elif fix_pre_gau == True or (fix_pre_gau == False and pre_shf_lim<=0):
 						try:
 							print
 							print colored('1 PRE-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							chisqr_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHML')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-							redchi_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRML')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
-							CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM1')#,float(FWHM_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM1')#,float(EW_C_PRE)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM1')#,float(EWE_C_PRE)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME1')#,float(CTRE_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME1')#,float(AMPL_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME1')#,float(SGMA_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							chisqr_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHML')
+							redchi_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRML')
+							CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')
+							AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')
+							SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')
+							FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM1')
+							EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM1')
+							EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM1')
+							CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME1')
+							AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME1')
+							SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME1')
 							
-							x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM1')#,float(x_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR X1 COO')
-							y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM1')#,float(y_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR Y1 COO')
+							x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM1')
+							y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM1')
 						
-							pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM1')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM1')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM1')
+							pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM1')
 							
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!' ,'yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!' ,'yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (PRE)!','yellow')
@@ -7301,7 +6193,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 							mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -7342,104 +6234,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						X0_f2DG_indx_PST       = np.where(inten_glx[mask_ft_pst]==(max(inten_glx[mask_ft_pst])))[0]
 						x_b = lambda_glx[mask_ft_pst][X0_f2DG_indx_PST]
 						y_b = inten_glx[mask_ft_pst][X0_f2DG_indx_PST]
-						'''
-						try:
-							print colored('2-Fitting gaussian after line','cyan')
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET
-							X0_f2DG_indx_PST       = np.where(inten_glx[mask_ft_pst]==(max(inten_glx[mask_ft_pst])))[0]
-							A_f2DG_PST             = (max(inten_glx[mask_ft_pst])-1)
-							X0_f2DG_PST            = LINES[0][lines] + pst_shf_ctr#
-							SIGMA_f2DG_PST         = SIGMA_f2DG/2
-							initial_guess_C_PST    = (X0_f2DG_PST,A_f2DG_PST,SIGMA_f2DG_PST)#,max(inten_glx[mask_ft_pst])-1)
-							
-							print
-							print colored('Initial Guess Values PST : ','cyan')
-							print colored(initial_guess_C_PST,'cyan')
-							print
-							
-							gmodel_C_PST           = Model(func_1D_Gaussian_Emm)
-							gmodel_C_PST.set_param_hint('X_0'  , value=X0_f2DG_PST , min=X0_f2DG_PST-(X0_f2DG_PST*LINES[7][lines]), max=X0_f2DG_PST+(X0_f2DG_PST*LINES[7][lines]))
-							#gmodel_C_PST.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_C_PST.set_param_hint('A'    , value=A_f2DG_PST  , min=A_f2DG_PST -(A_f2DG_PST*LINES[10][lines]), max=A_f2DG_PST +(A_f2DG_PST*LINES[10][lines]))#min=A_f2DG_PST-0.001, max=A_f2DG_PST)
-							gmodel_C_PST.set_param_hint('SIGMA', value=SIGMA_f2DG_PST)
-							pars_C_PST             = gmodel_C_PST.make_params()
-							result_C_PST           = gmodel_C_PST.fit(inten_glx[mask_ft_pst],pars_C_PST,
-													X=lambda_glx[mask_ft_pst],X_0=X0_f2DG_PST,A=A_f2DG_PST,SIGMA=SIGMA_f2DG_PST,
-													nan_policy = 'omit')
-							CTRE_G_C_PST           = result_C_PST.params['X_0'].value
-							AMPL_G_C_PST           = result_C_PST.params['A'].value
-							SGMA_G_C_PST           = abs(result_C_PST.params['SIGMA'].value)
-							FWHM_G_C_PST           = lw_sgma2fwhm(SGMA_G_C_PST)
 
-							W_C_PST                = integrate.quad(lambda x: AMPL_G_C_PST*np.exp(-((x)**2)/(2*SGMA_G_C_PST**2)), -np.inf, np.inf)
-							EW_C_PST               = np.round(abs(np.asarray(W_C_PST[0])),10)
-							EWE_C_PST              = np.round(abs(np.asarray(W_C_PST[1])),10)
-							data_fitted_C_PST      = func_1D_Gaussian_Emm((lambda_glx[mask_ft_pst]), CTRE_G_C_PST,AMPL_G_C_PST,SGMA_G_C_PST)
-							
-							CTRE_G_C_PST_E         = result_C_PST.params['X_0'].stderr
-							AMPL_G_C_PST_E         = result_C_PST.params['A'].stderr
-							SGMA_G_C_PST_E         = result_C_PST.params['SIGMA'].stderr
-							
-							CTRE_G_C_PST_cor       = result_C_PST.params['X_0'].correl
-							AMPL_G_C_PST_cor       = result_C_PST.params['A'].correl
-							SGMA_G_C_PST_cor       = result_C_PST.params['SIGMA'].correl
-							
-							AMPL_SNR           = AMPL_G_C_PST
-							CTRE_SNR           = CTRE_G_C_PST
-							SGMA_SNR           = abs(SGMA_G_C_PST)
-							
-							if CTRE_G_C_PST_E == None:
-								CTRE_G_C_PST_E = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_PST_E == None:
-								AMPL_G_C_PST_E = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_PST_E == None:
-								SGMA_G_C_PST_E = 999999.99999
-							else:
-								pass
-							if CTRE_G_C_PST_cor == None:
-								CTRE_G_C_PST_cor = 999999.99999
-							else:
-								pass
-							if AMPL_G_C_PST_cor == None:
-								AMPL_G_C_PST_cor = 999999.99999
-							else:
-								pass
-							if SGMA_G_C_PST_cor == None:
-								SGMA_G_C_PST_cor = 999999.99999
-							else:
-								pass
-							chisqr_C_PST           = result_C_PST.chisqr
-							redchi_C_PST           = result_C_PST.redchi
-							
-							W_C_PS2    = integrate.quad(lambda x: AMPL_G_C_PST*np.exp(-((x)**2)/(2*SGMA_G_C_PST**2)), -np.inf, x_b)
-							EW_C_PS2   = np.round(abs(np.asarray(W_C_PS2[0])),10)
-							EWE_C_PS2  = np.round(abs(np.asarray(W_C_PS2[1])),10)
-							#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET +
-						except (RuntimeError,ValueError,TypeError):
-							print colored('RuntimeError','cyan')
-							popt_C_PST, pcov_C_PST  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-							perr_C_PST          = [999999.99999,999999.99999,999999.99999]
-							CTRE_G_C_PST        = 999999.99999
-							AMPL_G_C_PST        = 999999.99999
-							SGMA_G_C_PST        = 999999.99999
-							FWHM_G_C_PST        = 999999.99999
-							EW_C_PST            = 999999.99999
-							EWE_C_PST           = 999999.99999
-							
-														
-							CTRE_G_C_PST_E      = 999999.99999
-							AMPL_G_C_PST_E      = 999999.99999
-							SGMA_G_C_PST_E      = 999999.99999
-							CTRE_G_C_PST_cor    = 999999.99999
-							AMPL_G_C_PST_cor    = 999999.99999
-							SGMA_G_C_PST_cor    = 999999.99999
-							chisqr_C_PST        = 999999.99999
-							redchi_C_PST        = 999999.99999								
-						'''
 						print colored('Cleaning Method','cyan')
 						popt_C_PST, pcov_C_PST  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_C_PST          = [999999.99999,999999.99999,999999.99999]
@@ -7474,7 +6269,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							Header_Add(specfile_glx,str(LINES[5][lines])+'_YAM2',float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
 						else:
 							print
-							print colored('The fit (PST) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PST) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -7495,24 +6290,24 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('2 PST-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM2')#,float(FWHM_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM2')#,float(EW_C_PST)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM2')#,float(EWE_C_PST)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')#,float(CTRE_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')#,float(AMPL_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')#,float(SGMA_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')
+							AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')
+							SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')
+							FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM2')
+							EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM2')
+							EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM2')
+							CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')
+							AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')
+							SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')
 							
-							x_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM2')#,float(x_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-							y_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM2')#,float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
+							x_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM2')
+							y_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM2')
 							
-							pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM2')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM2')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM2')
+							pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM2')
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -7546,14 +6341,14 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					###################################################POST GAUSSIAN##################################################										
 
 					###################################################MDL GAUSSIAN###################################################
-					if fix_mdl_gau == False:# and mdl_shf_lim>0:
+					if fix_mdl_gau == False:
 						if mdl_shf_lim>0:
 							#########################################DEFINING PRE-PST-MDL REGIONS################################################
 							if ofs_ctr_fit == True:
 								print
 								print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 								print
-								lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+								lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 								lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 								mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 								mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -7599,104 +6394,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							X0_f2DG_indx_MDL       = np.where(inten_glx[mask_ft_mdl]==(max(inten_glx[mask_ft_mdl])))[0]
 							x_c = lambda_glx[mask_ft_mdl][X0_f2DG_indx_MDL]
 							y_c = inten_glx[mask_ft_mdl][X0_f2DG_indx_MDL]
-							'''
-							try:
-								print colored('3-Fitting gaussian between lines','green')
-								#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET
-								X0_f2DG_indx_MDL       = np.where(inten_glx[mask_ft_mdl]==(max(inten_glx[mask_ft_mdl])))[0]
-								A_f2DG_MDL             = (max(inten_glx[mask_ft_mdl])-1)
-								X0_f2DG_MDL            = LINES[0][lines] + mdl_shf_ctr#
-								SIGMA_f2DG_MDL         = SIGMA_f2DG/2
-								initial_guess_C_MDL    = (X0_f2DG_MDL,A_f2DG_MDL,SIGMA_f2DG_MDL)#,max(inten_glx[mask_ft_mdl])-1)
-								
-								print
-								print colored('Initial Guess Values MDL : ','green')
-								print colored(initial_guess_C_MDL,'green')
-								print
-								
-								gmodel_C_MDL           = Model(func_1D_Gaussian_Emm)
-								gmodel_C_MDL.set_param_hint('X_0'  , value=X0_f2DG_MDL , min=X0_f2DG_MDL-(X0_f2DG_MDL*LINES[7][lines]), max=X0_f2DG_MDL+(X0_f2DG_MDL*LINES[7][lines]))
-								#gmodel_C_MDL.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-								gmodel_C_MDL.set_param_hint('A'    , value=A_f2DG_MDL  , min=A_f2DG_MDL -(A_f2DG_MDL*LINES[10][lines]), max=A_f2DG_MDL +(A_f2DG_MDL*LINES[10][lines]))#min=A_f2DG_MDL-0.001, max=A_f2DG_MDL)
-								gmodel_C_MDL.set_param_hint('SIGMA', value=SIGMA_f2DG_MDL)
-								pars_C_MDL             = gmodel_C_MDL.make_params()
-								result_C_MDL           = gmodel_C_MDL.fit(inten_glx[mask_ft_mdl],pars_C_MDL,
-														X=lambda_glx[mask_ft_mdl],X_0=X0_f2DG_MDL,A=A_f2DG_MDL,SIGMA=SIGMA_f2DG_MDL,
-														nan_policy = 'omit')
-								CTRE_G_C_MDL           = result_C_MDL.params['X_0'].value
-								AMPL_G_C_MDL           = result_C_MDL.params['A'].value
-								SGMA_G_C_MDL           = abs(result_C_MDL.params['SIGMA'].value)
-								FWHM_G_C_MDL           = lw_sgma2fwhm(SGMA_G_C_MDL)
 
-								W_C_MDL                = integrate.quad(lambda x: AMPL_G_C_MDL*np.exp(-((x)**2)/(2*SGMA_G_C_MDL**2)), -np.inf, np.inf)
-								EW_C_MDL               = np.round(abs(np.asarray(W_C_MDL[0])),10)
-								EWE_C_MDL              = np.round(abs(np.asarray(W_C_MDL[1])),10)
-								data_fitted_C_MDL      = func_1D_Gaussian_Emm((lambda_glx[mask_ft_mdl]), CTRE_G_C_MDL,AMPL_G_C_MDL,SGMA_G_C_MDL)
-								
-								CTRE_G_C_MDL_E         = result_C_MDL.params['X_0'].stderr
-								AMPL_G_C_MDL_E         = result_C_MDL.params['A'].stderr
-								SGMA_G_C_MDL_E         = result_C_MDL.params['SIGMA'].stderr
-								
-								CTRE_G_C_MDL_cor       = result_C_MDL.params['X_0'].correl
-								AMPL_G_C_MDL_cor       = result_C_MDL.params['A'].correl
-								SGMA_G_C_MDL_cor       = result_C_MDL.params['SIGMA'].correl
-								
-								AMPL_SNR               = AMPL_G_C_MDL
-								CTRE_SNR               = CTRE_G_C_MDL
-								SGMA_SNR               = abs(SGMA_G_C_MDL)
-								
-								if CTRE_G_C_MDL_E == None:
-									CTRE_G_C_MDL_E = 999999.99999
-								else:
-									pass
-								if AMPL_G_C_MDL_E == None:
-									AMPL_G_C_MDL_E = 999999.99999
-								else:
-									pass
-								if SGMA_G_C_MDL_E == None:
-									SGMA_G_C_MDL_E = 999999.99999
-								else:
-									pass
-								if CTRE_G_C_MDL_cor == None:
-									CTRE_G_C_MDL_cor = 999999.99999
-								else:
-									pass
-								if AMPL_G_C_MDL_cor == None:
-									AMPL_G_C_MDL_cor = 999999.99999
-								else:
-									pass
-								if SGMA_G_C_MDL_cor == None:
-									SGMA_G_C_MDL_cor = 999999.99999
-								else:
-									pass
-								chisqr_C_MDL           = result_C_MDL.chisqr
-								redchi_C_MDL           = result_C_MDL.redchi
-								
-								W_C_PS3    = integrate.quad(lambda x: AMPL_G_C_MDL*np.exp(-((x)**2)/(2*SGMA_G_C_MDL**2)), -np.inf, x_c)
-								EW_C_PS3   = np.round(abs(np.asarray(W_C_PS3[0])),10)
-								EWE_C_PS3  = np.round(abs(np.asarray(W_C_PS3[1])),10)
-								#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET +
-							except (RuntimeError,ValueError,TypeError):
-								print colored('RuntimeError','green')
-								popt_C_MDL, pcov_C_MDL  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-								perr_C_MDL          = [999999.99999,999999.99999,999999.99999]
-								CTRE_G_C_MDL        = 999999.99999
-								AMPL_G_C_MDL        = 999999.99999
-								SGMA_G_C_MDL        = 999999.99999
-								FWHM_G_C_MDL        = 999999.99999
-								EW_C_MDL            = 999999.99999
-								EWE_C_MDL           = 999999.99999
-								
-															
-								CTRE_G_C_MDL_E      = 999999.99999
-								AMPL_G_C_MDL_E      = 999999.99999
-								SGMA_G_C_MDL_E      = 999999.99999
-								CTRE_G_C_MDL_cor    = 999999.99999
-								AMPL_G_C_MDL_cor    = 999999.99999
-								SGMA_G_C_MDL_cor    = 999999.99999
-								chisqr_C_MDL        = 999999.99999
-								redchi_C_MDL        = 999999.99999
-							'''
 							print colored('Cleaning Method','green')
 							popt_C_MDL, pcov_C_MDL  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 							perr_C_MDL          = [999999.99999,999999.99999,999999.99999]
@@ -7753,7 +6451,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							Header_Add(specfile_glx,str(LINES[5][lines])+'_YAM3',float(y_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' MDL GAU-LNR Y3 COO')
 						else:
 							print
-							print colored('The fit (MDL) values will not be added to the fits headers!','green')
+							print colored('The fit (MDL) values will NOT be added to the fits headers!','green')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -7767,33 +6465,32 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Initial Guess Values for line Fitting will NOT be recorded!','yellow')
 							print
-							pass
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] + OFST_G_O #OFFSET -
-					elif fix_mdl_gau == True:# or (fix_mdl_gau == False and mdl_shf_lim<=0):
+							pass						
+					elif fix_mdl_gau == True:
 						try:
 							print
 							print colored('3- MDL-gaussian already fitted!','yellow')
 							print colored('Values from fits header','yellow')
-							CTRE_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')#,float(CTRE_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-							AMPL_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')#,float(AMPL_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-							SGMA_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')#,float(SGMA_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-							FWHM_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM3')#,float(FWHM_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-							EW_C_MDL       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM3')#,float(EW_C_MDL)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-							EWE_C_MDL      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM3')#,float(EWE_C_MDL)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-							CTRE_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')#,float(CTRE_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-							AMPL_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')#,float(AMPL_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-							SGMA_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')#,float(SGMA_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+							CTRE_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')
+							AMPL_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')
+							SGMA_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')
+							FWHM_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM3')
+							EW_C_MDL       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM3')
+							EWE_C_MDL      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM3')
+							CTRE_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')
+							AMPL_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')
+							SGMA_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')
 							
-							x_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM3')#,float(x_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-							y_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM3')#,float(y_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
-							EW_C_PS3       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WRM3')#,float(EW_C_PS3),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PST' + str(fit_type))
-							EWE_C_PS3      = Header_Get(specfile_glx,str(LINES[5][lines])+'_ERM3')#,float(EWE_C_PS3),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
+							x_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM3')
+							y_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM3')
+							EW_C_PS3       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WRM3')
+							EWE_C_PS3      = Header_Get(specfile_glx,str(LINES[5][lines])+'_ERM3')
 							
-							mdl_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM3')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-							mdl_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM3')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+							mdl_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM3')
+							mdl_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM3')
 						except KeyError:
 							print
-							print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+							print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 							print colored ('File  : ' + specfile_glx,'yellow')
 							print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 							print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -7842,25 +6539,25 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					#############################################COMPUTING LINEAR AREA###################################################
 					###############################################COMPUTING TOTAL AREA###############################################
-					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')
+					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')
+					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')
 
-					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')
+					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')
+					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')
 
-					CTRE_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')
+					AMPL_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')
+					SGMA_G_C_PRE  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')
 
-					CTRE_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')
+					AMPL_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')
+					SGMA_G_C_PST  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')
 
-					CTRE_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')#,float(CTRE_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')#,float(AMPL_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
+					CTRE_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')
+					AMPL_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')
+					SGMA_G_C_MDL  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')
 
 					print
 					print colored('Computing Areas using info from fits headers.','yellow')
@@ -7958,7 +6655,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 
 					else:
 						print
-						print colored('The Areas values will not be updated to the fits headers!','magenta')
+						print colored('The Areas values will NOT be updated to the fits headers!','magenta')
 						print
 					#############################################ADDING AREA TO FTIS HEADER#############################################
 					#################################DEFINE AREA FOR LATER ON SUBSTRACT OFFSET FOR PLOTING###############################
@@ -7967,7 +6664,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 						print
-						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 						lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 						mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 						mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -8023,99 +6720,15 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					fit_typ = 'G'
 					#GAUSSIAN FIT
 					MSK_NTMS=2.5
-					'''
-					print
-					print colored('1D Gaussian Fit Mode Choosen: Lmfit (Offset)','cyan')
-					print
-					from lmfit import Model
 
-					'''
-					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 					lmb_max_lim_line_ft = (LINES[0][lines]+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
-					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#- 20#LINES[2][lines] - 10 #IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+ 20#LINES[2][lines] + 10
+					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]
+					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-					'''
-					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0] #+ ' ' + stk_function
 
-					X0_f2DG    = (LINES[0][lines]+LINES[8][lines])
-					SIGMA_f2DG = LINES[1][lines]
-					A_f2DG     = -(1-(min(inten_glx[mask_ft])))
-
-					max_val    = -(1-min(inten_glx[mask_ft]))
-					lambda_max = (lambda_glx[np.where(inten_glx==min(inten_glx[mask_ft]))[0]][0])					
-
-					if pre_off_plt == True:
-						plt.step(lambda_glx[mask_pl], inten_glx[mask_pl],
-								where='mid',lw=3.0,alpha=0.5,linestyle=':',color='gray',
-								label='Original Spectrum')
-					elif pre_off_plt == False:
-						pass
-
-					'''
-					#hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					#hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					#Header_Add(specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hst Fit Spec Reg (med)')
-					#Header_Add(specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hsw Fit Spec Reg (med)')
-					#print specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med)
-					#print specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med)
-					'''
-					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
-					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
-					try:
-						gmodel_0           = Model(func_1D_Gaussian)
-						gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-						#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
-						pars_0             = gmodel_0.make_params()							
-						result_0           = gmodel_0.fit(inten_glx[mask_ft],pars_0,
-												X=lambda_glx[mask_ft],
-												X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-												nan_policy = 'omit')
-						CTRE_G_0           = result_0.params['X_0'].value
-						AMPL_G_0           = result_0.params['A'].value
-						SGMA_G_0           = abs(result_0.params['SIGMA'].value)
-						FWHM_G_0           = lw_sgma2fwhm(SGMA_G_0)
-						W_0                = integrate.quad(lambda x: AMPL_G_0*np.exp(-((x)**2)/(2*SGMA_G_0**2)), -np.inf, np.inf)
-						EW_0               = np.round(abs(np.asarray(W_0[0])),3)
-						EWE_0              = np.round(abs(np.asarray(W_0[1])),10)
-						data_fitted_0      = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_0,AMPL_G_0,SGMA_G_0)
-
-						CTRE_G_0_E         = result_0.params['X_0'].stderr
-						AMPL_G_0_E         = result_0.params['A'].stderr
-						SGMA_G_0_E         = result_0.params['SIGMA'].stderr
-
-						CTRE_G_0_cor       = result_0.params['X_0'].correl
-						AMPL_G_0_cor       = result_0.params['A'].correl
-						SGMA_G_0_cor       = result_0.params['SIGMA'].correl
-
-						chisqr_0           = result_0.chisqr
-						redchi_0           = result_0.redchi
-
-					except (RuntimeError,ValueError,TypeError):
-						popt_0, pcov_0     = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-						perr_0             = [999999.99999,999999.99999,999999.99999]
-						CTRE_G_0           = 999999.99999
-						AMPL_G_0           = 999999.99999
-						SGMA_G_0           = 999999.99999
-						FWHM_G_0           = 999999.99999
-						EW_0               = 999999.99999
-						EWE_0              = 999999.99999
-
-						CTRE_G_0_E         = 999999.99999
-						AMPL_G_0_E         = 999999.99999
-						SGMA_G_0_E         = 999999.99999
-
-						CTRE_G_0_cor       = 999999.99999
-						AMPL_G_0_cor       = 999999.99999
-						SGMA_G_0_cor       = 999999.99999
-
-						chisqr_0           = 999999.99999
-						redchi_0           = 999999.99999
-					'''
 					popt_0, pcov_0     = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 					perr_0             = [999999.99999,999999.99999,999999.99999]
 					CTRE_G_0           = 999999.99999
@@ -8143,163 +6756,9 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_EGF0',float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
 					else:
 						print
-						print colored('The fit values will not be added to the fits headers!','magenta')
+						print colored('The fit values will NOT be added to the fits headers!','magenta')
 						print
-					'''
-					try:
-						gmodel_O           = Model(func_1D_Gaussian_O)
-						gmodel_O.set_param_hint('X_0'   , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-						#gmodel_O.set_param_hint('A'     , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_O.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_O.set_param_hint('SIGMA' , value=SIGMA_f2DG)
-						gmodel_O.set_param_hint('OFFSET', value=max(inten_glx[mask_ft])-1)
-						pars_O             = gmodel_O.make_params()
 
-						result_O           = gmodel_O.fit(inten_glx[mask_ft],pars_O,
-												X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,OFFSET=max(inten_glx[mask_ft])-1,
-												nan_policy = 'omit')
-						CTRE_G_O           = result_O.params['X_0'].value
-						AMPL_G_O           = result_O.params['A'].value
-						SGMA_G_O           = abs(result_O.params['SIGMA'].value)
-						OFST_G_O           = abs(result_O.params['OFFSET'].value)
-						FWHM_G_O           = lw_sgma2fwhm(SGMA_G_O)
-						W_O                = integrate.quad(lambda x: AMPL_G_O*np.exp(-((x)**2)/(2*SGMA_G_O**2)), -np.inf, np.inf)
-						EW_O               = np.round(abs(np.asarray(W_O[0])),3)
-						EWE_O              = np.round(abs(np.asarray(W_O[1])),10)
-						data_fitted_O      = func_1D_Gaussian_O((lambda_glx[mask_ft]),CTRE_G_O,AMPL_G_O,SGMA_G_O,OFST_G_O)
-
-						CTRE_G_O_E         = result_O.params['X_0'].stderr
-						AMPL_G_O_E         = result_O.params['A'].stderr
-						SGMA_G_O_E         = result_O.params['SIGMA'].stderr
-
-						CTRE_G_O_cor       = result_O.params['X_0'].correl
-						AMPL_G_O_cor       = result_O.params['A'].correl
-						SGMA_G_O_cor       = result_O.params['SIGMA'].correl
-
-						chisqr_O           = result_O.chisqr
-						redchi_O           = result_O.redchi
-						
-						#####################################################################################################################
-						if ofs_ctr_fit == True:
-							print
-							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
-							print
-							lmb_min_lim_line_ft = (CTRE_G_O-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
-							lmb_max_lim_line_ft = (CTRE_G_O+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
-							#lmb_min_lim_line    = (CTRE_G_O-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#-20#LINES[2][lines] - 10 #IT WAS LINE CTR - LINE OFFSET
-							#lmb_max_lim_line    = (CTRE_G_O+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+20#LINES[2][lines] + 10
-							#mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
-							mask_ft     = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-						else:
-							pass
-						#####################################################################################################################
-
-						inten_glx[mask_ft] = inten_glx[mask_ft] - OFST_G_O
-						A_f2DG             = -(1-(min(inten_glx[mask_ft])))
-						initial_guess_C    = (X0_f2DG,A_f2DG,SIGMA_f2DG)#,max(inten_glx[mask_ft])-1)
-
-						gmodel_C           = Model(func_1D_Gaussian)
-						gmodel_C.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-						#gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_C.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
-						gmodel_C.set_param_hint('SIGMA', value=SIGMA_f2DG)
-						pars_C             = gmodel_C.make_params()
-						result_C           = gmodel_C.fit(inten_glx[mask_ft],pars_C,
-												X=lambda_glx[mask_ft],X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-												nan_policy = 'omit')
-						CTRE_G_C           = result_C.params['X_0'].value
-						AMPL_G_C           = result_C.params['A'].value
-						SGMA_G_C           = abs(result_C.params['SIGMA'].value)
-						FWHM_G_C           = lw_sgma2fwhm(SGMA_G_C)
-						W_C                = integrate.quad(lambda x: AMPL_G_C*np.exp(-((x)**2)/(2*SGMA_G_C**2)), -np.inf, np.inf)
-
-						EW_C               = np.round(abs(np.asarray(W_C[0])),3)
-						EWE_C              = np.round(abs(np.asarray(W_C[1])),10)
-						data_fitted_C      = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_C,AMPL_G_C,SGMA_G_C)
-
-						CTRE_G_C_E         = result_C.params['X_0'].stderr
-						AMPL_G_C_E         = result_C.params['A'].stderr
-						SGMA_G_C_E         = result_C.params['SIGMA'].stderr
-
-						CTRE_G_C_cor       = result_C.params['X_0'].correl
-						AMPL_G_C_cor       = result_C.params['A'].correl
-						SGMA_G_C_cor       = result_C.params['SIGMA'].correl
-
-						AMPL_SNR           = AMPL_G_C
-						CTRE_SNR           = CTRE_G_C
-						SGMA_SNR           = abs(SGMA_G_C)
-
-						if CTRE_G_C_E == None:
-							CTRE_G_C_E = 999999.99999
-						else:
-							pass
-						if AMPL_G_C_E == None:
-							AMPL_G_C_E = 999999.99999
-						else:
-							pass
-						if SGMA_G_C_E == None:
-							SGMA_G_C_E = 999999.99999
-						else:
-							pass
-						if CTRE_G_C_cor == None:
-							CTRE_G_C_cor = 999999.99999
-						else:
-							pass
-						if AMPL_G_C_cor == None:
-							AMPL_G_C_cor = 999999.99999
-						else:
-							pass
-						if SGMA_G_C_cor == None:
-							SGMA_G_C_cor = 999999.99999
-						else:
-							pass
-						chisqr_C           = result_C.chisqr
-						redchi_C           = result_C.redchi
-					except (RuntimeError,ValueError,TypeError):
-						print colored('RuntimeError','cyan')
-						popt_C, pcov_C  = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
-						perr_C          = [999999.99999,999999.99999,999999.99999]
-						CTRE_G_C        = 999999.99999
-						AMPL_G_C        = 999999.99999
-						SGMA_G_C        = 999999.99999
-						FWHM_G_C        = 999999.99999
-						EW_C            = 999999.99999
-						EWE_C           = 999999.99999
-
-						CTRE_G_C_E      = 999999.99999
-						AMPL_G_C_E      = 999999.99999
-						SGMA_G_C_E      = 999999.99999
-						CTRE_G_C_cor    = 999999.99999
-						AMPL_G_C_cor    = 999999.99999
-						SGMA_G_C_cor    = 999999.99999
-						chisqr_C        = 999999.99999
-						redchi_C        = 999999.99999
-
-						popt_O, pcov_O  = [999999.99999,999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999,999999.99999]
-						perr_O          = [999999.99999,999999.99999,999999.99999,999999.99999]
-						CTRE_G_O        = 999999.99999
-						AMPL_G_O        = 999999.99999
-						SGMA_G_O        = 999999.99999
-						OFST_G_O        = 999999.99999
-						FWHM_G_O        = 999999.99999
-						EW_O            = 999999.99999
-						EWE_O           = 999999.99999
-
-						CTRE_G_O_E      = 999999.99999
-						AMPL_G_O_E      = 999999.99999
-						SGMA_G_O_E      = 999999.99999
-						CTRE_G_O_cor    = 999999.99999
-						AMPL_G_O_cor    = 999999.99999
-						SGMA_G_O_cor    = 999999.99999
-						OFST_G_O_cor    = 999999.99999
-						chisqr_O        = 999999.99999
-						redchi_O        = 999999.99999
-
-						AMPL_SNR        = 999999.99999
-						CTRE_SNR        = 999999.99999
-						SGMA_SNR        = 999999.99999
-
-					'''
 					perr_C          = [999999.99999,999999.99999,999999.99999]
 					CTRE_G_C        = 999999.99999
 					AMPL_G_C        = 999999.99999
@@ -8378,55 +6837,24 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_CRGL',float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
 					else:
 						print
-						print colored('The fit values will not be added to the fits headers!','magenta')
+						print colored('The fit values will NOT be added to the fits headers!','magenta')
 						print
 						pass
 				elif 'Dbl' not in LINES[3][lines] and fit_fnct=='gaussM'  and fit_type == 'lmfit' and uft_lne_vls == True:
 					fit_typ = 'GM'
 					#GAUSSIAN FIT
 					MSK_NTMS=2.5
-					'''
-					print
-					print colored('1D Gaussian Fit Mode Choosen: Lmfit (Offset)','cyan')
-					print
-					from lmfit import Model
-					'''
 
-					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 					lmb_max_lim_line_ft = (LINES[0][lines]+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
-					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#- 20#LINES[2][lines] - 10 #IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+ 20#LINES[2][lines] + 10
+					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]
+					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
 					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0] #+ ' ' + stk_function
 
-					
-					'''
-					X0_f2DG    = (LINES[0][lines]+LINES[8][lines])
-					SIGMA_f2DG = LINES[1][lines]
-					A_f2DG     = -(1-(min(inten_glx[mask_ft])))
 
-					max_val    = -(1-min(inten_glx[mask_ft]))
-					lambda_max = (lambda_glx[np.where(inten_glx==min(inten_glx[mask_ft]))[0]][0])					
-
-					if pre_off_plt == True:
-						plt.step(lambda_glx[mask_pl], inten_glx[mask_pl],
-								where='mid',lw=3.0,alpha=0.5,linestyle=':',color='gray',
-								label='Original Spectrum')
-					elif pre_off_plt == False:
-						pass
-
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hst[mask_ft]))
-					hsw_nmb_med = np.ceil(np.median(inten_glx_hsw[mask_ft]))
-					Header_Add(specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hst Fit Spec Reg (med)')
-					Header_Add(specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + '# glxs stk hsw Fit Spec Reg (med)')
-					print specfile_glx,str(LINES[5][lines])+'_NHT',float(hsw_nmb_med) 
-					print specfile_glx,str(LINES[5][lines])+'_NHW',float(hsw_nmb_med) 
-
-					initial_guess_O   = (X0_f2DG,A_f2DG,SIGMA_f2DG,max(inten_glx[mask_ft])-1)
-					initial_guess_0   = (X0_f2DG,A_f2DG,SIGMA_f2DG)
-					'''
 									
 					##################################################CENTRAL GAUSSIAN###################################################
 					if fix_ctr_gau == False:
@@ -8434,40 +6862,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('0-Fitting Central line','cyan')
 						print
 						#################################################CENTRAL GAUSSIAN-0##################################################
-						'''
-						try:
-							gmodel_0           = Model(func_1D_Gaussian)
-							gmodel_0.set_param_hint('X_0'  , value=X0_f2DG   , min=X0_f2DG-(X0_f2DG*LINES[7][lines]), max=X0_f2DG+(X0_f2DG*LINES[7][lines]))
-							#gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('A'    , value=A_f2DG    , min=A_f2DG  - (A_f2DG*LINES[10][lines]) , max=A_f2DG  + (A_f2DG*LINES[10][lines]))#min=A_f2DG-0.001, max=A_f2DG)
-							gmodel_0.set_param_hint('SIGMA', value=SIGMA_f2DG)
-							pars_0             = gmodel_0.make_params()							
-							result_0           = gmodel_0.fit(inten_glx[mask_ft],pars_0,
-													X=lambda_glx[mask_ft],
-													X_0=X0_f2DG,A=A_f2DG,SIGMA=SIGMA_f2DG,
-													nan_policy = 'omit')
-							CTRE_G_0           = result_0.params['X_0'].value
-							AMPL_G_0           = result_0.params['A'].value
-							SGMA_G_0           = abs(result_0.params['SIGMA'].value)
-							FWHM_G_0           = lw_sgma2fwhm(SGMA_G_0)
-							W_0                = integrate.quad(lambda x: AMPL_G_0*np.exp(-((x)**2)/(2*SGMA_G_0**2)), -np.inf, np.inf)
-							EW_0               = np.round(abs(np.asarray(W_0[0])),3)
-							EWE_0              = np.round(abs(np.asarray(W_0[1])),10)
-							data_fitted_0      = func_1D_Gaussian((lambda_glx[mask_ft]), CTRE_G_0,AMPL_G_0,SGMA_G_0)
 
-							CTRE_G_0_E         = result_0.params['X_0'].stderr
-							AMPL_G_0_E         = result_0.params['A'].stderr
-							SGMA_G_0_E         = result_0.params['SIGMA'].stderr
-
-							CTRE_G_0_cor       = result_0.params['X_0'].correl
-							AMPL_G_0_cor       = result_0.params['A'].correl
-							SGMA_G_0_cor       = result_0.params['SIGMA'].correl
-
-							chisqr_0           = result_0.chisqr
-							redchi_0           = result_0.redchi
-						except (RuntimeError,ValueError,TypeError):
-							pass
-						'''
 						popt_0, pcov_0   = [999999.99999,999999.99999,999999.99999],[999999.99999,999999.99999,999999.99999]
 						perr_0           = [999999.99999,999999.99999,999999.99999]
 						CTRE_G_0         = 999999.99999
@@ -8498,7 +6893,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-0) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-0) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-0##################################################
 						#################################################CENTRAL GAUSSIAN-C##################################################
@@ -8592,7 +6987,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (CTR-C & CTR_O) values will not be added to the fits headers!','magenta')
+							print colored('The fit (CTR-C & CTR_O) values will NOT be added to the fits headers!','magenta')
 							print
 						#################################################CENTRAL GAUSSIAN-C##################################################					
 					elif fix_ctr_gau == True:
@@ -8600,31 +6995,31 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print colored('0 CTR-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
 
-						CTRE_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF0M')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-						AMPL_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF0M')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-						FWHM_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF0M')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-						EW_0        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF0M')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-						EWE_0       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF0M')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+						CTRE_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF0M')
+						AMPL_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF0M')
+						FWHM_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF0M')
+						EW_0        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF0M')
+						EWE_0       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF0M')
 
-						CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLOM')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-						AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALOM')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-						FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLOM')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-						EW_O        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLOM')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-						EWE_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELOM')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-						OFST_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFOM')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+						CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLOM')
+						AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALOM')
+						FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLOM')
+						EW_O        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLOM')
+						EWE_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELOM')
+						OFST_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFOM')
 
-						CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLCM')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLCM')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						EWE_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELCM')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						CTRE_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CECM')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						AMPL_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AECM')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						SGMA_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SECM')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+						CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')
+						AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')
+						SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')
+						FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLCM')
+						EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLCM')
+						EWE_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELCM')
+						CTRE_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CECM')
+						AMPL_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AECM')
+						SGMA_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SECM')
 
-						chisqr_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHLM')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-						redchi_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRLM')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+						chisqr_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHLM')
+						redchi_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRLM')
 
 					print
 					print colored(str(LINES[0][lines])+'-'+str(LINES[3][lines])+'-CTR','yellow')
@@ -8647,7 +7042,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 							print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 							print
-							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+							lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 							lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 							mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 							mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -8731,7 +7126,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						else:
 							print
-							print colored('The fit (PRE) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PRE) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -8752,20 +7147,20 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('1 PRE-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
-						CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL1')#,float(FWHM_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL1')#,float(EW_C_PRE)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL1')#,float(EWE_C_PRE)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE1')#,float(CTRE_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE1')#,float(AMPL_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE1')#,float(SGMA_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+						CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')
+						AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')
+						SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')
+						FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL1')
+						EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL1')
+						EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL1')
+						CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE1')
+						AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE1')
+						SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE1')
 
-						x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA1')#,float(x_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR X1 COO')
-						y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA1')#,float(y_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR Y1 COO')
-						EW_C_PR1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPR1')#,float(EW_C_PR1),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PRE' + str(fit_type))
-						EWE_C_PR1      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPR1')#,float(EWE_C_PR1),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PRE' + str(fit_type))
+						x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA1')
+						y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA1')
+						EW_C_PR1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPR1')
+						EWE_C_PR1      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPR1')
 
 					print
 					print colored(str(LINES[0][lines])+'-'+str(LINES[3][lines])+'-PRE','yellow')
@@ -8819,7 +7214,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						###########################################DEFINING PRE-PST REGIONS##################################################
 
-						#inten_glx[mask_ft_plp] = inten_glx[mask_ft_plp] - OFST_G_O #OFFSET -
 						X0_f2DG_indx_PST       = np.where(inten_glx[mask_ft_pst]==(max(inten_glx[mask_ft_pst])))[0]
 						x_b = lambda_glx[mask_ft_pst][X0_f2DG_indx_PST]
 						y_b = inten_glx[mask_ft_pst][X0_f2DG_indx_PST]
@@ -8863,7 +7257,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							Header_Add(specfile_glx,str(LINES[5][lines])+'_EPS2',float(EWE_C_PST),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
 						else:
 							print
-							print colored('The fit (PST) values will not be added to the fits headers!','magenta')
+							print colored('The fit (PST) values will NOT be added to the fits headers!','magenta')
 							print
 							pass
 						if uft_lne_vls == False and fit_vls_hdr == True and int_vlf_hdr==True:
@@ -8884,20 +7278,20 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('2 PST-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
-						CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL2')#,float(FWHM_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL2')#,float(EW_C_PST)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL2')#,float(EWE_C_PST)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE2')#,float(CTRE_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE2')#,float(AMPL_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE2')#,float(SGMA_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+						CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')
+						AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')
+						SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')
+						FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL2')
+						EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL2')
+						EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL2')
+						CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE2')
+						AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE2')
+						SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE2')
 
-						x_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA2')#,float(x_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-						y_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA2')#,float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
-						EW_C_PS2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPS2')#,float(EW_C_PS2),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PST' + str(fit_type))
-						EWE_C_PS2   = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPS2')#,float(EWE_C_PS2),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
+						x_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA2')
+						y_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA2')
+						EW_C_PS2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPS2')
+						EWE_C_PS2   = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPS2')
 						
 					print
 					print colored(str(LINES[0][lines])+'-'+str(LINES[3][lines])+'-PST','yellow')
@@ -8916,12 +7310,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 
 					###############################################COMPUTING TOTAL AREA###############################################
 					print colored('Computing Flux Area','yellow')
-					'''
-					x_a = lambda_glx[mask_ft_pre][X0_f2DG_indx_PRE]
-					y_a = inten_glx[mask_ft_pre][X0_f2DG_indx_PRE]
-					x_b = lambda_glx[mask_ft_pst][X0_f2DG_indx_PST]
-					y_b = inten_glx[mask_ft_pst][X0_f2DG_indx_PST]
-					'''
 					#############################################COMPUTING LINEAR AREA###################################################
 					slope_line1 = (y_a-y_b)/(x_a-x_b)
 					slope_line2 = (y_b-y_a)/(x_b-x_a)
@@ -8968,7 +7356,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						Header_Add(specfile_glx,str(LINES[5][lines])+'_WTOT',float(EWMT),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])       + ' EW   TOT' + str(fit_type))
 					else:
 						print
-						print colored('The LINEAR AND TOTAL Areas values will not be updated to the fits headers!','magenta')
+						print colored('The LINEAR AND TOTAL Areas values will NOT be updated to the fits headers!','magenta')
 						print
 					#################################DEFINE AREA FOR LATER ON SUBSTRACT OFFSET FOR PLOTING###############################
 					###########################################DEFINING PRE-PST REGIONS##################################################
@@ -8976,7 +7364,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('Using Fitted Center From Offset Fit to Redefine Fitting Region!','yellow')
 						print
-						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] #IT WAS LINE CTR - LINE OFFSET
+						lmb_min_lim_line_ft = (CTRE_G_0-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 						lmb_max_lim_line_ft = (CTRE_G_0+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
 						mask_ft_pre = (lambda_glx <= LINES[0][lines] - pre_shf_ctr + pre_shf_lim) & (lambda_glx >= LINES[0][lines] - pre_shf_ctr - pre_shf_lim)
 						mask_ft_pst = (lambda_glx >= LINES[0][lines] + pst_shf_ctr - pst_shf_lim) & (lambda_glx <= LINES[0][lines] + pst_shf_ctr + pst_shf_lim)
@@ -9056,7 +7444,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except ValueError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -9087,7 +7475,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored('1: ' + LINES[3][lines-2]  + '-' + str(LINES[0][lines-2]),'cyan')							
 							print colored(str(LINES[5][lines-2])+'_AF01' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','cyan')
@@ -9142,65 +7530,24 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print
 					########################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#########################
 					##################################################CENTRAL GAUSSIAN-1###################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 
 					lmb_max_lim_line_ft = (LINES[0][lines-2]+L8_1) + MSK_NTMS*L1_1
-					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 ##IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+ 20#L2_1 + 10
+					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1
+					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0] #+ ' ' + stk_function
+					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0] 
 
-					#CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-					#AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-					#FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-					#EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-					#EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')
+					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')
+					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')
+					FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')
 
-					#CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-					#AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-					#FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-					#EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-					#EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-					#OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
-
-					CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-					FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-					#EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-					#EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-					#CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-					#AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-					#SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
-
-					#chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-					#redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
-
-					#CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-					#AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-					#FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-					#EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-					#EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
-
-					#CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-					#AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-					#FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-					#EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-					#EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-					#OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
-
-					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-					FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-					#EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-					#EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-					#CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CEC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-					#AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AEC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-					#SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SEC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
-					#chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHL2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-					#redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRL2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+					CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLC2')
+					AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALC2')
+					SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLC2')
+					FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLC2')
 				elif 'Dbl' in LINES[3][lines] and fit_fnct=='gaussM'and mke_lne_fit == False:
 					fit_typ = 'GM'
 					#GAUSSIAN FIT
@@ -9251,7 +7598,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -9314,7 +7661,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored('1: ' + LINES[3][lines]  + '-' + str(LINES[0][lines]),'cyan')							
 							print colored(str(LINES[5][lines])+'_AM01' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','cyan')
@@ -9368,47 +7715,26 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored(str(LINES[5][lines-1])+'_AF02' + ': ' + str(L10_2),'magenta')
 					print
 					#####################################################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#####################################################
-					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines-2]+L8_1) - MSK_NTMS*L1_1 
 					lmb_max_lim_line_ft = (LINES[0][lines-2]+L8_1) + MSK_NTMS*L1_1
-					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1#- 20#L2_1 - 10 ##IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1#+ 20#L2_1 + 10
+					lmb_min_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) - 1.5*MSK_NTMS*L2_1
+					lmb_max_lim_line    = (LINES[0][lines-2]+L8_1)*(1+z_glx_Ps) + 1.5*MSK_NTMS*L2_1
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
-					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0] #+ ' ' + stk_function
+					label_glx  = (specfile_glx.split('sep_as-',1)[1]).split('-stk',1)[0]
 
 					print
 					print colored('1-CTR-gaussian already fitted!','yellow')
 					print colored('Values from fits header','yellow')
 					try:
-						#CTRE_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM01')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-						#AMPL_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM01')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-						#FWHM_G_0_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM01')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-						#EW_0_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM01')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-						#EWE_0_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM01')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
-
-						#CTRE_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO1')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-						#AMPL_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO1')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-						#FWHM_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO1')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-						#EW_O_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO1')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-						#EWE_O_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO1')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-						#OFST_G_O_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO1')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
-
-						CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC1')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						#EW_C_1        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC1')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C_1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC1')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_1_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
-
-						#chisqr_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM1')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-						#redchi_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM1')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+						CTRE_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC1')
+						AMPL_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC1')
+						SGMA_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC1')
+						FWHM_G_C_1    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC1')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines-2])+'_CF01','yellow')
 						print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
@@ -9423,34 +7749,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored(LINES[3][lines],'yellow')
 					print
 					try:
-						#CTRE_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CM02')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Ctr  1GF Crct')
-						#AMPL_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AM02')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'Amp  1GF Crct')
-						#FWHM_G_0_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FM02')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'FWHM 1GF Crct')
-						#EW_0_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WM02')#,float(EW_0)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EW   1GF Crct')
-						#EWE_0_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EM02')#,float(EWE_0)    ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + 'EWE  1GF Crct')
-
-						#CTRE_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMO2')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Offst' + str(fit_type))
-						#AMPL_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMO2')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Offst' + str(fit_type))
-						#FWHM_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMO2')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Offst' + str(fit_type))
-						#EW_O_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMO2')#,float(EW_O)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Offst' + str(fit_type))
-						#EWE_O_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMO2')#,float(EWE_O)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Offst' + str(fit_type))
-						#OFST_G_O_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OMO2')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ofst 1GF Offst' + str(fit_type))
-
-						CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC2')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' FWHM 1GF Crct' + str(fit_type))
-						#EW_C_2        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WMC2')#,float(EW_C)      ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C_2       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EMC2')#,float(EWE_C)     ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_2_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Sigm err 1GF Crct' + str(fit_type))
-
-						#chisqr_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHM2')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 1GF' + str(fit_type))
-						#redchi_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRM2')#,float(redchi_C)  ,header_comment = str(LINES[3][lines-1]) + str(LINES[0][lines-1]) + ' Chi2 Reduced 1GF' + str(fit_type))
+						CTRE_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CMC2')
+						AMPL_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AMC2')
+						SGMA_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SMC2')
+						FWHM_G_C_2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FMC2')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines-1])+'_CF01','yellow')
 						print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
@@ -9463,25 +7768,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('1 PRE-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
-						#chisqr_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHML')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-						#redchi_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRML')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
-						CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM1')#,float(FWHM_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						#EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM1')#,float(EW_C_PRE)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM1')#,float(EWE_C_PRE)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME1')#,float(CTRE_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME1')#,float(AMPL_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME1')#,float(SGMA_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
-						
-						#x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM1')#,float(x_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR X1 COO')
-						#y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM1')#,float(y_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR Y1 COO')
-						#pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM1')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-						#pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM1')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+						CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM1')
+						AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM1')
+						SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM1')
+						FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM1')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!' ,'yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!' ,'yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines])+'_CGM1','yellow')
 						print colored ('Gotta Fit first before fixing a component (PRE)!','yellow')
@@ -9494,24 +7787,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('2 PST-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
-						CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM2')#,float(FWHM_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						#EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM2')#,float(EW_C_PST)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM2')#,float(EWE_C_PST)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')#,float(CTRE_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')#,float(AMPL_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')#,float(SGMA_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
-						
-						#x_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM2')#,float(x_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-						#y_b            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM2')#,float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
-						
-						#pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM2')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-						#pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM2')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+						CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM2')
+						AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM2')
+						SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM2')
+						FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM2')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 						print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -9524,26 +7806,13 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('3- MDL-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
-						CTRE_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')#,float(CTRE_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')#,float(AMPL_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')#,float(SGMA_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM3')#,float(FWHM_G_C_MDL)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						#EW_C_MDL       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGM3')#,float(EW_C_MDL)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C_MDL      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGM3')#,float(EWE_C_MDL)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CME2')#,float(CTRE_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_AME2')#,float(AMPL_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_MDL_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SME2')#,float(SGMA_G_C_MDL_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
-						
-						#x_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XAM3')#,float(x_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-						#y_c            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YAM3')#,float(y_c),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
-						#EW_C_PS3       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WRM3')#,float(EW_C_PS3),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PST' + str(fit_type))
-						#EWE_C_PS3      = Header_Get(specfile_glx,str(LINES[5][lines])+'_ERM3')#,float(EWE_C_PS3),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
-						
-						#mdl_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GSM3')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-						#mdl_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GCM3')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+						CTRE_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGM3')
+						AMPL_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGM3')
+						SGMA_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGM3')
+						FWHM_G_C_MDL   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGM3')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 						print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -9560,10 +7829,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored('1D Gaussian Fit Mode Choosen: Lmfit (Offset)','cyan')
 					print
 
-					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines]  #IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines]  
 					lmb_max_lim_line_ft = (LINES[0][lines]+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
-					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#- 20#LINES[2][lines] - 10  #IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+ 20#LINES[2][lines] + 10
+					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines] 
+					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
@@ -9587,7 +7856,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -9606,7 +7875,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored(str(LINES[5][lines])+'_AF_0' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','yellow')
 							Header_Get_Add(org_spc_fle,str(LINES[5][lines])+'_AF_0',0.001,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' LINES-10 Amp Fit Bnds  1GF-IntVal')
@@ -9617,29 +7886,16 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					else:
 						pass
 					try:
-						#CTRE_G_O   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGLO')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-						AMPL_G_O   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLO')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-						#SGMA_G_O   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGLO')#,float(SGMA_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Offst' + str(fit_type))
-						#FWHM_G_O   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGLO')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-						#EW_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGLO')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-						#EWE_O      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGLO')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-						#OFST_G_O   = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFSO')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
+						AMPL_G_O   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLO')
 
-						CTRE_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGLC')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLC')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGLC')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGLC')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						EW_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGLC')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGLC')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLEC')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALEC')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLEC')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
-
-						#chisqr_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-						#redchi_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))	
+						CTRE_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGLC')
+						AMPL_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGLC')
+						SGMA_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGLC')
+						FWHM_G_C   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGLC')
+						EW_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGLC')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines-2])+'_CF01','yellow')
 						print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
@@ -9678,7 +7934,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except ValueError:
 							print
-							print colored('Headers containing initial fit variables not found!','yellow')
+							print colored('Headers containing initial fit variables NOT found!','yellow')
 							print colored('Run Spec_Stk_Stack first or use value from Lines_Dictionary.py with ivl_fts_hdr = False:','yellow')
 							print colored('Headers:','yellow')
 							print
@@ -9697,7 +7953,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 							print
 						except KeyError:
 							print
-							print colored('Header not found!','yellow')
+							print colored('Header NOT found!','yellow')
 							print colored('Adding Header with default valuee 0.001:','yellow')
 							print colored(str(LINES[5][lines])+'_AF_0' + ' LINES-10 Amp Fit Bnds  1GF-IntVal','yellow')
 							Header_Get_Add(org_spc_fle,str(LINES[5][lines])+'_AF_0',0.001,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' LINES-10 Amp Fit Bnds  1GF-IntVal')
@@ -9728,10 +7984,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 
 					#####################################################Getting Line Fitting Initial Values From Statcked Spectrum Fits Header#####################################################
 
-					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] ##IT WAS LINE CTR - LINE OFFSET
+					lmb_min_lim_line_ft = (LINES[0][lines]-LINES[8][lines]) - MSK_NTMS*LINES[1][lines] 
 					lmb_max_lim_line_ft = (LINES[0][lines]+LINES[8][lines]) + MSK_NTMS*LINES[1][lines]
-					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]#- 20#LINES[2][lines] - 10 ##IT WAS LINE CTR - LINE OFFSET
-					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]#+ 20#LINES[2][lines] + 10
+					lmb_min_lim_line    = (LINES[0][lines]-LINES[8][lines])*(1+z_glx_Ps) - 1.5*MSK_NTMS*LINES[2][lines]
+					lmb_max_lim_line    = (LINES[0][lines]+LINES[8][lines])*(1+z_glx_Ps) + 1.5*MSK_NTMS*LINES[2][lines]
 
 					mask_pl    = (lambda_glx >= lmb_min_lim_line)    & (lambda_glx <= lmb_max_lim_line)
 					mask_ft    = (lambda_glx >= lmb_min_lim_line_ft) & (lambda_glx <= lmb_max_lim_line_ft)
@@ -9741,34 +7997,18 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					print colored('0 CTR-gaussian already fitted!','yellow')
 					print colored('Values from fits header','yellow')
 					try:
-						#CTRE_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CF0M')#,float(CTRE_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Ctr  1GF Crct')
-						#AMPL_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_AF0M')#,float(AMPL_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'Amp  1GF Crct')
-						#FWHM_G_0    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FF0M')#,float(FWHM_G_0) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'FWHM 1GF Crct')
-						#EW_0        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WF0M')#,float(EW_0)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EW   1GF Crct')
-						#EWE_0       = Header_Get(specfile_glx,str(LINES[5][lines])+'_EF0M')#,float(EWE_0)    ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + 'EWE  1GF Crct')
+						CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLOM')
+						AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALOM')
+						FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLOM')
 
-						CTRE_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLOM')#,float(CTRE_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Offst' + str(fit_type))
-						AMPL_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALOM')#,float(AMPL_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Offst' + str(fit_type))
-						FWHM_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLOM')#,float(FWHM_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Offst' + str(fit_type))
-						#EW_O        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLOM')#,float(EW_O)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Offst' + str(fit_type))
-						#EWE_O       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELOM')#,float(EWE_O)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Offst' + str(fit_type))
-						#OFST_G_O    = Header_Get(specfile_glx,str(LINES[5][lines])+'_OFOM')#,float(OFST_G_O)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ofst 1GF Offst' + str(fit_type))
-
-						CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')#,float(CTRE_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')#,float(AMPL_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')#,float(SGMA_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLCM')#,float(FWHM_G_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLCM')#,float(EW_C)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_ELCM')#,float(EWE_C)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_CECM')#,float(CTRE_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_AECM')#,float(AMPL_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_E  = Header_Get(specfile_glx,str(LINES[5][lines])+'_SECM')#,float(SGMA_G_C_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
-
-						#chisqr_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHLM')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-						#redchi_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRLM')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
+						CTRE_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLCM')
+						AMPL_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALCM')
+						SGMA_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLCM')
+						FWHM_G_C    = Header_Get(specfile_glx,str(LINES[5][lines])+'_FLCM')
+						EW_C        = Header_Get(specfile_glx,str(LINES[5][lines])+'_WLCM')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 						print colored ('Gotta Fit first before fixing a component (CTR)!','yellow')
@@ -9781,28 +8021,16 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('1 PRE-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
-						#chisqr_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CHGL')#,float(chisqr_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 1GF' + str(fit_type))
-						#redchi_C       = Header_Get(specfile_glx,str(LINES[5][lines])+'_CRGL')#,float(redchi_C)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Chi2 Reduced 1GF' + str(fit_type))
-						CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')#,float(CTRE_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')#,float(AMPL_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')#,float(SGMA_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL1')#,float(FWHM_G_C_PRE)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						#EW_C_PRE       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL1')#,float(EW_C_PRE)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C_PRE      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL1')#,float(EWE_C_PRE)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE1')#,float(CTRE_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE1')#,float(AMPL_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_PRE_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE1')#,float(SGMA_G_C_PRE_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+						CTRE_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL1')
+						AMPL_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL1')
+						SGMA_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL1')
+						FWHM_G_C_PRE   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL1')
 
-						x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA1')#,float(x_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR X1 COO')
-						y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA1')#,float(y_a),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PRE GAU-LNR Y1 COO')
-						#EW_C_PR1       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPR1')#,float(EW_C_PR1),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PRE' + str(fit_type))
-						#EWE_C_PR1      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPR1')#,float(EWE_C_PR1),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PRE' + str(fit_type))
-
-						#pre_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GS1')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-						#pre_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GC1')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+						x_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA1')
+						y_a            = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA1')
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!' ,'yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!' ,'yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 						print colored ('Gotta Fit first before fixing a component (PRE)!','yellow')
@@ -9815,26 +8043,17 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print colored('2 PST-gaussian already fitted!','yellow')
 						print colored('Values from fits header','yellow')
-						CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')#,float(CTRE_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  1GF Crct' + str(fit_type))
-						AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')#,float(AMPL_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  1GF Crct' + str(fit_type))
-						SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')#,float(SGMA_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm 1GF Crct' + str(fit_type))
-						FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL2')#,float(FWHM_G_C_PST)  ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' FWHM 1GF Crct' + str(fit_type))
-						#EW_C_PST       = Header_Get(specfile_glx,str(LINES[5][lines])+'_WGL2')#,float(EW_C_PST)      ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EW   1GF Crct' + str(fit_type))
-						#EWE_C_PST      = Header_Get(specfile_glx,str(LINES[5][lines])+'_EGL2')#,float(EWE_C_PST)     ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' EWE  1GF Crct' + str(fit_type))
-						#CTRE_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_CLE2')#,float(CTRE_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Ctr  err 1GF Crct' + str(fit_type))
-						#AMPL_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_ALE2')#,float(AMPL_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Amp  err 1GF Crct' + str(fit_type))
-						#SGMA_G_C_PST_E = Header_Get(specfile_glx,str(LINES[5][lines])+'_SLE2')#,float(SGMA_G_C_PST_E),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Sigm err 1GF Crct' + str(fit_type))
+						CTRE_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_CGL2')
+						AMPL_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_AGL2')
+						SGMA_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_SGL2')
+						FWHM_G_C_PST   = Header_Get(specfile_glx,str(LINES[5][lines])+'_FGL2')
 
-						x_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA2')#,float(x_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR X2 COO')
-						y_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA2')#,float(y_b),header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' PST GAU-LNR Y2 COO')
-						#EW_C_PS2    = Header_Get(specfile_glx,str(LINES[5][lines])+'_WPS2')#,float(EW_C_PS2),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])   + ' EW   PST' + str(fit_type))
-						#EWE_C_PS2   = Header_Get(specfile_glx,str(LINES[5][lines])+'_EPS2')#,float(EWE_C_PS2),header_comment = str(LINES[3][lines]) + str(LINES[0][lines])  + ' EWE  PST' + str(fit_type))
-
-						#pst_shf_lim    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GS2')#,float(pre_shf_lim) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Shf from expt ctr wvl for PRE G-1')
-						#pst_shf_ctr    = Header_Get(specfile_glx,str(LINES[5][lines])+'_GC2')#,float(pre_shf_ctr) ,header_comment = str(LINES[3][lines]) + str(LINES[0][lines]) + ' Gaussian Ctr Int Val for PRE G-1')
+						x_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_XA2')
+						y_b         = Header_Get(specfile_glx,str(LINES[5][lines])+'_YA2')
+						
 					except KeyError:
 						print
-						print colored ('Gaussian Fit Parameters are not found on Fits Header!','yellow')
+						print colored ('Gaussian Fit Parameters are NOT found on Fits Header!','yellow')
 						print colored ('File  : ' + specfile_glx,'yellow')
 						print colored ('Header: ' + str(LINES[5][lines])+'_CF0M','yellow')
 						print colored ('Gotta Fit first before fixing a component (PST)!','yellow')
@@ -9896,10 +8115,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 				else:
 					lne_lim_inf_sgm,lne_lim_sup_sgm = CTRE_SNR-SGMA_SNR,CTRE_SNR+SGMA_SNR
 					lne_lim_inf_fwh,lne_lim_sup_fwh = CTRE_SNR-(sigma2fwhm(SGMA_SNR)/2),CTRE_SNR+(sigma2fwhm(SGMA_SNR)/2)
-					#print
-					#print lne_lim_inf_fwh,lne_lim_sup_fwh
-					#print CTRE_SNR,SGMA_SNR
-					#print 
 					chn_lim_ctr   = np.digitize(1*abs(CTRE_SNR),lambda_glx[mask_pl],right=False)
 					chn_lim_inf   = np.digitize(1*abs(lne_lim_inf_fwh),lambda_glx[mask_pl],right=False)
 					chn_lim_sup   = np.digitize(1*abs(lne_lim_sup_fwh),lambda_glx[mask_pl],right=True)
@@ -9911,14 +8126,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print 'Out of Bounds!-1'
 						print
-						#print len(lambda_glx[mask_pl])
-						#print chn_lim_ctr
-						#print CTRE_SNR
-						#print chn_lim_inf,chn_lim_sup
-						#print lne_lim_inf_fwh,lne_lim_sup_fwh
-						#print
-						#print lambda_glx[mask_pl]
-						#print
 						chn_lim_ctr = 2						
 						chn_lim_inf = chn_lim_ctr - 1
 						chn_lim_sup = chn_lim_ctr + 1
@@ -9926,14 +8133,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						print
 						print 'Out of Bounds!-2'
 						print
-						#print len(lambda_glx[mask_pl])
-						#print chn_lim_ctr
-						#print CTRE_SNR
-						#print chn_lim_inf,chn_lim_sup
-						#print lne_lim_inf_fwh,lne_lim_sup_fwh
-						#print
-						#print lambda_glx[mask_pl]
-						#print
 						chn_lim_inf = chn_lim_ctr - 1
 						chn_lim_sup = chn_lim_ctr + 1
 
@@ -9975,73 +8174,6 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 					
 					if verbose == True:
 						pass
-						#print 'Lambda X points : '
-						#print lambda_glx[mask_pl]
-						#print
-						#print 'Lambda Line Center : ',CTRE_SNR
-						#print 'Sigma  Line Width  : ',SGMA_SNR
-						#print 'FWHM   Line Width  : ',sigma2fwhm(SGMA_SNR)
-						#print
-						#print 'Lambda Limits (inf, sup) : ',lne_lim_inf_sgm,lne_lim_sup_sgm
-						#print 'Lambda Limits (inf, sup) : ',lne_lim_inf_fwh,lne_lim_sup_fwh
-						#print
-						#print
-						#print 'Line Inf    Channel, Lambda : ',chn_lim_inf,lambda_glx[mask_pl][chn_lim_inf]
-						#print 'Line Center Channel, Lambda : ',chn_lim_ctr,lambda_glx[mask_pl][chn_lim_ctr]
-						#print 'Line Sup    Channel, Lambda : ',chn_lim_sup,lambda_glx[mask_pl][chn_lim_sup]
-						#print
-						#print 'Lambda Center      : ',lambda_glx[mask_pl][chn_lim_ctr]
-						#print 'Lambda Center Pre  : ',lambda_glx[mask_pl][0:chn_lim_inf]
-						#print 'Lambda Center Post : ',lambda_glx[mask_pl][chn_lim_sup+1:]
-						#print 'Lambda Center Tot  : ',lambda_glx[mask_pl][indx_tot]
-						#print
-						#print 'Lambda Center Width fwhm : ',lambda_glx[mask_pl][chn_lim_inf:chn_lim_sup+1]
-						#print
-						#print 'Flux Center Width fwhm : '
-						#print inten_glx[mask_pl][chn_lim_inf:chn_lim_sup+1]
-						#print 'Flux Center Pre  : '
-						#print inten_glx[mask_pl][0:chn_lim_inf]
-						#print 'Flux Center Post : '
-						#print inten_glx[mask_pl][chn_lim_sup+1:]
-						#print 'Flux Center Tot  : '
-						#print inten_glx[mask_pl][indx_tot]
-						#print 
-						#print 'Flux STD Center Pre  : ',np.std(inten_glx[mask_pl][0:chn_lim_inf])
-						#print 'Flux STD Center Post : ',np.std(inten_glx[mask_pl][chn_lim_sup+1:])
-						#print
-						#print
-						#print 'Channel Center Pre  : ',indx_inf
-						#print 'Channel Center Post : ',indx_sup
-						#print 'Channel Center Tot  : ',indx_tot
-						#print 'Flux STD Center Pre  : ',np.std(inten_glx[mask_pl][indx_inf])
-						#print 'Flux STD Center Post : ',np.std(inten_glx[mask_pl][indx_sup])
-						#print 'Flux STD Center Tot  : ',np.std(inten_glx[mask_pl][indx_tot])
-						#print
-						#print 
-						#print 'Channel Center Tot # : ',len(inten_glx[mask_pl][indx_tot])
-						#print
-						#print 'Bin Size     : ',bin_size
-						#print 'Bin Tot Size : ',len(inten_glx[mask_pl][indx_tot])
-						#print 'Bin Number   : ',bin_number,int(bin_number)
-						#print
-						#print 'Flux Binned arrays : '
-						#print [array_iteration for array_iteration in binned_arrays]
-						#print
-						#print 'Number of bins (post,pre) : ',len(binned_arrays),bin_number
-						#print
-						#print 'Binned Arrays AVG : ',NST_STS_AVG
-						#print 'Binned Arrays MED : ',NST_STS_MED
-						#print 'Binned Arrays SUM : ',NST_STS_SUM
-						#print 'Binned Arrays STD : ',NST_STS_STD
-						#print
-						#print
-						#print 'Amp   : ',AMPL_G_C
-						#print 'Noise : ',SPC_NSE_BN_1
-						#print 'Noise : ',SPC_NSE_BN_2
-						#print 'Noise : ',SPC_NSE_BN_3
-						#print 'SNR   : ',SPC_SNR_BN_1
-						#print 'SNR   : ',SPC_SNR_BN_2
-						#print 'SNR   : ',SPC_SNR_BN_3
 					else:
 						pass
 				###### SNR out the line plot region #####
@@ -10107,6 +8239,7 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 												'EW: ' + str(EW_O) + ', '  
 												'OFS: ' + str(np.round(OFST_G_O,2)), 
 												alpha=0.5)
+									pass
 								except UnboundLocalError:
 									plt.plot(lambda_glx_lne_fit,
 												func_1D_Gaussian(lambda_glx_lne_fit,CTRE_G_0,AMPL_G_0,SGMA_G_0)     ,
@@ -10127,25 +8260,37 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 								plt.plot(lambda_glx_lne_fit,
 										func_1D_Gaussian(lambda_glx_lne_fit,*popt_C)    ,
 										color=colors[index]   ,ls='-',lw=1.5,
-										label = label_glx + ' '+ 'g fit Crc: ' + 
-										'EW: ' + str(EW_C) + ', ' +
+										label = label_glx + ' '+ 
+										"\n" +
+										'$\lambda_{f}$: ' + str(np.round(CTRE_G_C,2)) +
+										"\n" +
+										'$\sigma_{f}$: ' + str(np.round(SGMA_G_C,2)) +
+										"\n" +
+										'EW: ' + str(np.round(EW_C,2)) + ', ' +
 										"\n" +
 										'N : ' + str(stk_glx_nmb) +  ', ' +
-										'SNR (M) : ' + str(np.round(SPC_SNR_BN_2,2))+ ', ' +
-										'$\chi^{2}$: '+str(chisqr_C)+ ', ' +
-										'$\chi^{2}_{r}$:' + str(redchi_C),
+										'SNR (M) : ' + str(np.round(SPC_SNR_BN_2,2))+ ', ' 
+										#'$\chi^{2}$: '+str(chisqr_C)+ ', ' +
+										#'$\chi^{2}_{r}$:' + str(redchi_C)
+										,
 										alpha=1.0)
 							except UnboundLocalError:
 								plt.plot(lambda_glx_lne_fit,
 										func_1D_Gaussian(lambda_glx_lne_fit,CTRE_G_C,AMPL_G_C,SGMA_G_C)    ,
 										color=colors[index]   ,ls='-',lw=1.5,
-										label = label_glx + ' '+ 'g fit Crc: ' + 
-										'EW: ' + str(EW_C) + ', ' +
+										label = label_glx + ' '+
+										"\n" +
+										'$\lambda_{f}$: ' + str(np.round(CTRE_G_C,2)) +
+										"\n" +
+										'$\sigma_{f}$: ' + str(np.round(SGMA_G_C,2)) +
+										"\n" +
+										'EW: ' + str(np.round(EW_C,2)) + ', ' +
 										"\n" +
 										'N : ' + str(stk_glx_nmb) +  ', ' +
-										'SNR (M) : ' + str(np.round(SPC_SNR_BN_2,2))+ ', ' +
-										'$\chi^{2}$: '+str(chisqr_C)+ ', ' +
-										'$\chi^{2}_{r}$:' + str(redchi_C),
+										'SNR (M) : ' + str(np.round(SPC_SNR_BN_2,2))+ ', ' 
+										#'$\chi^{2}$: '+str(chisqr_C)+ ', ' +
+										#'$\chi^{2}_{r}$:' + str(redchi_C)
+										,
 										alpha=1.0)
 							plt.step(lambda_glx[mask_pl], inten_glx[mask_pl], colors[index],where='mid',lw=1.0,alpha=0.6,linestyle='-',color='blue')#label=label_glx,
 						elif fit_fnct=='lorentz' and not 'DblF' in LINES[3][lines]:
@@ -10160,9 +8305,10 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 									'EW: ' + str(EW_V_0) + ', ' +
 									"\n" +
 									'N : ' + str(stk_glx_nmb) +  ', ' +
-									'SNR (M) : ' + str(np.round(SPC_SNR_BN_2,2))+ ', ' +
-									'$\chi^{2}$: '+str(chisqr_V_0)+ ', ' +
-									'$\chi^{2}_{r}$:' + str(redchi_V_0),
+									'SNR (M) : ' + str(np.round(SPC_SNR_BN_2,2))+ ', ' #+
+									#'$\chi^{2}$: '+str(chisqr_V_0)+ ', ' +
+									#'$\chi^{2}_{r}$:' + str(redchi_V_0)
+									,
 									alpha=1.0)
 							pass
 					else:
@@ -10189,14 +8335,14 @@ def Stk_Fit_Lines(specfile,*args,**kwargs):
 						color='black', lw=1, alpha=0.6)			
 			plt.plot([LINES[0][lines]+L8_0,LINES[0][lines]+L8_0],[min_y, max_y], #LINES[8][lines]
 						color='black', lw=1, alpha=0.6,ls=':',
-						label=LINES[4][lines]+' ' + str(LINES[0][lines])+' A')
-			plt.plot([lmb_min_lim_line_ft,lmb_min_lim_line_ft], [min_y, max_y], 
-						color='black', lw=1, alpha=0.6,ls=':')
-			plt.plot([lmb_max_lim_line_ft,lmb_max_lim_line_ft], [min_y, max_y], 
-						color='black', lw=1, alpha=0.6,ls=':')
+						label=LINES[9][lines]+' ' + str(LINES[0][lines])+' $\mathrm{\mathrm{\AA}}$')
+			#plt.plot([lmb_min_lim_line_ft,lmb_min_lim_line_ft], [min_y, max_y], 
+						#color='black', lw=1, alpha=0.6,ls=':')
+			#plt.plot([lmb_max_lim_line_ft,lmb_max_lim_line_ft], [min_y, max_y], 
+						#color='black', lw=1, alpha=0.6,ls=':')
 
 
-			lg2=plt.legend(loc=3,prop={'size':8})
+			lg2=plt.legend(loc=3,prop={'size':12})
 			lg2.draw_frame(False)
 
 			################################################################SAVE###########################################################
@@ -10273,67 +8419,24 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 
 	if 'BS_MST' in slct_smp_cat:
 
+		print
+		print colored('BS-MASTER!','cyan')
+		print colored (slct_smp_cat,'cyan')
+		print			
+
 		cat_parent_tbl_mas_slice = readtable_fg_bg_glx(slct_smp_cat,tbl_format_ipt,**kwargs)
 
 		cat_parent_tbl_all_slice = cat_parent_tbl_mas_slice[0]
-		#number_slice             = cat_parent_tbl_mas_slice[1]
-		#alpha_slice              = cat_parent_tbl_mas_slice[2]
-		#delta_slice              = cat_parent_tbl_mas_slice[3]
-		#k_mag_slice              = cat_parent_tbl_mas_slice[4]
-		#k_mag_err_slice          = cat_parent_tbl_mas_slice[5]
-		#z_slice                  = cat_parent_tbl_mas_slice[6]
-		#S_mean_mJy_slice         = cat_parent_tbl_mas_slice[7]
-		#S_med_mJy_slice          = cat_parent_tbl_mas_slice[8]
 
 		spc_f_BS_slice       = cat_parent_tbl_mas_slice[1]
 		spc_f_n_BS_slice     = spc_f_BS_slice
-		#z_F_slice        = cat_parent_tbl_mas_slice[2]
-		#zf_F_slice       = cat_parent_tbl_mas_slice[3]
-		#id_B_slice       = cat_parent_tbl_mas_slice[4]
-		#z_B_slice        = cat_parent_tbl_mas_slice[5]
-		#zf_B_slice       = cat_parent_tbl_mas_slice[6]
-		#DELTAZ_slice     = cat_parent_tbl_mas_slice[7]
-		#SEP_arcsec_slice = cat_parent_tbl_mas_slice[8]
-		#arcsec_kpc_slice = cat_parent_tbl_mas_slice[9]
-		#SEP_kpc_slice    = cat_parent_tbl_mas_slice[10]
-		#spc_f_F_slice    = cat_parent_tbl_mas_slice[11]
-		#spc_f_n_F_slice  = cat_parent_tbl_mas_slice[12]
-		#spc_f_B_slice    = cat_parent_tbl_mas_slice[13]
+
 
 	else:
-		cat_parent_tbl_mas_slice = astropy.table.Table.read(slct_smp_cat, format=tbl_format_ipt)
-		#cat_parent_tbl_mas_slice = readtable_fg_bg_glx(slct_smp_cat,tbl_format_ipt,**kwargs)
+		cat_parent_tbl_mas_slice = aptbl.Table.read(slct_smp_cat, format=tbl_format_ipt)
 
 		cat_parent_tbl_all_slice = cat_parent_tbl_mas_slice #cat_parent_tbl_mas_slice[0]
-		#number_slice             = cat_parent_tbl_mas_slice[1]
-		#alpha_slice              = cat_parent_tbl_mas_slice[2]
-		#delta_slice              = cat_parent_tbl_mas_slice[3]
-		#k_mag_slice              = cat_parent_tbl_mas_slice[4]
-		#k_mag_err_slice          = cat_parent_tbl_mas_slice[5]
-		#z_slice                  = cat_parent_tbl_mas_slice[6]
-		#S_mean_mJy_slice         = cat_parent_tbl_mas_slice[7]
-		#S_med_mJy_slice          = cat_parent_tbl_mas_slice[8]
 
-		#######################################################
-		####COMMENTED TO AVOID ERROR ON MRP-ICL(3)-SEP  #######
-		###################STACKS ERROR########################
-		#id_F_slice               = cat_parent_tbl_mas_slice[1]
-		#z_F_slice                = cat_parent_tbl_mas_slice[2]
-		#zf_F_slice               = cat_parent_tbl_mas_slice[3]
-		#id_B_slice               = cat_parent_tbl_mas_slice[4]
-		#z_B_slice                = cat_parent_tbl_mas_slice[5]
-		#zf_B_slice               = cat_parent_tbl_mas_slice[6]
-		#DELTAZ_slice             = cat_parent_tbl_mas_slice[7]
-		#SEP_arcsec_slice         = cat_parent_tbl_mas_slice[8]
-		#arcsec_kpc_slice         = cat_parent_tbl_mas_slice[9]
-		#SEP_kpc_slice            = cat_parent_tbl_mas_slice[10]
-		#spc_f_F_slice            = cat_parent_tbl_mas_slice[11]
-		#spc_f_n_F_slice          = cat_parent_tbl_mas_slice[12]
-		#spc_f_B_slice            = cat_parent_tbl_mas_slice[13]
-		#spc_f_n_B_slice          = cat_parent_tbl_mas_slice[14]
-		####COMMENTED TO AVOID ERROR ON MRP-ICL(3)-SEP  #######
-		###################STACKS ERROR########################
-		#######################################################
 
 		id_F_slice               = cat_parent_tbl_mas_slice['id_F']
 		z_F_slice                = cat_parent_tbl_mas_slice['z_F']
@@ -10353,6 +8456,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 		if '-PRP' in slct_smp_cat:
 			print
 			print colored('PRP!','cyan')
+			print colored (slct_smp_cat,'cyan')
 			print			
 			mass_B_slice         = cat_parent_tbl_mas_slice['mass_B']
 			Age_B_slice          = cat_parent_tbl_mas_slice['Age_B']
@@ -10368,6 +8472,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 		elif '_PRP_MRP' in slct_smp_cat:
 			print
 			print colored('Morpho!','cyan')
+			print colored (slct_smp_cat,'cyan')
 			print
 			mass_B_slice         = cat_parent_tbl_mas_slice['mass_B']
 			Age_B_slice          = cat_parent_tbl_mas_slice['Age_B']
@@ -10386,9 +8491,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 			q_F_slice            = cat_parent_tbl_mas_slice['q_F']
 			PHI_slice_new=[]
 			for j,angle_item in enumerate(PHI_slice):
-				#print angle_item
 				if angle_item>90:
-					#print j,angle_item,180-angle_item
 					PHI_slice_new.append(180-angle_item)
 				else:
 					PHI_slice_new.append(angle_item)
@@ -10439,139 +8542,108 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 	
 	if slc_smp == True:
 		if col_name == 'redshift_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
 			col_slice = z_F_slice
 			slicedby  = 'z_F'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'redshift_fg_flag':
-			#cat_parent_tbl_all_slice.sort('zf_F')
+		elif col_name == 'redshift_fg_flag':
 			col_slice = zf_F_slice
 			slicedby  = 'zf_F'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'redshift_bk':
-			#cat_parent_tbl_all_slice.sort('z_B')
+		elif col_name == 'redshift_bk':
 			col_slice = z_B_slice
 			slicedby  = 'z_B'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'redshift_bk_flag':
-			#cat_parent_tbl_all_slice.sort('zf_B')
+		elif col_name == 'redshift_bk_flag':
 			col_slice = zf_B_slice
 			slicedby  = 'zf_B'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'deltaz':
-			#cat_parent_tbl_all_slice.sort('DELTAZ')
+		elif col_name == 'deltaz':
 			col_slice = DELTAZ_slice
 			slicedby  = 'DELTAZ'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'sep_as':
-			#cat_parent_tbl_all_slice.sort('SEP_arcsec')
+		elif col_name == 'sep_as':
 			col_slice = SEP_arcsec_slice
 			slicedby  = 'sep_as'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'sep_kpc':
-			#cat_parent_tbl_all_slice.sort('SEP_kpc')
+		elif col_name == 'sep_kpc':
 			col_slice = SEP_kpc_slice
 			slicedby  = 'sep_kpc'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'mass_bg':
-			#cat_parent_tbl_all_slice.sort('z_B')
+		elif col_name == 'mass_bg':
 			col_slice = mass_B_slice
 			slicedby  = 'mass_B'
 			print 'Filtering table by: ', slicedby
 			
-		if col_name == 'Age_bg':
-			#cat_parent_tbl_all_slice.sort('z_B')
+		elif col_name == 'Age_bg':
 			col_slice =Age_B_slice
 			slicedby  = 'Age_B'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'SFR_bg':
-			#cat_parent_tbl_all_slice.sort('z_B')
+		elif col_name == 'SFR_bg':
 			col_slice =SFR_B_slice
 			slicedby  = 'SFR_B'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'sSFR_bg':
-			#cat_parent_tbl_all_slice.sort('z_B')
+		elif col_name == 'sSFR_bg':
 			col_slice = sSFR_B_slice
 			slicedby  = 'sSFR_B'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'Lnuv_bg':
-			#cat_parent_tbl_all_slice.sort('z_B')
+		elif col_name == 'Lnuv_bg':
 			col_slice = Lnuv_B_slice
 			slicedby  = 'Lnuv_B'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'mass_fg':
-			#cat_parent_tbl_all_slice.sort('z_B')
+		elif col_name == 'mass_fg':
 			col_slice = mass_B_slice
 			slicedby  = 'mass_F'
 			print 'Filtering table by: ', slicedby
 			
-		if col_name == 'Age_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'Age_fg':
 			col_slice =Age_F_slice
 			slicedby  = 'Age_F'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'SFR_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'SFR_fg':
 			col_slice =SFR_F_slice
 			slicedby  = 'SFR_F'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'sSFR_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'sSFR_fg':
 			col_slice = sSFR_F_slice
 			slicedby  = 'sSFR_F'
 			print 'Filtering table by: ', slicedby
 
-		if col_name == 'Lnuv_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'Lnuv_fg':
 			col_slice = Lnuv_F_slice
 			slicedby  = 'Lnuv_F'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'magi_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'magi_fg':
 			col_slice = magi_F_slice
 			slicedby  = 'magi_F'
 			print 'Filtering table by: ', slicedby
-		###################MORPHO###################
-		if col_name == 'phi':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		###################MORPHO###################			
+		elif col_name == 'phi':
 			col_slice = PHI_slice
 			slicedby  = 'PHI'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'icl_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'icl_fg':
 			col_slice = q_F_slice
 			slicedby  = 'q_F'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'n_sersic_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'n_sersic_fg':
 			col_slice = n_F_slice
 			slicedby  = 'n_F'
 			print 'Filtering table by: ', slicedby
-		if col_name == 'r_eff_fg':
-			#cat_parent_tbl_all_slice.sort('z_F')
+		elif col_name == 'r_eff_fg':
 			col_slice = re_F_slice
 			slicedby  = 're_F'
 			print 'Filtering table by: ', slicedby
+		else:
+			print colored('Such col name does not exist! ' + col_name,'yellow')
+			quit()
 		###################MORPHO###################
-
-		#if col_name == 'z_F' and (Random_Vars == 'z_F' or Random_Vars == 'Both'):
-			##cat_parent_tbl_all_slice.sort('z_F')
-			#col_slice = z_F_slice
-			#slicedby  = 'RND_z_F'
-			#print 'Filtering table by: ', slicedby
-		#if col_name ==  'sep_as' and (Random_Vars == 'SEP_arcsec' or Random_Vars == 'Both'):
-			##cat_parent_tbl_all_slice.sort('SEP_arcsec')
-			#col_slice = SEP_arcsec_slice
-			#slicedby  = 'RND_SEP_arcsec'
-			#print 'Filtering table by: ', slicedby
-
 		print 
 		print colored('Values used for slicing: '+str(slice_itv),'yellow')
 		for previous, item, nxt in Prev_Next(slice_itv):
@@ -10579,22 +8651,22 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 			if   item <= slice_itv[-1]:
 			   if slc_int == True:
 				print
-			   	print 'Objects in the range: ',item,'<',col_name,'<=',nxt
-			   	print
-			   	subsampl_tbl_fn   = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) +'-' + str(item)         + '-' + str(nxt)           + tbl_ext_opt
-			   	subsampl_tbl_fn_A = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) +'-' + str(slice_itv[0]) + '-' + str(slice_itv[-1]) + tbl_ext_opt
-			   	subsample = np.where((item < col_slice) & (col_slice <= nxt))
-			   	subsample = np.ravel(subsample)
+				print 'Objects in the range: ',item,'<',col_name,'<=',nxt
+				print
+				subsampl_tbl_fn   = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) +'-' + str(item)         + '-' + str(nxt)           + tbl_ext_opt
+				subsampl_tbl_fn_A = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) +'-' + str(slice_itv[0]) + '-' + str(slice_itv[-1]) + tbl_ext_opt
+				subsample = np.where((item < col_slice) & (col_slice <= nxt))
+				subsample = np.ravel(subsample)
 			   elif slc_int == False:#:
-			   	print
-			   	print colored('Objects with values equal to: '+str(item),'cyan')#,col_slice
-			   	subsampl_tbl_fn   = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) + '-' + str(item)         + tbl_ext_opt
-			   	subsampl_tbl_fn_A = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) + '-' + str(slice_itv[0]) + '-' + str(slice_itv[-1]) + tbl_ext_opt
-			   	subsample = np.where(item==col_slice)
-			   	subsample = np.ravel(subsample)
+				print
+				print colored('Objects with values equal to: '+str(item),'cyan')
+				subsampl_tbl_fn   = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) + '-' + str(item)         + tbl_ext_opt
+				subsampl_tbl_fn_A = str(slct_smp_cat.split('.'+tbl_format_ipt)[0]) + '-ss-' + str(slicedby) + '-' + str(slice_itv[0]) + '-' + str(slice_itv[-1]) + tbl_ext_opt
+				subsample = np.where(item==col_slice)
+				subsample = np.ravel(subsample)
 			   if len(cat_parent_tbl_all_slice[subsample])!=0:
-			   	print 'Non empty'
-			   	print
+				print 'Non empty'
+				print
 				print 'Number of objects in this range: ',len(cat_parent_tbl_all_slice[subsample]),(len(subsample))
 
 				rtsubsmpl = cat_parent_tbl_all_slice[subsample]
@@ -10660,9 +8732,9 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 				subsample_crvalns.append(crvalns)
 
 			   elif len(cat_parent_tbl_all_slice[subsample])==0:
-			   	print
-			   	print 'Empty'
-			   	print 'Number of objects in this range: ',len(cat_parent_tbl_all_slice[subsample])
+				print
+				print 'Empty'
+				print 'Number of objects in this range: ',len(cat_parent_tbl_all_slice[subsample])
 			else :
 				break
 
@@ -10673,7 +8745,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 		for previous, item, nxt in Prev_Next(tbls_fnms):
 			if   item != slice_itv[-1]:
 				a = readtable_fg_bg_glx(item,tbl_format_opt)[0]
-				template = astropy.table.vstack([template,a])
+				template = aptbl.vstack([template,a])
 			else:
 				break
 		template.write(subsampl_tbl_fn_A,  format=tbl_format_opt, overwrite=True)
@@ -10689,8 +8761,10 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 
 		print
 		print colored('Number of subsamples created according to the '+ str(col_name) + ' criteria selection: ' + str(len(tbls_fnms)) + ': '+str(slice_itv),'cyan')
-		print 'The results are contained in: '
+		print
+		print colored('The results are contained in: ','green')
 		print "\n".join([tblnm for tblnm in tbls_fnms])
+		print
 
 	elif slc_smp == False:
 		print
@@ -10702,7 +8776,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 		print 
 		print slct_smp_cat		
 
-		if  'P_Fg_ALL' in slct_smp_cat  and ('BS_MST' not in slct_smp_cat) and ('-BS-' not in slct_smp_cat) :
+		if  'P_Fg_' + CAT_PARENT in slct_smp_cat  and ('BS_MST' not in slct_smp_cat) and ('-BS-' not in slct_smp_cat) :
 			[ os.system('cp ' + fg_sbdir[0] + str(spc_f_F_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str('rf') + '.fits ' + cpy_fts_dir) for j in range(len(spc_f_F_slice))]
 			if spc_nse == True:
 				[ os.system('cp ' + fg_sbdir[0] + str(spc_f_n_F_slice[j].split('.fits',1)[0]) + '-s2-'      + str('rf') + '.fits ' + cpy_fts_dir) for j in range(len(spc_f_n_F_slice))]
@@ -10712,7 +8786,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 			name       = [ cpy_fts_dir + str(spc_f_F_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str('rf') + '.fits' for j in range(len(spc_f_F_slice))]
 			name_noise = [ cpy_fts_dir + str(spc_f_n_F_slice[j].split('.fits',1)[0]) + '-s2-'      + str('rf') + '.fits' for j in range(len(spc_f_n_F_slice))]
 
-		elif 'P_Bg_ALL' in slct_smp_cat and ( 'BS_MST' not in slct_smp_cat)  and ('-BS-' not in slct_smp_cat) and test_bg == False:
+		elif 'P_Bg_' + CAT_PARENT in slct_smp_cat and ( 'BS_MST' not in slct_smp_cat)  and ('-BS-' not in slct_smp_cat) and test_bg == False:
 			[ os.system('cp ' + bg_sbdir[0] + str(spc_f_B_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str(id_F_slice[j])  + '.fits ' + cpy_fts_dir) for j in range(len(spc_f_B_slice))]
 			if spc_nse == True:
 				[ os.system('cp ' + bg_sbdir[0] + str(spc_f_n_B_slice[j].split('.fits',1)[0]) + '-s2-'      + str(id_F_slice[j])  + '.fits ' + cpy_fts_dir) for j in range(len(spc_f_n_B_slice))]
@@ -10722,7 +8796,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 			name       = [ cpy_fts_dir + str(spc_f_B_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str(id_F_slice[j]) + '.fits' for j in range(len(spc_f_B_slice))]
 			name_noise = [ cpy_fts_dir + str(spc_f_n_B_slice[j].split('.fits',1)[0]) + '-s2-'      + str(id_F_slice[j]) + '.fits' for j in range(len(spc_f_n_B_slice))]
 
-		elif 'P_Bg_ALL' in slct_smp_cat and ( 'BS_MST' not in slct_smp_cat)  and ('-BS-' not in slct_smp_cat) and test_bg == True:
+		elif 'P_Bg_' + CAT_PARENT in slct_smp_cat and ( 'BS_MST' not in slct_smp_cat)  and ('-BS-' not in slct_smp_cat) and test_bg == True:
 			print
 			print colored('Warning: Background galaxies check mode selected! (Background)','green')
 			[ os.system('cp ' + bg_sbdir[0] + str(spc_f_B_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str('rf') + '.fits ' + cpy_fts_dir) for j in range(len(spc_f_B_slice))]
@@ -10734,7 +8808,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 			name       = [ cpy_fts_dir + str(spc_f_B_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str('rf') + '.fits' for j in range(len(spc_f_B_slice))]
 			name_noise = [ cpy_fts_dir + str(spc_f_n_B_slice[j].split('.fits',1)[0]) + '-s2-'      + str('rf') + '.fits' for j in range(len(spc_f_n_B_slice))]
 
-		elif (('P_Bg_ALL' in slct_smp_cat)) and ('-BS-' in slct_smp_cat):
+		elif (('P_Bg_' + CAT_PARENT in slct_smp_cat)) and ('-BS-' in slct_smp_cat):
 			print
 			print colored('Warning: Bootstrap galaxies mode selected! (Background)','green')
 			[ os.system('cp ' + bg_sbdir[0] + str(spc_f_B_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str(id_F_slice[j])  + '.fits ' + cpy_fts_dir) for j in range(len(spc_f_B_slice))]
@@ -10746,14 +8820,14 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 			name       = [ nme_fts_dir + str(spc_f_B_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str(id_F_slice[j]) + '.fits' for j in range(len(spc_f_B_slice))]
 			name_noise = [ nme_fts_dir + str(spc_f_n_B_slice[j].split('.fits',1)[0]) + '-s2-'      + str(id_F_slice[j]) + '.fits' for j in range(len(spc_f_n_B_slice))]
 
-		elif (('P_Bg_ALL' in slct_smp_cat)) and ('BS_MST' in slct_smp_cat):
+		elif (('P_Bg_' + CAT_PARENT in slct_smp_cat)) and ('BS_MST' in slct_smp_cat):
 			print
 			print colored('Warning: Bootstrap galaxies mode selected! (Background-MST)','green')
 
 			name       = [ nme_fts_dir + str(spc_f_BS_slice[j]) for j in range(len(spc_f_BS_slice))]
 			name_noise = name
 
-		elif (('P_Fg_ALL' in slct_smp_cat)) and ('-BS-' in slct_smp_cat):
+		elif (('P_Fg_' + CAT_PARENT in slct_smp_cat)) and ('-BS-' in slct_smp_cat):
 			print
 			print colored('Warning: Bootstrap galaxies mode selected! (Foreground)','green')
 			[ os.system('cp ' + fg_sbdir[0] + str(spc_f_F_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str('rf')  + '.fits ' + cpy_fts_dir) for j in range(len(spc_f_F_slice))]
@@ -10765,7 +8839,7 @@ def Select_Subsamples(slct_smp_cat,col_name,slice_itv,*args, **kwargs):
 			name       = [ nme_fts_dir + str(spc_f_F_slice[j].split('.fits',1)[0])   + spc_ifn_ext + str('rf') + '.fits' for j in range(len(spc_f_F_slice))]
 			name_noise = [ nme_fts_dir + str(spc_f_n_F_slice[j].split('.fits',1)[0]) + '-s2-'      + str('rf') + '.fits' for j in range(len(spc_f_n_F_slice))]
 
-		elif (('P_Fg_ALL' in slct_smp_cat)) and ('BS_MST' in slct_smp_cat):
+		elif (('P_Fg_' + CAT_PARENT in slct_smp_cat)) and ('BS_MST' in slct_smp_cat):
 			print
 			print colored('Warning: Bootstrap galaxies mode selected! (Foreground-MST)','green')
 
@@ -10817,9 +8891,9 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 	pre_msk_typ     = kwargs.get('pre_msk_typ'     ,'NaN')
 	pre_msk_cte_val = kwargs.get('pre_msk_cte_val' ,1)
 	pre_msk_abs_lne = kwargs.get('pre_msk_abs_lne' ,False)
-	pre_msk_blu_rgn = kwargs.get('pre_msk_blu_rgn' ,False)
-	pre_blu_lmb_min = kwargs.get('pre_blu_lmb_min' ,500)
-	pre_blu_lmb_max = kwargs.get('pre_blu_lmb_max' ,1210)
+	pre_msk_rgn     = kwargs.get('pre_msk_rgn' ,False)
+	pre_msk_min     = kwargs.get('pre_msk_min' ,500)
+	pre_msk_max     = kwargs.get('pre_msk_max' ,1210)
 
 	sig_clp         = kwargs.get('sig_clp'         ,False)
 	sig_cut         = kwargs.get('sig_cut'         ,3)
@@ -10847,8 +8921,6 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 	smt_shp_pst     = kwargs.get('smt_shp_pst'     ,'gaussian')
 	smt_sze_pst     = kwargs.get('smt_sze_pst'     ,1)
 
-	#print '1-$$$$$'
-	#print get_cont_flux
 	if pre_cnt == True and not ('-BS-' in spc_ifn_RS):
 		print
 		print '1'
@@ -10864,7 +8936,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 		Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'ID_REF',header_comment='ID Reference')
 		Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'Z_0'   ,header_comment='Redshift')
 		Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'Z_REF' ,header_comment='Redshift Reference')
-		Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'MAG_I' ,header_comment='i-band magnitude VUDS')
+		Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'MAG_I' ,header_comment='i-band magnitude')
 		Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'h_s_0')
 		Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'h_s_c')
 		Header_History_Step(spc_ifn_RS,spc_ifn_RS_cnt)
@@ -10885,7 +8957,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'CNT_RPC',header_comment='Continuum IRAF replacement')
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'CNT_LRJ',header_comment='Continuum IRAF low sigma rejection')
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'CNT_HRJ',header_comment='Continuum IRAF high sigma rejection')
-			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS')
+			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude')
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'SHT_FNS',header_comment='Spec file post-shift')
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'SHT_FN0',header_comment='Spec file post-shift')
 		elif sel_pre_cnt == True and not 'noise' in spc_ifn_RS and '-BS_MST' in spc_tbl_RS:
@@ -10898,7 +8970,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			Header_Get_Add(spc_ifn_RS_cnt,'CNT_RPC',cont_replace ,header_comment='Continuum IRAF replacement')
 			Header_Get_Add(spc_ifn_RS_cnt,'CNT_LRJ',cont_low_rej ,header_comment='Continuum IRAF low sigma rejection')
 			Header_Get_Add(spc_ifn_RS_cnt,'CNT_HRJ',cont_high_rej,header_comment='Continuum IRAF high sigma rejection')
-			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'MAG_I',header_comment='i-band magnitude VUDS')
+			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'MAG_I',header_comment='i-band magnitude')
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'CNT_FNM',header_comment='Continuum IRAF Spec file pre-cont')
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 			Header_Copy(spc_ifn_RS_cnt,spc_ifn_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
@@ -10909,15 +8981,12 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 		pass
 
 	if smt_spc_pre == True and not ('-BS-' in spc_ifn_RS):
-		#print
-		#print '2'
-		#print
 		spc_ifn_RS_smt = Spectra_Smooth(spc_ifn_RS,smt_shp_pre,smt_sze_pre,*args,**kwargs)
 		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'ID_0'  ,header_comment='ID')
 		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'ID_REF',header_comment='ID Reference')
 		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'Z_0'   ,header_comment='Redshift')
 		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'Z_REF' ,header_comment='Redshift Reference')
-		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'MAG_I' ,header_comment='i-band magnitude VUDS')
+		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'MAG_I' ,header_comment='i-band magnitude')
 		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'h_s_0')
 		Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'h_s_c')
 		Header_History_Step(spc_ifn_RS,spc_ifn_RS_smt)
@@ -10929,9 +8998,6 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 		else:
 			pass
 		if 	smt_spc_pre == True and 'noise' not in spc_ifn_RS and '-BS_MST' not in spc_tbl_RS:
-			#print
-			#print '2-a'
-			#print		
 			try:
 				Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 				Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_FIT',header_comment='Continuum IRAF function')
@@ -10941,7 +9007,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 				Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_HRJ',header_comment='Continuum IRAF high sigma rejection')
 			except KeyError: 
 				pass
-			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS'  )
+			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude'  )
 			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'SHT_FNS',header_comment='Spec file post-shift')
 			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'SHT_FN0',header_comment='Spec file post-shift')
 			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_FNM',header_comment='Continuum IRAF Spec file pre-cont')
@@ -10949,9 +9015,6 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
 		elif smt_spc_pre == True and 'noise' not in spc_ifn_RS and '-BS_MST' in spc_tbl_RS:
-			#print
-			#print '2-b'
-			#print		
 			try:
 				Header_Get_Add(spc_ifn_RS_smt,'CNT_TYP',cont_typ     ,header_comment='Continuum IRAF type')
 				Header_Get_Add(spc_ifn_RS_smt,'CNT_FIT',cont_funct   ,header_comment='Continuum IRAF function')
@@ -10961,7 +9024,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 				Header_Get_Add(spc_ifn_RS_smt,'CNT_HRJ',cont_high_rej,header_comment='Continuum IRAF high sigma rejection')
 			except KeyError:
 				pass
-			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS')
+			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude')
 			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_FNM',header_comment='Continuum IRAF Spec file pre-cont')
 			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 			Header_Copy(spc_ifn_RS_smt,spc_ifn_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
@@ -10971,11 +9034,9 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 	elif smt_spc_pre == False:
 		pass
 
-	#print '2-$$$$$'
 	spec_RS      = Spectra_x_y(spc_ifn_RS)
 	spc_ifn_RS   = spec_RS[5]
 
-	#new_sp_lambda,new_lambda_step,new_zs_lambda,new_lambda_end,new_lambda_zero
 	spec_RS_big_lims = new_wave_range(new_wavelength_array[0],new_wavelength_array[-1],spec_RS[3])
 	
 	min_el       = float(spec_RS[0][0])
@@ -11028,31 +9089,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			quit()
 	else:
 		pass
-	#print '3-$$$$$'
 	new_lambda    = np.concatenate((prev_lambda,spec_RS[0],post_lambda),axis=0)
-
-	#print
-	#print 'new_lambda_bin :',new_lambda_bin
-	#print 'len(new_wavelength_array) :',len(new_wavelength_array)
-	#print 'len(spec_RS_big_lims) :',len(spec_RS_big_lims[0]),spec_RS_big_lims[2]	
-	#print 'First item: ',  spec_RS_big_lims[0][0],new_wavelength_array[0]
-	#print 'Last item: ',  spec_RS_big_lims[0][-1],new_wavelength_array[-1]
-	#print 'spec_RS[3] : ',spec_RS[3]
-	#print 'min_el :',min_el
-	#print 'max_el :',max_el
-	#print 'elements :',elements
-	#print 'fillin :',fillin
-	#print 'cae_abajo :',cae_abajo    
-	#print 'cae_arriba :',cae_arriba
-	#print 'falta_abajo :',falta_abajo  
-	#print 'falta_arriba :',falta_arriba 
-	#print 'prev_lambda :'#,prev_lambda
-	#print 'post_lambda :'#,post_lambda	
-	#print 'prev_lambda (l):',len(prev_lambda)
-	#print 'post_lambda (l):',len(post_lambda)
-	#print 'new_lambda : ',new_lambda
-	#print 'new_lambda (l): ',len(new_lambda)
-	#print
 
 	if monotonic(new_lambda)==True:
 		pass
@@ -11075,23 +9112,8 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 		pass
 	elif len(new_lambda) != len(new_wavelength_array):
 		len_dif = len(new_lambda) - len(new_wavelength_array)
-		#print
-		#print 'Lambda and BIG spectra lengths have different lengths:'
-		#print len(new_lambda),len(new_wavelength_array)
-		#print len(new_wavelength_array) - len(new_lambda)
-		#print len_dif
 		for deleting in range(len_dif):
-			#print 'Deleting', deleting, ' item'
 			new_lambda    = np.delete(new_lambda,-1,0)
-			#new_intensity = np.delete(new_intensity,-1,0)
-		#print len(new_lambda),len(new_wavelength_array)
-		#print 'Quitting 4'		
-		#quit()
-
-	#print
-	#print falta_abajo
-	#print falta_arriba
-	#print
 
 	prev_intens = np.empty(falta_abajo)
 	post_intens = np.empty(falta_arriba)
@@ -11100,23 +9122,14 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 	post_intens[:] = np.nan
 
 	new_intensity  = np.concatenate((prev_intens,spec_RS[1],post_intens),axis=0)
-	#quit()
-	#print '4-$$$$$'
+
 		
 	if len(new_lambda) == len(new_intensity):
 		pass
 	elif len(new_lambda) != len(new_intensity):
-		#print 
-		#print 'Lambda and Intensity arrays differ by more than one element'
-		#print len(new_lambda),len(new_intensity)
 		len_dif = (len(new_intensity) - len(new_lambda))
-		#print len_dif
 		for deleting in range(len_dif):
-			#print 'Deleting', deleting, ' item'
 			new_intensity = np.delete(new_intensity,-1,0)
-		#print 'Quitting 5'
-		#print len(new_lambda),len(new_intensity)
-
 	spec_res_int = rebin_spec(new_lambda, new_intensity, new_wavelength_array)
 	if '-BS-' in spc_tbl_RS:
 		if SS_indx==None:
@@ -11148,48 +9161,35 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 	Header_Updt(Int_Spc_ofn,'CDELT1',new_lambda_bin)
 	Header_Updt(Int_Spc_ofn,'CD1_1' ,new_lambda_bin)
 	Header_Updt(Int_Spc_ofn,'CD2_2' ,new_lambda_bin)
-	#print '5-$$$$$'
 
 	if '-BS_MST' in spc_tbl_RS:
-		#print
-		#print '3'
-		#print
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'Z_0'  ,header_comment='Redshift')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'Z_REF',header_comment='Redshift Reference')
 	else:
-		#print
-		#print '4'
-		#print
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'ID_0'  ,header_comment='ID')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'ID_REF',header_comment='ID Reference')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'Z_0'   ,header_comment='Redshift')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'Z_REF' ,header_comment='Redshift Reference')
-		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I' ,header_comment='i-band magnitude VUDS')
+		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I' ,header_comment='i-band magnitude')
 
 	if 	sel_pre_cnt == True and 'noise' not in spc_ifn_RS and '-BS_MST' not in spc_tbl_RS:
-		#print
-		#print '5'
-		#print
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_ORD',header_comment='Continuum IRAF order')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_RPC',header_comment='Continuum IRAF replacement')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_LRJ',header_comment='Continuum IRAF low sigma rejection')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_HRJ',header_comment='Continuum IRAF high sigma rejection')
-		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS')
+		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'SHT_FNS',header_comment='Spec file post-shift')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'SHT_FN0',header_comment='Spec file post-shift')
 	elif sel_pre_cnt == True and 'noise' not in spc_ifn_RS and '-BS_MST' in spc_tbl_RS:
-		#print
-		#print '6'
-		#print
 		Header_Get_Add(Int_Spc_ofn,'CNT_TYP',pre_cnt_typ,header_comment='Continuum IRAF type')
 		Header_Get_Add(Int_Spc_ofn,'CNT_FIT',pre_cnt_fnc,header_comment='Continuum IRAF function')
 		Header_Get_Add(Int_Spc_ofn,'CNT_ORD',pre_cnt_ord,header_comment='Continuum IRAF order')
 		Header_Get_Add(Int_Spc_ofn,'CNT_RPC',pre_cnt_rpl,header_comment='Continuum IRAF replacement')
 		Header_Get_Add(Int_Spc_ofn,'CNT_LRJ',pre_cnt_lrj,header_comment='Continuum IRAF low sigma rejection')
 		Header_Get_Add(Int_Spc_ofn,'CNT_HRJ',pre_cnt_hrj,header_comment='Continuum IRAF high sigma rejection')
-		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS')
+		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude')
 		try:
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FNM',header_comment='Continuum IRAF Spec file pre-cont')
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
@@ -11205,7 +9205,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			print colored('CNT_FN0','yellow')
 			print colored('CNT_FNF','yellow')
 			print
-			print colored ('They will not be copied','yellow')
+			print colored ('They will NOT be copied','yellow')
 			print colored('Into file: '+Int_Spc_ofn,'yellow')
 			print colored('From file: '+spc_ifn_RS,'yellow')
 			print
@@ -11220,7 +9220,6 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 				Header_Copy(spc_ifn_RS,prev_smt_cnt_file,'CNT_FNM',header_comment='Continuum IRAF Spec file pre-cont')
 				Header_Copy(spc_ifn_RS,prev_smt_cnt_file,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 				Header_Copy(spc_ifn_RS,prev_smt_cnt_file,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
-
 			elif not os.path.exists(prev_smt_cnt_file):
 				print
 				print '6-a-2'
@@ -11232,33 +9231,24 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 				print
 				quit()
 			pass
-			#quit()
 			pass
 	elif sel_pre_cnt == False:
 		Header_Get_Add(Int_Spc_ofn,'CNT_TYP',pre_cnt     ,header_comment='Continuum IRAF PRE')
 		pass
-	#print '6-$$$$$'
 
 	if smt_spc_pre == True and 'noise' not in spc_ifn_RS and '-BS_MST' not in spc_tbl_RS:
-		#print
-		#print '7'
-		#print
 		Header_Get_Add(Int_Spc_ofn,'PRE_SMT',str(smt_spc_pre) ,header_comment='Pre-Smooth')
 		Header_Get_Add(Int_Spc_ofn,'PSM_KRN',str(smt_shp_pre) ,header_comment='Pre-Smooth kernel type')
 		Header_Get_Add(Int_Spc_ofn,'PSM_SZE',int(smt_sze_pre) ,header_comment='Pre-Smooth kernel size')
-		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS')
+		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'SHT_FNS',header_comment='Spec file post-shift')
 		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'SHT_FN0',header_comment='Spec file post-shift')
-		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS')
-
+		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude')
 		try:
-			#print
-			#print '7-a'
-			#print
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FNM',header_comment='Continuum IRAF Spec file pre-cont')
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
-		except KeyError: #"Keyword 'CNT_TYP' not found."
+		except KeyError: 
 			print
 			print '7-b'
 			print
@@ -11269,7 +9259,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			print colored('CNT_FN0','yellow')
 			print colored('CNT_FNF','yellow')
 			print
-			print colored ('They will not be copied','yellow')
+			print colored ('They will NOT be copied','yellow')
 			print colored('Into file: '+Int_Spc_ofn,'yellow')
 			print colored('From file: '+spc_ifn_RS,'yellow')
 			print
@@ -11303,23 +9293,17 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 				print '7-$$$$$'
 				quit()
 	elif smt_spc_pre == True and 'noise' not in spc_ifn_RS and '-BS_MST' in spc_tbl_RS:
-		#print
-		#print '8'
-		#print
 		Header_Get_Add(Int_Spc_ofn,'PRE_SMT',str(smt_spc_pre) ,header_comment='Pre-Smooth')
 		Header_Get_Add(Int_Spc_ofn,'PSM_KRN',str(smt_shp_pre) ,header_comment='Pre-Smooth kernel type')
 		Header_Get_Add(Int_Spc_ofn,'PSM_SZE',int(smt_sze_pre) ,header_comment='Pre-Smooth kernel size')
-		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude VUDS')
+		Header_Copy(Int_Spc_ofn,spc_ifn_RS,'MAG_I'  ,header_comment='i-band magnitude')
 		try:
-			#print
-			#print '8-a'
-			#print
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'SHT_FNS',header_comment='Spec file post-shift')
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'SHT_FN0',header_comment='Spec file post-shift')
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FNM',header_comment='Continuum IRAF Spec file pre-cont')
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
-		except KeyError: #"Keyword 'CNT_TYP' not found."
+		except KeyError:
 			print
 			print '8-b'
 			print
@@ -11330,7 +9314,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			print colored('CNT_FN0','yellow')
 			print colored('CNT_FNF','yellow')
 			print
-			print colored ('They will not be copied','yellow')
+			print colored ('They will NOT be copied','yellow')
 			print colored('Into file: '+Int_Spc_ofn,'yellow')
 			print colored('From file: '+spc_ifn_RS,'yellow')
 			print
@@ -11372,17 +9356,7 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 		loop_back_step_header = 'h_s_' + str(loop_back_step)
 		try:
 			Header_Copy(Int_Spc_ofn,spc_ifn_RS,loop_back_step_header)
-		except KeyError: #"Keyword 'CNT_TYP' not found."
-			#print
-			#print colored ('Header not Found: !','yellow')
-			#print colored ('h_s_' + str(loop_back_step),'yellow')
-			#print colored ('SHT_FN0','yellow')
-			#print colored ('CNT_FNM','yellow')
-			#print colored ('CNT_FN0','yellow')
-			#print colored ('CNT_FNF','yellow')
-			#print
-			#print colored ('They will not be copied','yellow')
-			#print
+		except KeyError:
 			pass
 	else:
 		pass
@@ -11392,17 +9366,17 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 		z_ref_msk    = (1+ Header_Get(Int_Spc_ofn,'Z_0'))/ (1+ Header_Get(Int_Spc_ofn,'Z_REF'))
 		spc_opt_msk  = Spectra_Masking(Int_Spc_ofn,msk_typ=pre_msk_typ,rshft_corr=z_ref_msk,rshft_corr_direct=True,
 						msk_abs_lne=pre_msk_abs_lne,
-						msk_blu_rgn=pre_msk_blu_rgn,blu_lmb_min=pre_blu_lmb_min,blu_lmb_max=pre_blu_lmb_max)
+						msk_blu_rgn=pre_msk_rgn,blu_lmb_min=pre_msk_min,blu_lmb_max=pre_msk_max)
 		Int_Spc_ofn  = spc_opt_msk
-		Header_Get_Add(Int_Spc_ofn,'SCP_PMK',str(pre_msk)        ,header_comment='Post-Masking')
-		Header_Get_Add(Int_Spc_ofn,'MSK_TYP',str(pre_msk_typ)    ,header_comment='Post-Masking Type')
-		Header_Get_Add(Int_Spc_ofn,'MSK_VAL',int(pre_msk_cte_val),header_comment='Post-Masking Constant Values')
-		Header_Get_Add(Int_Spc_ofn,'MSK_PXL',str(pre_msk_blu_rgn),header_comment='Post-Masking Blue-end Region')
-		Header_Get_Add(Int_Spc_ofn,'PIX_INT',int(pre_blu_lmb_min),header_comment='Post-Masking Lower lambda limit')
-		Header_Get_Add(Int_Spc_ofn,'PIX_LST',int(pre_blu_lmb_max),header_comment='Post-Masking Upper lambda limit')
-		Header_Get_Add(Int_Spc_ofn,'MSK_LNS',str(pre_msk_abs_lne),header_comment='Post-Masking Absorption Lines')
+		Header_Get_Add(Int_Spc_ofn,'SCP_PMK',str(pre_msk)        ,header_comment='Pre-Masking')
+		Header_Get_Add(Int_Spc_ofn,'MSK_TYP',str(pre_msk_typ)    ,header_comment='Pre-Masking Type')
+		Header_Get_Add(Int_Spc_ofn,'MSK_VAL',int(pre_msk_cte_val),header_comment='Pre-Masking Constant Values')
+		Header_Get_Add(Int_Spc_ofn,'MSK_PXL',str(pre_msk_rgn)    ,header_comment='Pre-Masking Spec Region')
+		Header_Get_Add(Int_Spc_ofn,'PIX_INT',int(pre_msk_min)    ,header_comment='Pre-Masking Lower lambda limit')
+		Header_Get_Add(Int_Spc_ofn,'PIX_LST',int(pre_msk_max)    ,header_comment='Pre-Masking Upper lambda limit')
+		Header_Get_Add(Int_Spc_ofn,'MSK_LNS',str(pre_msk_abs_lne),header_comment='Pre-Masking Absorption Lines')
 	elif pre_msk == False:
-		Header_Get_Add(Int_Spc_ofn,'SCP_PMK',str(pre_msk)        ,header_comment='Post-Masking')
+		Header_Get_Add(Int_Spc_ofn,'SCP_PMK',str(pre_msk)        ,header_comment='Pre-Masking')
 		pass
 
 	if get_cont_flux == True:
@@ -11414,7 +9388,6 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 			cnt_hdr = 'CNT_FNF'
 		else:
 			pass
-		#print '9-$$$$$'
 		cont_val = Spectra_Cont_GetVal(str(Header_Get(spc_ifn_RS,cnt_hdr)),gcv_lmbd_i=gcv_lmbd_i,gcv_lmbd_f=gcv_lmbd_f)
 		CFX_SUM  = bn.nansum(cont_val[0])
 		CFX_MED  = bn.nanmedian(cont_val[0])
@@ -11446,11 +9419,8 @@ def Interpolating_Spectra(spc_tbl_RS,spc_ifn_RS,new_lambda_bin,new_wavelength_ar
 		Header_Get_Add(Int_Spc_ofn,'CFX_AVG',CFX_AVG   ,header_comment='Weight average')
 		Header_Get_Add(Int_Spc_ofn,'WGT_UNT',1         ,header_comment='Weight unitary')
 		Int_Spc_ofn
-		#print '10-$$$$$'
-		#quit()
 	elif get_cont_flux == False:
 		Header_Get_Add(Int_Spc_ofn,'WGT_UNT',1         ,header_comment='Weight unitary')
-		# '11-$$$$$'
 	return Int_Spc_ofn
 	
 def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*args, **kwargs):
@@ -11484,9 +9454,9 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 	pre_msk_typ     = kwargs.get('pre_msk_typ'     ,'NaN')
 	pre_msk_cte_val = kwargs.get('pre_msk_cte_val' ,1)
 	pre_msk_abs_lne = kwargs.get('pre_msk_abs_lne' ,False)
-	pre_msk_blu_rgn = kwargs.get('pre_msk_blu_rgn' ,False)
-	pre_blu_lmb_min = kwargs.get('pre_blu_lmb_min' ,500)
-	pre_blu_lmb_max = kwargs.get('pre_blu_lmb_max' ,1210)
+	pre_msk_rgn     = kwargs.get('pre_msk_rgn'     ,False)
+	pre_msk_min     = kwargs.get('pre_msk_min'     ,500)
+	pre_msk_max     = kwargs.get('pre_msk_max'     ,1210)
 
 	sig_clp         = kwargs.get('sig_clp'         ,False)
 	sig_cut         = kwargs.get('sig_cut'         ,3)
@@ -11541,7 +9511,7 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 	print
 
 	if sig_clp == True:
-		img_flt       = astropy.stats.sigma_clip(img_2bstack,sigma=sig_cut,axis=0,iters=None,cenfunc=sig_fct, copy=True)
+		img_flt       = apsts.sigma_clip(img_2bstack,sigma=sig_cut,axis=0,iters=None,cenfunc=sig_fct, copy=True)
 
 		print
 		print colored('Sigma-clipping for stacking!','yellow')
@@ -11553,17 +9523,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		img_flt.set_fill_value(sig_fll)
 		img_flt_filled = img_flt.filled()
 		img_stat       = img_flt_filled
-		#print img_flt.count(axis=0)              count non-masked elements
-		#print np.ma.count_masked(img_flt,axis=0) count masked elements
-
-		#good_only      = img_flt.data[~img_flt.mask]
-		#bad_only       = img_flt.data[img_flt.mask]
-		#print
-		#print 'Filtered: ', img_flt.shape
-		#print 
-		#print 'Number of pixels good ones: ',good_only.shape
-		#print 'Number of pixels bad ones : ',bad_only.shape
-		#print
 	elif sig_clp == False:
 		img_stat   = img_2bstack
 
@@ -11595,11 +9554,9 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		elif np.isnan(sig_fll) == False:
 			pass
 			non_msk_num = int(np.count_nonzero(Transpose[j]!=sig_fll))
-			#msk_num     = int(np.count_nonzero((Transpose[j]).where()))#count(sig_fll)))
 			img_stat_hst.append(float(non_msk_num))
 
 			non_msk_num_wghts = int(np.count_nonzero(wght_img_stat_j!=sig_fll))
-			#msk_num     = int(np.count_nonzero((Transpose[j]).where()))#count(sig_fll)))
 			img_stat_hsw.append(float(non_msk_num_wghts))
 			img_stat_smw.append(float(bn.nansum(wght_img_stat_j)))
 
@@ -11610,10 +9567,10 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 	img_sts_hst = np.asarray(img_stat_hst)
 	img_sts_frc = img_sts_hst/len(img_2bstack)
 
-	img_res_sum = bn.nansum(np.array(img_stat)     , axis=0)#np.nansum(np.array(img_stat)   , axis=0) #
-	img_res_avg = bn.nanmean(np.array(img_stat)    , axis=0)#np.nanmean(np.array(img_stat)  , axis=0) #
-	img_res_med = bn.nanmedian(np.array(img_stat)  , axis=0)#np.nanmedian(np.array(img_stat), axis=0) #
-	img_res_std = bn.nanstd(np.array(img_stat)     , axis=0)#np.nanstd(np.array(img_stat)   , axis=0) #
+	img_res_sum = bn.nansum(np.array(img_stat)     , axis=0)
+	img_res_avg = bn.nanmean(np.array(img_stat)    , axis=0)
+	img_res_med = bn.nanmedian(np.array(img_stat)  , axis=0)
+	img_res_std = bn.nanstd(np.array(img_stat)     , axis=0)
 	img_res_rms = np.sqrt((img_res_avg**2) + (img_res_std**2))
 	
 	img_sts_hsw = np.asarray(img_stat_hsw)
@@ -11796,8 +9753,10 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 	#######################POST-PROCESSING########################
 	#########################CORE-FILES###########################
 	if pst_cnt==False and smt_spc_pst == False:
-		print '2-CRE'
-		pass
+		print
+		print colored('Generating CORE composite files','yellow')
+		print colored('2-CRE','yellow')
+		print
 		OPT_STCK_CRE      = [
 							spec_file_sum,spec_file_avg,spec_file_med,
 							spec_file_hst,
@@ -11820,7 +9779,10 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 							]							
 		FNL_SPEC_RES      = OPT_STCK_CRE
 	elif pst_cnt==True and smt_spc_pst == False:
-		print '3-CRE'
+		print
+		print colored('Generating CORE composite files','yellow')
+		print colored('3-CRE','yellow')
+		print
 		spec_file_sum_cnt  = Spectra_Cont_IRAF(spec_file_sum_ofn,ind_stk_res + 'log_cont-stk-sum',
 							Cont_type_IRAF     = pst_cnt_typ,Cont_lines_IRAF    = pst_cnt_lns,
 							Cont_funct_IRAF    = pst_cnt_fnc,Cont_order_IRAF    = pst_cnt_ord,
@@ -11916,7 +9878,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 							spec_file_avw_cnt[0],spec_file_avw_cnt[1],
 							spec_file_suw_cnt[0],spec_file_suw_cnt[1],
 							]		
-
 		OPT_STCK_CNT      = [
 							spec_file_sum_cnt[0],
 							spec_file_avg_cnt[0],
@@ -11948,15 +9909,11 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 							]	
 
 		FNL_SPEC_RES     = OPT_STCK_CRE
-		#spec_file_sum_cnt  = spec_file_sum_ofn,ind_stk_res + 'log_cont-stk-sum')
-		#spec_file_avg_cnt  = spec_file_avg_ofn,ind_stk_res + 'log_cont-stk-avg')
-		#spec_file_med_cnt  = spec_file_med_ofn,ind_stk_res + 'log_cont-stk-med')
-		#spec_file_std_cnt  = spec_file_std_ofn,ind_stk_res + 'log_cont-stk-std')
-		#spec_file_rms_cnt  = spec_file_rms_ofn,ind_stk_res + 'log_cont-stk-rms')
-		#spec_file_avw_cnt  = spec_file_avw_ofn,ind_stk_res + 'log_cont-stk-avg')
 	elif pst_cnt==False and smt_spc_pst == True:
 		print
-		print '4-CRE'
+		print colored('Generating CORE composite files','yellow')
+		print colored('4-CRE','yellow')
+		print
 		spec_file_sum_smt     = Spectra_Smooth(spec_file_sum_ofn,smt_shp_pst,smt_sze_pst)
 		spec_file_avg_smt     = Spectra_Smooth(spec_file_avg_ofn,smt_shp_pst,smt_sze_pst)
 		spec_file_med_smt     = Spectra_Smooth(spec_file_med_ofn,smt_shp_pst,smt_sze_pst)
@@ -11982,17 +9939,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_med_smt,spec_file_med,'STK_NUM',header_comment='Number of galaxies used for Stack')
 		Header_Copy(spec_file_avw_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
 		Header_Copy(spec_file_suw_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
-
-		print spec_file_sum_smt,Header_Get(spec_file_sum_smt,'STK_NUM')
-		print spec_file_sum,Header_Get(spec_file_sum,'STK_NUM')
-		print spec_file_avg_smt,Header_Get(spec_file_avg_smt,'STK_NUM')
-		print spec_file_avg,Header_Get(spec_file_avg,'STK_NUM')
-		print spec_file_med_smt,Header_Get(spec_file_med_smt,'STK_NUM')
-		print spec_file_med,Header_Get(spec_file_med,'STK_NUM')
-		print spec_file_avw_smt,Header_Get(spec_file_avw_smt,'STK_NUM')
-		print spec_file_avw,Header_Get(spec_file_avw,'STK_NUM')
-		print spec_file_suw_smt,Header_Get(spec_file_suw_smt,'STK_NUM')
-		print spec_file_suw,Header_Get(spec_file_suw,'STK_NUM')
 
 		OPT_STCK_CRE      = [
 							spec_file_sum,spec_file_avg,spec_file_med,
@@ -12025,7 +9971,9 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		FNL_SPEC_RES      = OPT_STCK_CRE
 	elif pst_cnt==True and smt_spc_pst == True:
 		print
-		print '5-CRE'
+		print colored('Generating CORE composite files','yellow')
+		print colored('5-CRE','yellow')
+		print
 
 		spec_file_sum_smt     = Spectra_Smooth(spec_file_sum_ofn,smt_shp_pst,smt_sze_pst)
 		spec_file_avg_smt     = Spectra_Smooth(spec_file_avg_ofn,smt_shp_pst,smt_sze_pst)
@@ -12038,17 +9986,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_med_smt,spec_file_med,'STK_NUM',header_comment='Number of galaxies used for Stack')
 		Header_Copy(spec_file_avw_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
 		Header_Copy(spec_file_suw_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
-
-		print spec_file_sum_smt,Header_Get(spec_file_sum_smt,'STK_NUM')
-		print spec_file_sum,Header_Get(spec_file_sum,'STK_NUM')
-		print spec_file_avg_smt,Header_Get(spec_file_avg_smt,'STK_NUM')
-		print spec_file_avg,Header_Get(spec_file_avg,'STK_NUM')
-		print spec_file_med_smt,Header_Get(spec_file_med_smt,'STK_NUM')
-		print spec_file_med,Header_Get(spec_file_med,'STK_NUM')
-		print spec_file_avw_smt,Header_Get(spec_file_avw_smt,'STK_NUM')
-		print spec_file_avw,Header_Get(spec_file_avw,'STK_NUM')
-		print spec_file_suw_smt,Header_Get(spec_file_suw_smt,'STK_NUM')
-		print spec_file_suw,Header_Get(spec_file_suw,'STK_NUM')
 
 		spec_file_sum_cnt  = Spectra_Cont_IRAF(spec_file_sum_ofn,ind_stk_res + 'log_cont-stk-sum',
 							Cont_type_IRAF     = pst_cnt_typ,Cont_lines_IRAF    = pst_cnt_lns,
@@ -12094,11 +10031,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		spec_file_avw_cnt_RS = spec_file_avw_cnt[0]
 		spec_file_suw_cnt_RS = spec_file_suw_cnt[0]
 
-		#Header_Copy(spec_file_sum_cnt_RS,spec_file_sum_ofn,'ID_0'  ,header_comment='ID')
-		#Header_Copy(spec_file_sum_cnt_RS,spec_file_sum_ofn,'ID_REF',header_comment='ID Reference')
-		#Header_Copy(spec_file_sum_cnt_RS,spec_file_sum_ofn,'Z_0'   ,header_comment='Redshift')
-		#Header_Copy(spec_file_sum_cnt_RS,spec_file_sum_ofn,'Z_REF' ,header_comment='Redshift Reference')
-		#Header_Copy(spec_file_sum_cnt_RS,spec_file_sum_ofn,'MAG_I' ,header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_sum_cnt_RS,spec_file_sum_ofn,'h_s_0')
 		Header_Copy(spec_file_sum_cnt_RS,spec_file_sum_ofn,'h_s_c')
 
@@ -12149,7 +10081,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_avw_cnt_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
 		Header_Copy(spec_file_suw_cnt_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
 
-		#Header_Copy(spec_file_sum_cnt_smt,spec_file_sum_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_sum_cnt_smt,spec_file_sum_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_sum_cnt_smt,spec_file_sum_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_sum_cnt_smt,spec_file_sum_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12160,7 +10091,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_sum_cnt_smt,spec_file_sum_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_sum_cnt_smt,spec_file_sum_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_avg_cnt_smt,spec_file_avg_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_avg_cnt_smt,spec_file_avg_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_avg_cnt_smt,spec_file_avg_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_avg_cnt_smt,spec_file_avg_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12171,7 +10101,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_avg_cnt_smt,spec_file_avg_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_avg_cnt_smt,spec_file_avg_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_med_cnt_smt,spec_file_med_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_med_cnt_smt,spec_file_med_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_med_cnt_smt,spec_file_med_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_med_cnt_smt,spec_file_med_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12182,7 +10111,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_med_cnt_smt,spec_file_med_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_med_cnt_smt,spec_file_med_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_avw_cnt_smt,spec_file_avw_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_avw_cnt_smt,spec_file_avw_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_avw_cnt_smt,spec_file_avw_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_avw_cnt_smt,spec_file_avw_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12193,7 +10121,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_avw_cnt_smt,spec_file_avw_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_avw_cnt_smt,spec_file_avw_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_suw_cnt_smt,spec_file_avw_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_suw_cnt_smt,spec_file_avw_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_suw_cnt_smt,spec_file_avw_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_suw_cnt_smt,spec_file_avw_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12268,7 +10195,11 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 	#######################POST-PROCESSING########################
 	##########################PCT-FILES###########################
 	if stk_pct_mde == True and pst_cnt==False and smt_spc_pst == False:
-		print '2-PCT'
+		print
+		print colored('Generating Percentile composite files','yellow')
+		print colored('Generating Percentile composite files','yellow')
+		print colored('2-PCT','yellow')
+		print
 		pass
 
 		OPT_STCK_PCT      = [
@@ -12284,33 +10215,12 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 							'2SL','2SH',
 							'3SL','3SH'
 							]
-
-
-		'''
-		OPT_STCK_CRE      = [
-							spec_file_sum,spec_file_avg,spec_file_med,
-							spec_file_hst,
-							spec_file_std,spec_file_rms,
-							spec_file_hsw,
-							spec_file_wsu,spec_file_suw,spec_file_avw
-							]
-
-		OPT_STCK_OPR      = [
-							'SUM','AVG','MED',
-							'HST',
-							'STD','RMS',
-							'HSW',
-							'WSU','SUW','AVW',
-							]
-		
-		OPT_STCK_WGT      = [
-							spec_file_hsw,
-							spec_file_wsu,spec_file_suw,spec_file_avw,
-							]
-		'''							
+					
 		FNL_SPEC_RES_PCT  = OPT_STCK_PCT
 	elif stk_pct_mde == True and pst_cnt==True and smt_spc_pst == False:
-		print '3-PCT'
+		print colored('Generating Percentile composite files','yellow')
+		print colored('3-PCT','yellow')
+		print
 		spec_file_p25_cnt  = Spectra_Cont_IRAF(spec_file_p25_ofn,ind_stk_res + 'log_cont-stk-sum',
 							Cont_type_IRAF     = pst_cnt_typ,Cont_lines_IRAF    = pst_cnt_lns,
 							Cont_funct_IRAF    = pst_cnt_fnc,Cont_order_IRAF    = pst_cnt_ord,
@@ -12443,65 +10353,13 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 							'3LC','3LF',
 							'3HC','3HF',
 							]
-		'''
-		OPT_STCK_CRE      = [
-							spec_file_sum,spec_file_avg,spec_file_med,
-							spec_file_hst,
-							spec_file_std,spec_file_rms,
-							spec_file_hsw,
-							spec_file_wsu,spec_file_suw,spec_file_avw,								
-							spec_file_sum_cnt[0],spec_file_sum_cnt[1],
-							spec_file_avg_cnt[0],spec_file_avg_cnt[1],
-							spec_file_med_cnt[0],spec_file_med_cnt[1],
-							spec_file_std_cnt[0],spec_file_std_cnt[1],
-							spec_file_rms_cnt[0],spec_file_rms_cnt[1],
-							spec_file_avw_cnt[0],spec_file_avw_cnt[1],
-							spec_file_suw_cnt[0],spec_file_suw_cnt[1],
-							]		
-
-		OPT_STCK_CNT      = [
-							spec_file_sum_cnt[0],
-							spec_file_avg_cnt[0],
-							spec_file_med_cnt[0],
-							spec_file_std_cnt[0],
-							spec_file_rms_cnt[0],
-							spec_file_avw_cnt[0],
-							spec_file_suw_cnt[0]
-							]
-		OPT_STCK_OPR      = [
-							'SUM','AVG','MED',
-							'HST',
-							'STD','RMS',
-							'HSW',
-							'WSU','SUW','AVW',
-							'SUC','SUF',
-							'AVC','AVF',
-							'MEC','MEF',
-							'STC','STF',
-							'RMC','RMF',
-							'AWC','AWF',
-							'SWC','SWF'
-							]
-		OPT_STCK_WGT      = [
-							spec_file_hsw,
-							spec_file_wsu,spec_file_suw,spec_file_avw,
-							spec_file_avw_cnt[0],spec_file_avw_cnt[1],
-							spec_file_suw_cnt[0],spec_file_suw_cnt[1],
-							]	
-
-		FNL_SPEC_RES     = OPT_STCK_CRE
-		'''
 		FNL_SPEC_RES_PCT = OPT_STCK_PCT
 
-		#spec_file_sum_cnt  = spec_file_sum_ofn,ind_stk_res + 'log_cont-stk-sum')
-		#spec_file_avg_cnt  = spec_file_avg_ofn,ind_stk_res + 'log_cont-stk-avg')
-		#spec_file_med_cnt  = spec_file_med_ofn,ind_stk_res + 'log_cont-stk-med')
-		#spec_file_std_cnt  = spec_file_std_ofn,ind_stk_res + 'log_cont-stk-std')
-		#spec_file_rms_cnt  = spec_file_rms_ofn,ind_stk_res + 'log_cont-stk-rms')
-		#spec_file_avw_cnt  = spec_file_avw_ofn,ind_stk_res + 'log_cont-stk-avg')
 	elif stk_pct_mde == True and pst_cnt==False and smt_spc_pst == True:
 		print
-		print '4-PCT'
+		print colored('Generating Percentile composite files','yellow')
+		print colored('4-PCT','yellow')
+		print
 		spec_file_p25_smt     = Spectra_Smooth(spec_file_p25_ofn,smt_shp_pst,smt_sze_pst)
 		spec_file_p75_smt     = Spectra_Smooth(spec_file_p75_ofn,smt_shp_pst,smt_sze_pst)
 		spec_file_1sl_smt     = Spectra_Smooth(spec_file_1sl_ofn,smt_shp_pst,smt_sze_pst)
@@ -12582,41 +10440,17 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 							]
 		FNL_SPEC_RES_PCT  = OPT_STCK_PCT
 
-
-		'''
-		OPT_STCK_CRE      = [
-							spec_file_sum,spec_file_avg,spec_file_med,
-							spec_file_hst,
-							spec_file_std,spec_file_rms,
-							spec_file_hsw,
-							spec_file_wsu,spec_file_suw,spec_file_avw,
-							spec_file_sum_smt,spec_file_avg_smt,spec_file_med_smt,
-							spec_file_avw_smt,spec_file_suw_smt		
+		OPT_PCT_SMT      = [
+							spec_file_p25_smt,spec_file_p75_smt,
+							spec_file_1sl_smt,spec_file_1sh_smt,
+							spec_file_2sl_smt,spec_file_2sh_smt,
+							spec_file_3sl_smt,spec_file_3sh_smt,
 							]
-		OPT_STCK_SMT      = [
-							spec_file_sum_smt,spec_file_avg_smt,spec_file_med_smt,
-							spec_file_avw_smt,spec_file_suw_smt
-							]
-		OPT_STCK_OPR      = [
-							'SUM','AVG','MED',
-							'HST',
-							'STD','RMS',
-							'HSW',
-							'WSU','SUW','AVW',
-							'SUMS','AVGS','MEDS',
-							'AVWS','SUWS',
-							]
-
-		OPT_STCK_WGT      = [
-							spec_file_hsw,
-							spec_file_wsu,spec_file_suw,spec_file_avw,
-							spec_file_avw_smt,spec_file_suw_smt,
-							]								
-		FNL_SPEC_RES      = OPT_STCK_CRE
-		'''
 	elif stk_pct_mde == True and pst_cnt==True and smt_spc_pst == True:
 		print
-		print '5-PCT'
+		print colored('Generating Percentile composite files','yellow')
+		print colored('5-PCT','yellow')
+		print
 
 		spec_file_p25_smt     = Spectra_Smooth(spec_file_p25_ofn,smt_shp_pst,smt_sze_pst)
 		spec_file_p75_smt     = Spectra_Smooth(spec_file_p75_ofn,smt_shp_pst,smt_sze_pst)
@@ -12711,67 +10545,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		print spec_file_3sl,Header_Get(spec_file_3sl,'STK_NUM')
 		print spec_file_3sh_smt,Header_Get(spec_file_3sh_smt,'STK_NUM')
 		print spec_file_3sh,Header_Get(spec_file_3sh,'STK_NUM')	
-
-		'''
-		spec_file_sum_smt     = Spectra_Smooth(spec_file_sum_ofn,smt_shp_pst,smt_sze_pst)
-		spec_file_avg_smt     = Spectra_Smooth(spec_file_avg_ofn,smt_shp_pst,smt_sze_pst)
-		spec_file_med_smt     = Spectra_Smooth(spec_file_med_ofn,smt_shp_pst,smt_sze_pst)
-		spec_file_avw_smt     = Spectra_Smooth(spec_file_avw_ofn,smt_shp_pst,smt_sze_pst)
-		spec_file_suw_smt     = Spectra_Smooth(spec_file_suw_ofn,smt_shp_pst,smt_sze_pst)
-
-		try:
-			print spec_file_sum_smt,Header_Get(spec_file_sum_smt,'STK_NUM')
-		except KeyError:
-			pass
-			print colored('No Header! STK_NUM','yellow')
-			print
-		print spec_file_sum,Header_Get(spec_file_sum,'STK_NUM')
-		try:
-			print spec_file_avg_smt,Header_Get(spec_file_avg_smt,'STK_NUM')
-		except KeyError:
-			pass
-			print colored('No Header! STK_NUM','yellow')
-			print
-		print spec_file_avg,Header_Get(spec_file_avg,'STK_NUM')
-		try:
-			print spec_file_med_smt,Header_Get(spec_file_med_smt,'STK_NUM')
-		except KeyError:
-			pass
-			print colored('No Header! STK_NUM','yellow')
-			print
-		print spec_file_med,Header_Get(spec_file_med,'STK_NUM')
-		try:
-			print spec_file_avw_smt,Header_Get(spec_file_avw_smt,'STK_NUM')
-		except KeyError:
-			pass
-			print colored('No Header! STK_NUM','yellow')
-			print
-		print spec_file_avw,Header_Get(spec_file_avw,'STK_NUM')
-		try:
-			print spec_file_suw_smt,Header_Get(spec_file_suw_smt,'STK_NUM')
-		except KeyError:
-			pass
-			print colored('No Header! STK_NUM','yellow')
-			print
-		print spec_file_suw,Header_Get(spec_file_suw,'STK_NUM')
-
-		Header_Copy(spec_file_sum_smt,spec_file_sum,'STK_NUM',header_comment='Number of galaxies used for Stack')
-		Header_Copy(spec_file_avg_smt,spec_file_avg,'STK_NUM',header_comment='Number of galaxies used for Stack')
-		Header_Copy(spec_file_med_smt,spec_file_med,'STK_NUM',header_comment='Number of galaxies used for Stack')
-		Header_Copy(spec_file_avw_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
-		Header_Copy(spec_file_suw_smt,spec_file_avw,'STK_NUM',header_comment='Number of galaxies used for Stack')
-
-		print spec_file_sum_smt,Header_Get(spec_file_sum_smt,'STK_NUM')
-		print spec_file_sum,Header_Get(spec_file_sum,'STK_NUM')
-		print spec_file_avg_smt,Header_Get(spec_file_avg_smt,'STK_NUM')
-		print spec_file_avg,Header_Get(spec_file_avg,'STK_NUM')
-		print spec_file_med_smt,Header_Get(spec_file_med_smt,'STK_NUM')
-		print spec_file_med,Header_Get(spec_file_med,'STK_NUM')
-		print spec_file_avw_smt,Header_Get(spec_file_avw_smt,'STK_NUM')
-		print spec_file_avw,Header_Get(spec_file_avw,'STK_NUM')
-		print spec_file_suw_smt,Header_Get(spec_file_suw_smt,'STK_NUM')
-		print spec_file_suw,Header_Get(spec_file_suw,'STK_NUM')
-		'''
 
 		spec_file_p25_cnt  = Spectra_Cont_IRAF(spec_file_p25_ofn,ind_stk_res + 'log_cont-stk-sum',
 							Cont_type_IRAF     = pst_cnt_typ,Cont_lines_IRAF    = pst_cnt_lns,
@@ -12884,7 +10657,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_3sl_cnt_smt,spec_file_3sl,'STK_NUM',header_comment='Number of galaxies used for Stack')
 		Header_Copy(spec_file_3sh_cnt_smt,spec_file_3sh,'STK_NUM',header_comment='Number of galaxies used for Stack')
 
-		#Header_Copy(spec_file_p25_cnt_smt,spec_file_p25_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_p25_cnt_smt,spec_file_p25_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_p25_cnt_smt,spec_file_p25_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_p25_cnt_smt,spec_file_p25_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12895,7 +10667,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_p25_cnt_smt,spec_file_p25_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_p25_cnt_smt,spec_file_p25_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_p75_cnt_smt,spec_file_p75_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_p75_cnt_smt,spec_file_p75_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_p75_cnt_smt,spec_file_p75_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_p75_cnt_smt,spec_file_p75_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12906,7 +10677,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_p75_cnt_smt,spec_file_p75_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_p75_cnt_smt,spec_file_p75_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_1sl_cnt_smt,spec_file_1sl_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_1sl_cnt_smt,spec_file_1sl_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_1sl_cnt_smt,spec_file_1sl_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_1sl_cnt_smt,spec_file_1sl_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12917,7 +10687,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_1sl_cnt_smt,spec_file_1sl_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_1sl_cnt_smt,spec_file_1sl_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_1sh_cnt_smt,spec_file_1sh_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_1sh_cnt_smt,spec_file_1sh_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_1sh_cnt_smt,spec_file_1sh_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_1sh_cnt_smt,spec_file_1sh_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12928,7 +10697,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_1sh_cnt_smt,spec_file_1sh_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_1sh_cnt_smt,spec_file_1sh_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-		#Header_Copy(spec_file_2sl_cnt_smt,spec_file_2sl_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_2sl_cnt_smt,spec_file_2sl_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_2sl_cnt_smt,spec_file_2sl_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_2sl_cnt_smt,spec_file_2sl_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12939,8 +10707,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_2sl_cnt_smt,spec_file_2sl_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_2sl_cnt_smt,spec_file_2sl_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-
-		#Header_Copy(spec_file_2sh_cnt_smt,spec_file_2sh_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_2sh_cnt_smt,spec_file_2sh_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_2sh_cnt_smt,spec_file_2sh_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_2sh_cnt_smt,spec_file_2sh_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12951,8 +10717,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_2sh_cnt_smt,spec_file_2sh_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_2sh_cnt_smt,spec_file_2sh_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-
-		#Header_Copy(spec_file_3sl_cnt_smt,spec_file_3sl_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_3sl_cnt_smt,spec_file_3sl_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_3sl_cnt_smt,spec_file_3sl_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_3sl_cnt_smt,spec_file_3sl_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -12963,8 +10727,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		Header_Copy(spec_file_3sl_cnt_smt,spec_file_3sl_cnt_RS,'CNT_FN0',header_comment='Continuum IRAF Spec file pst-cont')
 		Header_Copy(spec_file_3sl_cnt_smt,spec_file_3sl_cnt_RS,'CNT_FNF',header_comment='Continuum IRAF Spec file cnt-fit')
 
-
-		#Header_Copy(spec_file_3sh_cnt_smt,spec_file_3sh_cnt_RS,'MAG_I',header_comment='i-band magnitude VUDS')
 		Header_Copy(spec_file_3sh_cnt_smt,spec_file_3sh_cnt_RS,'CNT_TYP',header_comment='Continuum IRAF type')
 		Header_Copy(spec_file_3sh_cnt_smt,spec_file_3sh_cnt_RS,'CNT_FIT',header_comment='Continuum IRAF function')
 		Header_Copy(spec_file_3sh_cnt_smt,spec_file_3sh_cnt_RS,'CNT_ORD',header_comment='Continuum IRAF order')
@@ -13048,66 +10810,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 							]
 
 		FNL_SPEC_RES_PCT  = OPT_STCK_PCT
-
-		'''
-		OPT_STCK_CRE = [
-						spec_file_sum,spec_file_avg,spec_file_med,spec_file_hst,
-						spec_file_std,
-						spec_file_rms,
-						spec_file_hsw,spec_file_wsu,spec_file_suw,spec_file_avw,
-						spec_file_sum_cnt[0],spec_file_sum_cnt[1],
-						spec_file_avg_cnt[0],spec_file_avg_cnt[1],
-						spec_file_med_cnt[0],spec_file_med_cnt[1],
-						spec_file_std_cnt[0],spec_file_std_cnt[1],
-						spec_file_rms_cnt[0],spec_file_rms_cnt[1],
-						spec_file_avw_cnt[0],spec_file_avw_cnt[1],
-						spec_file_suw_cnt[0],spec_file_suw_cnt[1],
-						spec_file_sum_smt,spec_file_avg_smt,spec_file_med_smt,
-						spec_file_avw_smt,spec_file_suw_smt,
-						spec_file_sum_cnt_smt,spec_file_avg_cnt_smt,spec_file_med_cnt_smt,
-						spec_file_avw_cnt_smt,spec_file_suw_cnt_smt]
-
-
-		OPT_STCK_CNT = [
-						spec_file_sum_cnt[0],
-						spec_file_avg_cnt[0],
-						spec_file_med_cnt[0],
-						spec_file_std_cnt[0],
-						spec_file_rms_cnt[0],
-						spec_file_avw_cnt[0],
-						spec_file_suw_cnt[0]]
-
-		OPT_STCK_SMT = [
-						spec_file_sum_smt,spec_file_avg_smt,spec_file_med_smt,
-						spec_file_avw_smt,spec_file_suw_smt,
-						spec_file_sum_cnt_smt,spec_file_avg_cnt_smt,spec_file_med_cnt_smt,
-						spec_file_avw_cnt_smt,spec_file_suw_cnt_smt]
-
-		OPT_STCK_WGT = [
-						spec_file_hsw,spec_file_wsu,spec_file_suw,spec_file_avw,
-						spec_file_avw_cnt[0],spec_file_avw_cnt[1],
-						spec_file_suw_cnt[0],spec_file_suw_cnt[1],
-						spec_file_avw_smt,spec_file_suw_smt,
-						spec_file_avw_cnt_smt,spec_file_suw_cnt_smt]
-
-		OPT_STCK_OPR = [
-						'SUM','AVG','MED','HST',
-						'STD',
-						'RMS',
-						'HSW','WSU','SUW','AVW',
-						'SUC','SUF',
-						'AVC','AVF',
-						'MEC','MEF',
-						'STC','STF',
-						'RMC','RMF',
-						'AWC','AWF',
-						'SWC','SWF',
-						'SUMS','AVGS','MEDS',
-						'AVWS','SUWS',
-						'SUCS','AVCS','MECS',
-						'AWCS','SWCS']
-		FNL_SPEC_RES = OPT_STCK_CRE
-		'''
 	elif stk_pct_mde == False:
 		pass
 	##########################PCT-FILES###########################
@@ -13123,7 +10825,7 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		#########################CORE-FILES###########################
 		for stck_res_file ,stck_opr in zip(OPT_STCK_CRE,OPT_STCK_OPR):
 			Header_Get_Add(stck_res_file,'STK_OPR',str(stck_opr),header_comment='Stack operation')
-			Header_Get_Add(stck_res_file,'MAG_I'  ,0            ,header_comment='i-band magnitude VUDS')
+			Header_Get_Add(stck_res_file,'MAG_I'  ,0            ,header_comment='i-band magnitude')
 			Header_Get_Add(stck_res_file,'Z_0'    ,0            ,header_comment='Redshift')
 			Header_Get_Add(stck_res_file,'Z_REF'  ,0            ,header_comment='Redshift reference')
 			Header_Get_Add(stck_res_file,'SEL_SHF',sel_pre_shf  ,header_comment='Redshift reference')
@@ -13154,9 +10856,9 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 				Header_Get_Add(stck_res_file,'PMK_MTP',str(pre_msk_typ)    ,header_comment='Pre-Smooth Mask Type')
 				Header_Get_Add(stck_res_file,'PMK_CVL',str(pre_msk_cte_val),header_comment='Pre-Smooth Constant Value')
 				Header_Get_Add(stck_res_file,'PMK_ABL',str(pre_msk_abs_lne),header_comment='Pre-Smooth Mask Absorption Lines')
-				Header_Get_Add(stck_res_file,'PMK_BRG',str(pre_msk_blu_rgn),header_comment='Pre-Smooth Mask Blue Region')
-				Header_Get_Add(stck_res_file,'PMK_BMN',str(pre_blu_lmb_min),header_comment='Pre-Smooth Mask Blue Region Min')
-				Header_Get_Add(stck_res_file,'PMK_BMX',str(pre_blu_lmb_max),header_comment='Pre-Smooth Mask Blue Region Max')
+				Header_Get_Add(stck_res_file,'PMK_BRG',str(pre_msk_rgn)    ,header_comment='Pre-Smooth Mask Spec Region')
+				Header_Get_Add(stck_res_file,'PMK_BMN',str(pre_msk_min)    ,header_comment='Pre-Smooth Mask Spec Region Min')
+				Header_Get_Add(stck_res_file,'PMK_BMX',str(pre_msk_max)    ,header_comment='Pre-Smooth Mask Spec Region Max')
 			elif pre_msk == False:
 				Header_Get_Add(stck_res_file,'PMK_PMK',str(pre_msk)        ,header_comment='Pre-Smooth')
 
@@ -13178,7 +10880,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 		#########################CORE-FILES###########################
 
 		if stk_wgt_mde == True:
-			##
 			print
 			print colored('Checking length! 2b commented on Fnc_Stk_Stk.py','yellow')
 			print colored('OPT_STCK_CRE, OPT_STCK_OPR','yellow')
@@ -13186,7 +10887,7 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 			print
 			for stck_res_file ,stck_opr in zip(OPT_WGHT_FLS,OPT_WGT_OPR):
 				Header_Get_Add(stck_res_file,'STK_OPR',str(stck_opr),header_comment='Stack operation')
-				Header_Get_Add(stck_res_file,'MAG_I'  ,0            ,header_comment='i-band magnitude VUDS')
+				Header_Get_Add(stck_res_file,'MAG_I'  ,0            ,header_comment='i-band magnitude')
 				Header_Get_Add(stck_res_file,'Z_0'    ,0            ,header_comment='Redshift')
 				Header_Get_Add(stck_res_file,'Z_REF'  ,0            ,header_comment='Redshift reference')
 				Header_Get_Add(stck_res_file,'SEL_SHF',sel_pre_shf  ,header_comment='Redshift reference')
@@ -13217,9 +10918,9 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 					Header_Get_Add(stck_res_file,'PMK_MTP',str(pre_msk_typ)    ,header_comment='Pre-Smooth Mask Type')
 					Header_Get_Add(stck_res_file,'PMK_CVL',str(pre_msk_cte_val),header_comment='Pre-Smooth Constant Value')
 					Header_Get_Add(stck_res_file,'PMK_ABL',str(pre_msk_abs_lne),header_comment='Pre-Smooth Mask Absorption Lines')
-					Header_Get_Add(stck_res_file,'PMK_BRG',str(pre_msk_blu_rgn),header_comment='Pre-Smooth Mask Blue Region')
-					Header_Get_Add(stck_res_file,'PMK_BMN',str(pre_blu_lmb_min),header_comment='Pre-Smooth Mask Blue Region Min')
-					Header_Get_Add(stck_res_file,'PMK_BMX',str(pre_blu_lmb_max),header_comment='Pre-Smooth Mask Blue Region Max')
+					Header_Get_Add(stck_res_file,'PMK_BRG',str(pre_msk_rgn)    ,header_comment='Pre-Smooth Mask Spec Region')
+					Header_Get_Add(stck_res_file,'PMK_BMN',str(pre_msk_min)    ,header_comment='Pre-Smooth Mask Spec Region Min')
+					Header_Get_Add(stck_res_file,'PMK_BMX',str(pre_msk_max)    ,header_comment='Pre-Smooth Mask Spec Region Max')
 				elif pre_msk == False:
 					Header_Get_Add(stck_res_file,'PMK_PMK',str(pre_msk)        ,header_comment='Pre-Smooth')
 
@@ -13248,7 +10949,7 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 			print
 			for stck_res_file ,stck_opr in zip(OPT_STCK_PCT,OPT_PCT_OPR):
 				Header_Get_Add(stck_res_file,'STK_OPR',str(stck_opr),header_comment='Stack operation')
-				Header_Get_Add(stck_res_file,'MAG_I'  ,0            ,header_comment='i-band magnitude VUDS')
+				Header_Get_Add(stck_res_file,'MAG_I'  ,0            ,header_comment='i-band magnitude')
 				Header_Get_Add(stck_res_file,'Z_0'    ,0            ,header_comment='Redshift')
 				Header_Get_Add(stck_res_file,'Z_REF'  ,0            ,header_comment='Redshift reference')
 				Header_Get_Add(stck_res_file,'SEL_SHF',sel_pre_shf  ,header_comment='Redshift reference')
@@ -13279,9 +10980,9 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 					Header_Get_Add(stck_res_file,'PMK_MTP',str(pre_msk_typ)    ,header_comment='Pre-Smooth Mask Type')
 					Header_Get_Add(stck_res_file,'PMK_CVL',str(pre_msk_cte_val),header_comment='Pre-Smooth Constant Value')
 					Header_Get_Add(stck_res_file,'PMK_ABL',str(pre_msk_abs_lne),header_comment='Pre-Smooth Mask Absorption Lines')
-					Header_Get_Add(stck_res_file,'PMK_BRG',str(pre_msk_blu_rgn),header_comment='Pre-Smooth Mask Blue Region')
-					Header_Get_Add(stck_res_file,'PMK_BMN',str(pre_blu_lmb_min),header_comment='Pre-Smooth Mask Blue Region Min')
-					Header_Get_Add(stck_res_file,'PMK_BMX',str(pre_blu_lmb_max),header_comment='Pre-Smooth Mask Blue Region Max')
+					Header_Get_Add(stck_res_file,'PMK_BRG',str(pre_msk_rgn)    ,header_comment='Pre-Smooth Mask Spec Region')
+					Header_Get_Add(stck_res_file,'PMK_BMN',str(pre_msk_min)    ,header_comment='Pre-Smooth Mask Spec Region Min')
+					Header_Get_Add(stck_res_file,'PMK_BMX',str(pre_msk_max)    ,header_comment='Pre-Smooth Mask Spec Region Max')
 				elif pre_msk == False:
 					Header_Get_Add(stck_res_file,'PMK_PMK',str(pre_msk)        ,header_comment='Pre-Smooth')
 
@@ -13386,7 +11087,6 @@ def Stack_Img_Op(stck_img_op_stck,name,img_2bstack,spc_nse,wght_img_2bstack,*arg
 			pass
 	else:
 		FNL_SPEC_RES =[]
-	#return spec_file_med,spec_file_avg,spec_file_sum,spec_file_std,spec_file_hst,spec_file_1sl,spec_file_1sh,spec_file_2sl,spec_file_2sh,spec_file_3sl,spec_file_3sh,spec_file_p25,spec_file_p75,spec_file_rms,spec_file_hsw,spec_file_wsu,spec_file_suw,spec_file_avw
 	return FNL_SPEC_RES
 
 def Stack(Stck_cat,name,stamps_fni,stamps_noise_fni,*args, **kwargs):
@@ -13419,9 +11119,9 @@ def Stack(Stck_cat,name,stamps_fni,stamps_noise_fni,*args, **kwargs):
 	pre_msk_typ     = kwargs.get('pre_msk_typ'     ,'NaN')
 	pre_msk_cte_val = kwargs.get('pre_msk_cte_val' ,1)
 	pre_msk_abs_lne = kwargs.get('pre_msk_abs_lne' ,False)
-	pre_msk_blu_rgn = kwargs.get('pre_msk_blu_rgn' ,False)
-	pre_blu_lmb_min = kwargs.get('pre_blu_lmb_min' ,500)
-	pre_blu_lmb_max = kwargs.get('pre_blu_lmb_max' ,1210)
+	pre_msk_rgn     = kwargs.get('pre_msk_rgn'     ,False)
+	pre_msk_min     = kwargs.get('pre_msk_min'     ,500)
+	pre_msk_max     = kwargs.get('pre_msk_max'     ,1210)
 
 	sig_clp         = kwargs.get('sig_clp'         ,False)
 	sig_cut         = kwargs.get('sig_cut'         ,3)
@@ -13516,64 +11216,20 @@ def Stack(Stck_cat,name,stamps_fni,stamps_noise_fni,*args, **kwargs):
 				pre_cnt_fnc     = pre_cnt_fnc       ,pre_cnt_ord     = pre_cnt_ord     ,pre_cnt_ovr     = pre_cnt_ovr           ,
 				pre_cnt_rpl     = pre_cnt_rpl       ,pre_cnt_lrj     = pre_cnt_lrj     ,pre_cnt_hrj     = pre_cnt_hrj           ,
 				smt_spc_pre     = smt_spc_pre       ,smt_shp_pre     = smt_shp_pre     ,smt_sze_pre     = smt_sze_pre           ,
-				pre_msk         = pre_msk           ,pre_msk_typ     = pre_msk_typ     ,pre_msk_cte_val = pre_msk_cte_val       ,pre_msk_abs_lne = pre_msk_abs_lne,
-				pre_msk_blu_rgn = pre_msk_blu_rgn   ,pre_blu_lmb_min = pre_blu_lmb_min ,pre_blu_lmb_max = pre_blu_lmb_max       ,										
+				pre_msk         = pre_msk           ,
+				pre_msk_typ     = pre_msk_typ       ,pre_msk_cte_val = pre_msk_cte_val ,pre_msk_abs_lne = pre_msk_abs_lne,
+				pre_msk_rgn     = pre_msk_rgn       ,pre_msk_min     = pre_msk_min     ,pre_msk_max     = pre_msk_max           ,										
 				noise_imgs      = img_noise_stack   ,
-				wgt_typ         = wgt_typ           ,get_cont_flux   = get_cont_flux   ,gcv_lmbd_i      = gcv_lmbd_i            ,gcv_lmbd_f      = gcv_lmbd_f,
-				sig_clp         = sig_clp           ,sig_cut         = sig_cut         ,sig_fct         = sig_fct               ,sig_fll         = sig_fll,
+				wgt_typ         = wgt_typ           ,
+				get_cont_flux   = get_cont_flux     ,gcv_lmbd_i      = gcv_lmbd_i      ,gcv_lmbd_f      = gcv_lmbd_f,
+				sig_clp         = sig_clp           ,
+				sig_cut         = sig_cut           ,sig_fct         = sig_fct         ,sig_fll         = sig_fll,
 				pst_cnt         = pst_cnt           ,pst_cnt_typ     = pst_cnt_typ     ,pst_cnt_lns     = pst_cnt_lns           ,
 				pst_cnt_fnc     = pst_cnt_fnc       ,pst_cnt_ord     = pst_cnt_ord     ,pst_cnt_ovr     = pst_cnt_ovr           ,
 				pst_cnt_rpl     = pst_cnt_rpl       ,pst_cnt_lrj     = pst_cnt_lrj     ,pst_cnt_hrj     = pst_cnt_hrj           ,
 				smt_spc_pst     = smt_spc_pst       ,smt_shp_pst     = smt_shp_pst     ,smt_sze_pst     = smt_sze_pst           ,
 				bs_nmb_itr      = bs_nmb_itr,
 				stk_pct_mde     = stk_pct_mde       ,stk_wgt_mde     = stk_wgt_mde)
-	#stck_med          = stck_stat[0]
-	#stck_avg          = stck_stat[1]
-	#stck_sum          = stck_stat[2]
-	#stck_std          = stck_stat[3]
-	#stck_hst          = stck_stat[4]
-
-	#stck_1sl          = stck_stat[5]
-	#stck_1sh          = stck_stat[6]
-
-	#stck_2sl          = stck_stat[7]
-	#stck_2sh          = stck_stat[8]
-
-	#stck_3sl          = stck_stat[9]
-	#stck_3sh          = stck_stat[10]
-
-	#stck_p25          = stck_stat[11]
-	#stck_p75          = stck_stat[12]
-	#stck_rms          = stck_stat[13]
-	
-	#stck_hsw          = stck_stat[14]
-	#stck_wsu          = stck_stat[15]
-	#stck_suw          = stck_stat[16]
-	#stck_avw          = stck_stat[17]
-
-	#stck_sum_cnt      = stck_stat[18] #spec_file_sum_cnt[0]
-	#stck_avg_cnt      = stck_stat[19] #spec_file_avg_cnt[0]
-	#stck_med_cnt      = stck_stat[20] #spec_file_med_cnt[0]
-
-	#stck_std_cnt      = stck_stat[21] #spec_file_std_cnt[0]
-	#stck_rms_cnt      = stck_stat[22] #spec_file_rms_cnt[0]
-
-	#stck_avw_cnt      = stck_stat[23] #spec_file_avw_cnt[0]
-	#stck_suw_cnt      = stck_stat[24] #spec_file_suw_cnt[0]
-
-	#stck__sum_smt     = stck_stat[25] #spec_file_sum_smt
-	#stck__avg_smt     = stck_stat[26] #spec_file_avg_smt
-	#stck__med_smt     = stck_stat[27] #spec_file_med_smt
-
-	#stck__avw_smt     = stck_stat[28] #spec_file_avw_smt
-	#stck__suw_smt     = stck_stat[29] #spec_file_suw_smt
-
-	#stck__sum_cnt_smt = stck_stat[30] #spec_file_sum_cnt_smt
-	#stck__avg_cnt_smt = stck_stat[31] #spec_file_avg_cnt_smt
-	#stck__med_cnt_smt = stck_stat[32] #spec_file_med_cnt_smt
-
-	#stck__avw_cnt_smt = stck_stat[33] #spec_file_avw_cnt_smt
-	#stck__suw_cnt_smt = stck_stat[34] #spec_file_suw_cnt_smt
 
 	if upd_header_stck == True and not  'BS_MST' in prt_tbl_stk:
 		print
@@ -13585,10 +11241,10 @@ def Stack(Stck_cat,name,stamps_fni,stamps_noise_fni,*args, **kwargs):
 		print colored('Statistics from table '+prt_tbl_stk,'yellow')
 		print
 		stt_tbl_stk = readtable_fg_bg_glx(prt_tbl_stk,tbl_format_ipt,bs_func=bs_func)
-		z_fg    = stt_tbl_stk[2]#ftbl['z_F']
-		z_bg    = stt_tbl_stk[5]#ftbl['z_B']
-		sep_as  = stt_tbl_stk[8]# = ftbl['SEP_arcsec']
-		sep_kpc = stt_tbl_stk[10]# = ftbl['SEP_kpc']
+		z_fg    = stt_tbl_stk[2]
+		z_bg    = stt_tbl_stk[5]
+		sep_as  = stt_tbl_stk[8]
+		sep_kpc = stt_tbl_stk[10]
 
 		z_fg_sample_avg     = np.mean(z_fg)
 		z_fg_sample_med     = np.median(z_fg)
@@ -13867,360 +11523,72 @@ def Stack(Stck_cat,name,stamps_fni,stamps_noise_fni,*args, **kwargs):
 					sep_kpc_sample_p25,
 					sep_kpc_sample_p75
 				]
-		STK_SPC_RES = [                                                    #
-						stamps_fni,stamps_noise_fni                             #1
-						#stck_stat
-						#stck_med,stck_avg,stck_sum,stck_std,stck_hst,          #6
-						#stck_1sl,stck_1sh,                                     #8
-						#stck_2sl,stck_2sh,                                     #10
-						#stck_3sl,stck_3sh,                                     #12
-						#stck_p25,stck_p75,stck_rms,                            #15
-						#stck_hsw,stck_wsu,stck_suw,stck_avw,                   #19
-						#stck_sum_cnt,stck_avg_cnt,stck_med_cnt,                #22
-						#stck_std_cnt,stck_rms_cnt,                             #26
-						#stck_avw_cnt,stck_suw_cnt,                             #26
-						#stck__sum_smt,stck__avg_smt,stck__med_smt,             #29
-						#stck__avw_smt,stck__suw_smt,                           #31
-						#stck__sum_cnt_smt,stck__avg_cnt_smt,stck__med_cnt_smt, #34
-						#stck__avw_cnt_smt,stck__suw_cnt_smt                    #36
-					]
-		#print  "\n".join([(str(element[0])+' ' +str(element[1][0])+' ' +str(element[1][1])+' ' +str(element[1][2])) for element in itertools.product(stck_stat,zip(Z_FG_HDR,Z_FG_VAL,Z_FG_CMT))])
+		STK_SPC_RES = [stamps_fni,stamps_noise_fni]
+		print
 		print  "\n".join([(str(element)) for element in stck_stat])
 		print
 		print colored('Adding redshift, sep (as & kpc) stats (bg and fg galaxies) on stacked files.','yellow')
 		print
-		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itertools.product(stck_stat,zip(Z_FG_HDR,Z_FG_VAL,Z_FG_CMT))]
-		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itertools.product(stck_stat,zip(Z_BG_HDR,Z_BG_VAL,Z_BG_CMT))]
-		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itertools.product(stck_stat,zip(SEP_AS_HDR,SEP_AS_VAL,SEP_AS_CMT))]
-		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itertools.product(stck_stat,zip(SEP_KPC_HDR,SEP_KPC_VAL,SEP_KPC_CMT))]
+		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itpdc(stck_stat,zip(Z_FG_HDR,Z_FG_VAL,Z_FG_CMT))]
+		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itpdc(stck_stat,zip(Z_BG_HDR,Z_BG_VAL,Z_BG_CMT))]
+		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itpdc(stck_stat,zip(SEP_AS_HDR,SEP_AS_VAL,SEP_AS_CMT))]
+		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itpdc(stck_stat,zip(SEP_KPC_HDR,SEP_KPC_VAL,SEP_KPC_CMT))]
 
-		#if   (('-PRP-' in prt_tbl_stk) and 'sep_as'in prt_tbl_stk) or (('_PRP_MRP' in prt_tbl_stk) and 'sep_as'in prt_tbl_stk):
-			##print
-			##print '1'
-			##c15  = stt_tbl_stk['mass_B']
-			##c16  = stt_tbl_stk['Age_B']
-			##c17  = stt_tbl_stk['SFR_B']
-			##c18  = stt_tbl_stk['sSFR_B']
-			##c19  = stt_tbl_stk['Lnuv_B']
-			##c20  = stt_tbl_stk['mass_F']
-			##c21  = stt_tbl_stk['Age_F']
-			##c22  = stt_tbl_stk['SFR_F']
-			##c23  = stt_tbl_stk['sSFR_F']
-			##c24  = stt_tbl_stk['Lnuv_F']
-			#var_prp_sep_as_slc = stt_tbl_stk[8]
-			##print var_prp_slc
-			#var_prp_sep_as_hdr = 'SAS'
-			#var_prp_sep_as_cmt = 'SEP [as] Fg Glxs'
-			##print
-			##print var_prp_cmt
-			##print
-			#var_prp_slc = stt_tbl_stk[8]
-			##print var_prp_slc
-			#var_prp_hdr = 'SAS'
-			#var_prp_cmt = 'SEP [as] Fg Glxs'
-
-		#else:
-			#pass	
-
-
-		###
-		#var_prp_sep_as_slc_fg_sample_avg     = np.mean(var_prp_sep_as_slc)
-		#var_prp_sep_as_slc_fg_sample_med     = np.median(var_prp_sep_as_slc)
-		#var_prp_sep_as_slc_fg_sample_1sl     = np.nanpercentile(var_prp_sep_as_slc, 15.9)
-		#var_prp_sep_as_slc_fg_sample_1sh     = np.nanpercentile(var_prp_sep_as_slc, 84.1)
-		#var_prp_sep_as_slc_fg_sample_2sl     = np.nanpercentile(var_prp_sep_as_slc, 2.30)
-		#var_prp_sep_as_slc_fg_sample_2sh     = np.nanpercentile(var_prp_sep_as_slc, 97.7)
-		#var_prp_sep_as_slc_fg_sample_3sl     = np.nanpercentile(var_prp_sep_as_slc, 0.20)
-		#var_prp_sep_as_slc_fg_sample_3sh     = np.nanpercentile(var_prp_sep_as_slc, 99.8)
-		#var_prp_sep_as_slc_fg_sample_p25     = np.nanpercentile(var_prp_sep_as_slc, 25.0)
-		#var_prp_sep_as_slc_fg_sample_p75     = np.nanpercentile(var_prp_sep_as_slc, 75.0)
-
-		#var_prp_sep_as_slc_fg_sample_avg_hdr = var_prp_sep_as_hdr + '_AVG'
-		#var_prp_sep_as_slc_fg_sample_med_hdr = var_prp_sep_as_hdr + '_MED'
-		#var_prp_sep_as_slc_fg_sample_1sl_hdr = var_prp_sep_as_hdr + '_1SL'
-		#var_prp_sep_as_slc_fg_sample_1sh_hdr = var_prp_sep_as_hdr + '_1SH'
-		#var_prp_sep_as_slc_fg_sample_2sl_hdr = var_prp_sep_as_hdr + '_2SL'
-		#var_prp_sep_as_slc_fg_sample_2sh_hdr = var_prp_sep_as_hdr + '_2SH'
-		#var_prp_sep_as_slc_fg_sample_3sl_hdr = var_prp_sep_as_hdr + '_3SL'
-		#var_prp_sep_as_slc_fg_sample_3sh_hdr = var_prp_sep_as_hdr + '_3SH'
-		#var_prp_sep_as_slc_fg_sample_p25_hdr = var_prp_sep_as_hdr + '_P25'
-		#var_prp_sep_as_slc_fg_sample_p75_hdr = var_prp_sep_as_hdr + '_P75'
-
-		#var_prp_sep_as_slc_fg_sample_avg_cmt = var_prp_sep_as_cmt + ' avg'
-		#var_prp_sep_as_slc_fg_sample_med_cmt = var_prp_sep_as_cmt + ' med'
-		#var_prp_sep_as_slc_fg_sample_1sl_cmt = var_prp_sep_as_cmt + ' 1sl'
-		#var_prp_sep_as_slc_fg_sample_1sh_cmt = var_prp_sep_as_cmt + ' 1sh'
-		#var_prp_sep_as_slc_fg_sample_2sl_cmt = var_prp_sep_as_cmt + ' 2sl'
-		#var_prp_sep_as_slc_fg_sample_2sh_cmt = var_prp_sep_as_cmt + ' 2sh'
-		#var_prp_sep_as_slc_fg_sample_3sl_cmt = var_prp_sep_as_cmt + ' 3sl'
-		#var_prp_sep_as_slc_fg_sample_3sh_cmt = var_prp_sep_as_cmt + ' 3sh'
-		#var_prp_sep_as_slc_fg_sample_p25_cmt = var_prp_sep_as_cmt + ' p25'
-		#var_prp_sep_as_slc_fg_sample_p75_cmt = var_prp_sep_as_cmt + ' p75'
-
-		#VAR_PRP_SEP_AS_SLC_FG_HDR = [
-					#var_prp_sep_as_slc_fg_sample_avg_hdr,
-					#var_prp_sep_as_slc_fg_sample_med_hdr,
-					#var_prp_sep_as_slc_fg_sample_1sl_hdr,
-					#var_prp_sep_as_slc_fg_sample_1sh_hdr,
-					#var_prp_sep_as_slc_fg_sample_2sl_hdr,
-					#var_prp_sep_as_slc_fg_sample_2sh_hdr,
-					#var_prp_sep_as_slc_fg_sample_3sl_hdr,
-					#var_prp_sep_as_slc_fg_sample_3sh_hdr,
-					#var_prp_sep_as_slc_fg_sample_p25_hdr,
-					#var_prp_sep_as_slc_fg_sample_p75_hdr
-				#]
-		#VAR_PRP_SEP_AS_SLC_FG_CMT = [
-					#var_prp_sep_as_slc_fg_sample_avg_cmt,
-					#var_prp_sep_as_slc_fg_sample_med_cmt,
-					#var_prp_sep_as_slc_fg_sample_1sl_cmt,
-					#var_prp_sep_as_slc_fg_sample_1sh_cmt,
-					#var_prp_sep_as_slc_fg_sample_2sl_cmt,
-					#var_prp_sep_as_slc_fg_sample_2sh_cmt,
-					#var_prp_sep_as_slc_fg_sample_3sl_cmt,
-					#var_prp_sep_as_slc_fg_sample_3sh_cmt,
-					#var_prp_sep_as_slc_fg_sample_p25_cmt,
-					#var_prp_sep_as_slc_fg_sample_p75_cmt
-				#]
-		#VAR_PRP_SEP_AS_SLC_FG_VAL = [				
-					#var_prp_sep_as_slc_fg_sample_avg,
-					#var_prp_sep_as_slc_fg_sample_med,
-					#var_prp_sep_as_slc_fg_sample_1sl,
-					#var_prp_sep_as_slc_fg_sample_1sh,
-					#var_prp_sep_as_slc_fg_sample_2sl,
-					#var_prp_sep_as_slc_fg_sample_2sh,
-					#var_prp_sep_as_slc_fg_sample_3sl,
-					#var_prp_sep_as_slc_fg_sample_3sh,
-					#var_prp_sep_as_slc_fg_sample_p25,
-					#var_prp_sep_as_slc_fg_sample_p75
-				#]
-		#print
-		#print colored('Adding Var ('+var_prp_sep_as_cmt+') stats (bg and fg galaxies) on stacked files.','yellow')
-		#print
-		#[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itertools.product(stck_stat,zip(VAR_PRP_SEP_AS_SLC_FG_HDR,VAR_PRP_SEP_AS_SLC_FG_VAL,VAR_PRP_SEP_AS_SLC_FG_CMT))]
-
-		###
 		if (('-PRP-' in prt_tbl_stk) and 'mass_F'in prt_tbl_stk) or (('_PRP_MRP' in prt_tbl_stk) and 'mass_F'in prt_tbl_stk):
-			#print
-			#print '1'
-			#c15  = stt_tbl_stk['mass_B']
-			#c16  = stt_tbl_stk['Age_B']
-			#c17  = stt_tbl_stk['SFR_B']
-			#c18  = stt_tbl_stk['sSFR_B']
-			#c19  = stt_tbl_stk['Lnuv_B']
-			#c20  = stt_tbl_stk['mass_F']
-			#c21  = stt_tbl_stk['Age_F']
-			#c22  = stt_tbl_stk['SFR_F']
-			#c23  = stt_tbl_stk['sSFR_F']
-			#c24  = stt_tbl_stk['Lnuv_F']
 			var_prp_slc = stt_tbl_stk[20]
-			#print var_prp_slc
 			var_prp_hdr = 'MSF'
 			var_prp_cmt = 'Mass Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print
 		elif (('-PRP-' in prt_tbl_stk) and 'Age_F'in prt_tbl_stk) or (('_PRP_MRP' in prt_tbl_stk) and 'Age_F'in prt_tbl_stk):
-			#print
-			#print '2'
-			#c15  = stt_tbl_stk['mass_B']
-			#c16  = stt_tbl_stk['Age_B']
-			#c17  = stt_tbl_stk['SFR_B']
-			#c18  = stt_tbl_stk['sSFR_B']
-			#c19  = stt_tbl_stk['Lnuv_B']
-			#c20  = stt_tbl_stk['mass_F']
-			#c21  = stt_tbl_stk['Age_F']
-			#c22  = stt_tbl_stk['SFR_F']
-			#c23  = stt_tbl_stk['sSFR_F']
-			#c24  = stt_tbl_stk['Lnuv_F']
 			var_prp_slc = stt_tbl_stk[21]
-			#print var_prp_slc
 			var_prp_hdr = 'AGF'		
 			var_prp_cmt = 'Age Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print
 		elif (('-PRP-' in prt_tbl_stk) and 'SFR_F'in prt_tbl_stk) or (('_PRP_MRP' in prt_tbl_stk) and 'SFR_F'in prt_tbl_stk):
-			#print
-			#print '3'
-			#c15  = stt_tbl_stk['mass_B']
-			#c16  = stt_tbl_stk['Age_B']
-			#c17  = stt_tbl_stk['SFR_B']
-			#c18  = stt_tbl_stk['sSFR_B']
-			#c19  = stt_tbl_stk['Lnuv_B']
-			#c20  = stt_tbl_stk['mass_F']
-			#c21  = stt_tbl_stk['Age_F']
-			#c22  = stt_tbl_stk['SFR_F']
-			#c23  = stt_tbl_stk['sSFR_F']
-			#c24  = stt_tbl_stk['Lnuv_F']
 			var_prp_slc = stt_tbl_stk[22]
-			#print var_prp_slc
 			var_prp_hdr = 'SFR'		
 			var_prp_cmt = 'SFR Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print
 		elif (('-PRP-' in prt_tbl_stk) and '-sSFR_F-'in prt_tbl_stk) or (('_PRP_MRP'in prt_tbl_stk) and '-sSFR_F-'in prt_tbl_stk):
-			#print
-			#print '4'
-			#c15  = stt_tbl_stk['mass_B']
-			#c16  = stt_tbl_stk['Age_B']
-			#c17  = stt_tbl_stk['SFR_B']
-			#c18  = stt_tbl_stk['sSFR_B']
-			#c19  = stt_tbl_stk['Lnuv_B']
-			#c20  = stt_tbl_stk['mass_F']
-			#c21  = stt_tbl_stk['Age_F']
-			#c22  = stt_tbl_stk['SFR_F']
-			#c23  = stt_tbl_stk['sSFR_F']
-			#c24  = stt_tbl_stk['Lnuv_F']
 			var_prp_slc = stt_tbl_stk[23]
-			#print var_prp_slc
 			var_prp_hdr = 'sSF'
 			var_prp_cmt = 'sSF Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print
 		elif (('-PRP-' in prt_tbl_stk) and 'Lnuv_F'in prt_tbl_stk) or (('_PRP_MRP' in prt_tbl_stk) and 'Lnuv_F'in prt_tbl_stk):
-			#print
-			#print '5'
-			#c15  = stt_tbl_stk['mass_B']
-			#c16  = stt_tbl_stk['Age_B']
-			#c17  = stt_tbl_stk['SFR_B']
-			#c18  = stt_tbl_stk['sSFR_B']
-			#c19  = stt_tbl_stk['Lnuv_B']
-			#c20  = stt_tbl_stk['mass_F']
-			#c21  = stt_tbl_stk['Age_F']
-			#c22  = stt_tbl_stk['SFR_F']
-			#c23  = stt_tbl_stk['sSFR_F']
-			#c24  = stt_tbl_stk['Lnuv_F']
 			var_prp_slc = stt_tbl_stk[24]
-			#print var_prp_slc
 			var_prp_hdr = 'UVF'		
 			var_prp_cmt = 'LNUV Fg Glxs'
-			#print
-			#print var_prp_cmt
 		elif (('-PRP-' in prt_tbl_stk) and 'magi_F'in prt_tbl_stk) or (('_PRP_MRP' in prt_tbl_stk) and 'magi_F'in prt_tbl_stk):
-			#print
-			#print '5'
-			#c15  = stt_tbl_stk['mass_B']
-			#c16  = stt_tbl_stk['Age_B']
-			#c17  = stt_tbl_stk['SFR_B']
-			#c18  = stt_tbl_stk['sSFR_B']
-			#c19  = stt_tbl_stk['Lnuv_B']
-			#c20  = stt_tbl_stk['mass_F']
-			#c21  = stt_tbl_stk['Age_F']
-			#c22  = stt_tbl_stk['SFR_F']
-			#c23  = stt_tbl_stk['sSFR_F']
-			#c24  = stt_tbl_stk['Lnuv_F']
-			#c25  = stt_tbl_stk['magi_F'] 
 			var_prp_slc = stt_tbl_stk[25]
-			#print var_prp_slc
 			var_prp_hdr = 'magi'		
 			var_prp_cmt = 'magi Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print			#print
 		elif ('_PRP_MRP' in prt_tbl_stk) and 'PHI'in prt_tbl_stk:
-			#print
-			#print '5'
-			#c26  = abs(ftbl['PHI'])
-			#c27  = ftbl['PHI_ABS']
-			#c28  = ftbl['re_B']
-			#c29  = ftbl['n_B']
-			#c30  = ftbl['q_B']
-			#c31  = ftbl['re_F_kpc']
-			#c32  = ftbl['n_F']
-			#c33  = ftbl['q_F']
 			print
 			print len(stt_tbl_stk)
 			var_prp_slc = stt_tbl_stk[26]
-			#print var_prp_slc
 			var_prp_hdr = 'PHI'		
 			var_prp_cmt = 'Phi angle between Fg sma and Bg'
-			#print
-			#print var_prp_cmt
-			#print			#print		
 		elif ('_PRP_MRP' in prt_tbl_stk) and 're_F'in prt_tbl_stk:
-			#print
-			#print '5'
-			#c26  = abs(ftbl['PHI'])
-			#c27  = ftbl['PHI_ABS']
-			#c28  = ftbl['re_B']
-			#c29  = ftbl['n_B']
-			#c30  = ftbl['q_B']
-			#c31  = ftbl['re_F_kpc']
-			#c32  = ftbl['n_F']
-			#c33  = ftbl['q_F']
 			print
 			print len(stt_tbl_stk)
 			var_prp_slc = stt_tbl_stk[31]
-			#print var_prp_slc
 			var_prp_hdr = 'ref'
 			var_prp_cmt = 'Effective Radius Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print			#print	
 		elif ('_PRP_MRP' in prt_tbl_stk) and 'n_F'in prt_tbl_stk:
-			#print
-			#print '5'
-			#c26  = abs(ftbl['PHI'])
-			#c27  = ftbl['PHI_ABS']
-			#c28  = ftbl['re_B']
-			#c29  = ftbl['n_B']
-			#c30  = ftbl['q_B']
-			#c31  = ftbl['re_F_kpc']
-			#c32  = ftbl['n_F']
-			#c33  = ftbl['q_F']
 			print
 			print len(stt_tbl_stk)
 			var_prp_slc = stt_tbl_stk[32]
-			#print var_prp_slc
 			var_prp_hdr = 'nsr'		
 			var_prp_cmt = 'Sersic coefficient Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print			#print		
 		elif ('_PRP_MRP' in prt_tbl_stk) and 'q_F'in prt_tbl_stk:
-			#print
-			#print '5'
-			#c26  = abs(ftbl['PHI'])
-			#c27  = ftbl['PHI_ABS']
-			#c28  = ftbl['re_B']
-			#c29  = ftbl['n_B']
-			#c30  = ftbl['q_B']
-			#c31  = ftbl['re_F_kpc']
-			#c32  = ftbl['n_F']
-			#c33  = ftbl['q_F']
 			print
 			print len(stt_tbl_stk)
 			var_prp_slc = stt_tbl_stk[33]
-			#print var_prp_slc
 			var_prp_hdr = 'q'		
 			var_prp_cmt = 'Inclination q -> i Fg Glxs'
-			#print
-			#print var_prp_cmt
-			#print			#print		
 		else:
-			##print
-			##print '1'
-			##c15  = stt_tbl_stk['mass_B']
-			##c16  = stt_tbl_stk['Age_B']
-			##c17  = stt_tbl_stk['SFR_B']
-			##c18  = stt_tbl_stk['sSFR_B']
-			##c19  = stt_tbl_stk['Lnuv_B']
-			##c20  = stt_tbl_stk['mass_F']
-			##c21  = stt_tbl_stk['Age_F']
-			##c22  = stt_tbl_stk['SFR_F']
-			##c23  = stt_tbl_stk['sSFR_F']
-			##c24  = stt_tbl_stk['Lnuv_F']
 			print
 			print len(stt_tbl_stk)
 			var_prp_slc = stt_tbl_stk[10]
-			#print var_prp_slc
 			var_prp_hdr = 'XXX'
 			var_prp_cmt = 'SEP [kpc] Fg Glxs XXX ELSE CASE'
-			#print
-			#print var_prp_cmt
-			#print			
+
 		var_prp_slc_fg_sample_avg     = np.mean(var_prp_slc)
 		var_prp_slc_fg_sample_med     = np.median(var_prp_slc)
 		var_prp_slc_fg_sample_1sl     = np.nanpercentile(var_prp_slc, 15.9)
@@ -14298,18 +11666,18 @@ def Stack(Stck_cat,name,stamps_fni,stamps_noise_fni,*args, **kwargs):
 		print len(VAR_PRP_SLC_FG_HDR),len(VAR_PRP_SLC_FG_VAL),len(VAR_PRP_SLC_FG_CMT)
 		print 'stck_stat'
 		print len(stck_stat)
-		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itertools.product(stck_stat,zip(VAR_PRP_SLC_FG_HDR,VAR_PRP_SLC_FG_VAL,VAR_PRP_SLC_FG_CMT))]
+		[Header_Get_Add(element[0],element[1][0],element[1][1],header_comment=element[1][2]) for element in itpdc(stck_stat,zip(VAR_PRP_SLC_FG_HDR,VAR_PRP_SLC_FG_VAL,VAR_PRP_SLC_FG_CMT))]
 	elif 'BS_MST' in prt_tbl_stk:
 		print
 		print colored('BS_MST table!','yellow')
-		print colored('The headers of the stacked fits files will not be updated with the corresponding variable stats','yellow')
+		print colored('The headers of the stacked fits files will NOT be updated with the corresponding variable stats','yellow')
 		print colored('upd_header_stck '+ str(upd_header_stck),'yellow')
 		print
 		STK_SPC_RES = [stamps_fni,stamps_noise_fni]
 	else:
 		pass
 		print
-		print colored('The headers of the stacked fits files will not be updated with the corresponding variable stats','yellow')
+		print colored('The headers of the stacked fits files will NOT be updated with the corresponding variable stats','yellow')
 		print colored('upd_header_stck '+ str(upd_header_stck),'yellow')
 		print
 		STK_SPC_RES = [stamps_fni,stamps_noise_fni]
@@ -14341,9 +11709,9 @@ def Stack_Subsample(SubSmpl,*args, **kwargs):
 	pre_msk_typ     = kwargs.get('pre_msk_typ'     ,'NaN')
 	pre_msk_cte_val = kwargs.get('pre_msk_cte_val' ,1)
 	pre_msk_abs_lne = kwargs.get('pre_msk_abs_lne' ,False)
-	pre_msk_blu_rgn = kwargs.get('pre_msk_blu_rgn' ,False)
-	pre_blu_lmb_min = kwargs.get('pre_blu_lmb_min' ,500)
-	pre_blu_lmb_max = kwargs.get('pre_blu_lmb_max' ,1210)
+	pre_msk_rgn     = kwargs.get('pre_msk_rgn' ,False)
+	pre_msk_min     = kwargs.get('pre_msk_min' ,500)
+	pre_msk_max     = kwargs.get('pre_msk_max' ,1210)
 
 	sig_clp         = kwargs.get('sig_clp'         ,False)
 	sig_cut         = kwargs.get('sig_cut'         ,3)
@@ -14381,12 +11749,10 @@ def Stack_Subsample(SubSmpl,*args, **kwargs):
 	stk_pct_mde     = kwargs.get('stk_pct_mde'     ,False)
 	stk_wgt_mde     = kwargs.get('stk_wgt_mde'     ,False)
 
-	print '****'
 	print
-	print 'bs_nmb_itr : ',bs_nmb_itr
-	print 'stk_pct_mde: ',stk_pct_mde
-	print 'stk_wgt_mde: ',stk_wgt_mde
-	print '*****'
+	print colored('Stack Percentile (PCT) mode: ' + str(stk_pct_mde),'yellow')
+	print colored('Stack Weight     (WGT) mode: ' + str(stk_wgt_mde),'yellow')
+	print colored('BS repetition number       : ' + str(bs_nmb_itr),'yellow')
 	print
 
 	Stack_Spec_Res = []
@@ -14419,7 +11785,7 @@ def Stack_Subsample(SubSmpl,*args, **kwargs):
 			pre_cnt_rpl     = pre_cnt_rpl     , pre_cnt_lrj     = pre_cnt_lrj    , pre_cnt_hrj     = pre_cnt_hrj    ,    
 			smt_spc_pre     = smt_spc_pre     , smt_shp_pre     = smt_shp_pre    , smt_sze_pre     = smt_sze_pre    ,
 			pre_msk         = pre_msk         , pre_msk_typ     = pre_msk_typ    , pre_msk_abs_lne = pre_msk_abs_lne,
-			pre_msk_blu_rgn = pre_msk_blu_rgn , pre_blu_lmb_min = pre_blu_lmb_min, pre_blu_lmb_max = pre_blu_lmb_max,
+			pre_msk_rgn     = pre_msk_rgn     , pre_msk_min     = pre_msk_min    , pre_msk_max     = pre_msk_max    ,
 			get_cont_flux   = False           , gcv_lmbd_i      = gcv_lmbd_i     , gcv_lmbd_f      = gcv_lmbd_f) for spc2bitp in SubSmpl[2][SubSet]] 
 		elif spc_nse == False:
 			spec_n = [0]
@@ -14433,7 +11799,7 @@ def Stack_Subsample(SubSmpl,*args, **kwargs):
 			pre_cnt_rpl     = pre_cnt_rpl     , pre_cnt_lrj     = pre_cnt_lrj    , pre_cnt_hrj     = pre_cnt_hrj    ,    
 			smt_spc_pre     = smt_spc_pre     , smt_shp_pre     = smt_shp_pre    , smt_sze_pre     = smt_sze_pre    ,
 			pre_msk         = pre_msk         , pre_msk_typ     = pre_msk_typ    , pre_msk_abs_lne = pre_msk_abs_lne,
-			pre_msk_blu_rgn = pre_msk_blu_rgn , pre_blu_lmb_min = pre_blu_lmb_min, pre_blu_lmb_max = pre_blu_lmb_max,
+			pre_msk_rgn     = pre_msk_rgn     , pre_msk_min     = pre_msk_min    , pre_msk_max     = pre_msk_max    ,
 			get_cont_flux   = get_cont_flux   , gcv_lmbd_i      = gcv_lmbd_i     , gcv_lmbd_f      = gcv_lmbd_f) for spc2bitp in SubSmpl[1][SubSet]]
 		if '-BS-' in SubSmpl_nm:
 			cpy_fts_dir = fts_bst_lst
@@ -14474,10 +11840,13 @@ def Stack_Subsample(SubSmpl,*args, **kwargs):
 			pre_cnt_fnc     = pre_cnt_fnc         ,pre_cnt_ord     = pre_cnt_ord            ,pre_cnt_ovr     = pre_cnt_ovr            ,
 			pre_cnt_rpl     = pre_cnt_rpl         ,pre_cnt_lrj     = pre_cnt_lrj            ,pre_cnt_hrj     = pre_cnt_hrj            ,
 			smt_spc_pre     = smt_spc_pre         ,smt_shp_pre     = smt_shp_pre            ,smt_sze_pre     = smt_sze_pre            ,
-			pre_msk         = pre_msk             ,pre_msk_typ     = pre_msk_typ            ,pre_msk_abs_lne = pre_msk_abs_lne        ,pre_msk_cte_val = pre_msk_cte_val,
-			pre_msk_blu_rgn = pre_msk_blu_rgn     ,pre_blu_lmb_min = pre_blu_lmb_min        ,pre_blu_lmb_max = pre_blu_lmb_max        ,
-			wgt_typ         = wgt_typ             ,get_cont_flux   = get_cont_flux          ,gcv_lmbd_i      = gcv_lmbd_i             ,gcv_lmbd_f      = gcv_lmbd_f     ,
-			sig_clp         = sig_clp             ,sig_cut         = sig_cut                ,sig_fct         = sig_fct                ,sig_fll         = sig_fll        ,
+			pre_msk         = pre_msk             ,
+			pre_msk_typ     = pre_msk_typ         ,pre_msk_abs_lne = pre_msk_abs_lne        ,pre_msk_cte_val = pre_msk_cte_val,
+			pre_msk_rgn     = pre_msk_rgn         ,pre_msk_min     = pre_msk_min            ,pre_msk_max     = pre_msk_max            ,
+			wgt_typ         = wgt_typ             ,
+			get_cont_flux   = get_cont_flux       ,gcv_lmbd_i      = gcv_lmbd_i             ,gcv_lmbd_f      = gcv_lmbd_f             ,
+			sig_clp         = sig_clp             ,
+			sig_cut         = sig_cut             ,sig_fct         = sig_fct                ,sig_fll         = sig_fll                ,
 			pst_cnt         = pst_cnt             ,pst_cnt_typ     = pst_cnt_typ            ,pst_cnt_lns     = pst_cnt_lns            ,
 			pst_cnt_fnc     = pst_cnt_fnc         ,pst_cnt_ord     = pst_cnt_ord            ,pst_cnt_ovr     = pst_cnt_ovr            ,
 			pst_cnt_rpl     = pst_cnt_rpl         ,pst_cnt_lrj     = pst_cnt_lrj            ,pst_cnt_hrj     = pst_cnt_hrj            ,
@@ -14492,7 +11861,6 @@ def Stack_Subsample(SubSmpl,*args, **kwargs):
 			Stack_Spec_Res.append(Spec_Res)
 		elif spc_nse == False:
 			Spec_Res[0][0] = str(last_stack_files_txt_fnm)
-			#Spec_Res[1] = str(last_stack_files_txt_fnm_n)
 			Stack_Spec_Res.append(Spec_Res[0][0])
 	return Stack_Spec_Res
 
@@ -14522,13 +11890,13 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 	pre_msk_typ     = kwargs.get('pre_msk_typ'     ,'NaN')
 	pre_msk_cte_val = kwargs.get('pre_msk_cte_val' ,1)
 	pre_msk_abs_lne = kwargs.get('pre_msk_abs_lne' ,False)
-	pre_msk_blu_rgn = kwargs.get('pre_msk_blu_rgn' ,False)
-	pre_blu_lmb_min = kwargs.get('pre_blu_lmb_min' ,500)
-	pre_blu_lmb_max = kwargs.get('pre_blu_lmb_max' ,1210)
+	pre_msk_rgn     = kwargs.get('pre_msk_rgn' ,False)
+	pre_msk_min     = kwargs.get('pre_msk_min' ,500)
+	pre_msk_max     = kwargs.get('pre_msk_max' ,1210)
 
 	sig_clp         = kwargs.get('sig_clp'         ,False)
 	sig_cut         = kwargs.get('sig_cut'         ,3)
-	sig_fct         = kwargs.get('sig_fct'         ,'mean')
+	sig_fct         = kwargs.get('sig_fct'         ,mean)
 	sig_fll         = kwargs.get('sig_fll'         ,np.nan)
 
 	wgt_typ         = kwargs.get('wgt_typ'         ,None)
@@ -14597,7 +11965,7 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 	TBL_BS_AVW_C_S = []
 
 	widgets = ['Bootstrap for galaxies to be stacked: ', Percentage(), ' ', Bar(marker='*',left='[',right=']'),
-	           ' ', ETA(), ' ', FileTransferSpeed()] #see docs for other options
+			   ' ', ETA(), ' ', FileTransferSpeed()] #see docs for other options
 
 	pbar = ProgressBar(widgets=widgets, maxval=bs_i)
 	pbar.start()
@@ -14620,19 +11988,23 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 
 			stamps_bootstrap = Select_Subsamples(tbl_bs_opt,None,None,test_fg = True, test_bg = False, slc_int = False,slc_smp = False)
 			stacks_bootstrap = np.array(Stack_Subsample(stamps_bootstrap,
-								sel_pre_shf     = sel_pre_shf       ,sel_pre_cnt     = sel_pre_cnt           ,sel_pre_msk     = sel_pre_msk           ,
-								pre_cnt         = pre_cnt           ,pre_cnt_typ     = pre_cnt_typ           ,pre_cnt_lns     = pre_cnt_lns           ,
-								pre_cnt_fnc     = pre_cnt_fnc       ,pre_cnt_ord     = pre_cnt_ord           ,pre_cnt_ovr     = pre_cnt_ovr           ,
-								pre_cnt_rpl     = pre_cnt_rpl       ,pre_cnt_lrj     = pre_cnt_lrj           ,pre_cnt_hrj     = pre_cnt_hrj           ,
-								smt_spc_pre     = smt_spc_pre       ,smt_shp_pre     = smt_shp_pre          ,smt_sze_pre     = smt_sze_pre           ,
-								pre_msk         = pre_msk           ,pre_msk_typ     = pre_msk_typ           ,pre_msk_abs_lne = False                 ,pre_msk_cte_val = pre_msk_cte_val,
-								pre_msk_blu_rgn = pre_msk_blu_rgn   ,pre_blu_lmb_min = pre_blu_lmb_min       ,pre_blu_lmb_max = pre_blu_lmb_max       ,
-								sig_clp         = sig_clp           ,sig_cut         = sig_cut               ,sig_fct         = sig_fct               ,sig_fll         = sig_fll,
-								wgt_typ         = wgt_typ           ,get_cont_flux   = get_cont_flux         ,gcv_lmbd_i      = gcv_lmbd_i            ,gcv_lmbd_f      = gcv_lmbd_f,							
+								sel_pre_shf     = sel_pre_shf       ,sel_pre_cnt     = sel_pre_cnt           ,sel_pre_msk     = sel_pre_msk,
+								pre_cnt         = pre_cnt           ,pre_cnt_typ     = pre_cnt_typ           ,pre_cnt_lns     = pre_cnt_lns,
+								pre_cnt_fnc     = pre_cnt_fnc       ,pre_cnt_ord     = pre_cnt_ord           ,pre_cnt_ovr     = pre_cnt_ovr,
+								pre_cnt_rpl     = pre_cnt_rpl       ,pre_cnt_lrj     = pre_cnt_lrj           ,pre_cnt_hrj     = pre_cnt_hrj,
+								smt_spc_pre     = smt_spc_pre       ,smt_shp_pre     = smt_shp_pre           ,smt_sze_pre     = smt_sze_pre,
+								pre_msk         = pre_msk           ,
+								pre_msk_typ     = pre_msk_typ       ,pre_msk_abs_lne = False                 ,pre_msk_cte_val = pre_msk_cte_val,
+								pre_msk_rgn     = pre_msk_rgn       ,
+								pre_msk_min     = pre_msk_min       ,pre_msk_max     = pre_msk_max            ,
+								sig_clp         = sig_clp           ,
+								sig_cut         = sig_cut           ,sig_fct         = sig_fct               ,sig_fll         = sig_fll,
+								wgt_typ         = wgt_typ           ,
+								get_cont_flux   = get_cont_flux     ,gcv_lmbd_i      = gcv_lmbd_i            ,gcv_lmbd_f      = gcv_lmbd_f,							
 								wrt_fits        = wrt_fits          ,spc_nse         = spc_nse               ,
-								pst_cnt         = pst_cnt           ,pst_cnt_typ     = pst_cnt_typ           ,pst_cnt_lns     = pst_cnt_lns            ,
-								pst_cnt_fnc     = pst_cnt_fnc       ,pst_cnt_ord     = pst_cnt_ord           ,pst_cnt_ovr     = pst_cnt_ovr            ,
-								pst_cnt_rpl     = pst_cnt_rpl       ,pst_cnt_lrj     = pst_cnt_lrj           ,pst_cnt_hrj     = pst_cnt_hrj            ,
+								pst_cnt         = pst_cnt           ,pst_cnt_typ     = pst_cnt_typ           ,pst_cnt_lns     = pst_cnt_lns,
+								pst_cnt_fnc     = pst_cnt_fnc       ,pst_cnt_ord     = pst_cnt_ord           ,pst_cnt_ovr     = pst_cnt_ovr,
+								pst_cnt_rpl     = pst_cnt_rpl       ,pst_cnt_lrj     = pst_cnt_lrj           ,pst_cnt_hrj     = pst_cnt_hrj,
 								smt_spc_pst     = smt_spc_pst       ,smt_shp_pst     = smt_shp_pst           ,smt_sze_pst     = smt_sze_pst,
 								bs_nmb_itr      = bs_i))
 
@@ -14662,7 +12034,7 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 			TBL_BS_AVG_C_S.append(bs_file_avg_c_s)
 			TBL_BS_AVW_C_S.append(bs_file_avw_c_s)
 
-		rtM                        = astropy.table.Table()
+		rtM                        = aptbl.Table()
 		rtM['bs_spc_file_med']     = TBL_BS_MED
 		rtM['bs_spc_file_avg']     = TBL_BS_AVG
 		rtM['bs_spc_file_std']     = TBL_BS_STD
@@ -14676,7 +12048,7 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 
 		tbl_bs_mst                 = str_bst_tbl + (str(bs_tbl.split('.csv')[0]) + '-BS_MST_' +str(bs_i) + '.' + tbl_format_opt).split('/')[-1]
 		print
-		rtM.write(tbl_bs_mst, format=tbl_format_opt,overwrite=True)#'ascii.fixed_width_two_line')	
+		rtM.write(tbl_bs_mst, format=tbl_format_opt,overwrite=True)
 		print 'Results containing Bootstrap galaxies in table: '
 		print tbl_bs_mst
 		
@@ -14720,51 +12092,26 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 
 			stamps_bootstrap = Select_Subsamples(tbl_bs_opt,None,None,test_fg = True, test_bg = False, slc_int = False,slc_smp = False)
 			stacks_bootstrap = np.array(Stack_Subsample(stamps_bootstrap,
-								sel_pre_shf     = sel_pre_shf       ,sel_pre_cnt     = sel_pre_cnt           ,sel_pre_msk     = sel_pre_msk           ,
-								pre_cnt         = pre_cnt           ,pre_cnt_typ     = pre_cnt_typ           ,pre_cnt_lns     = pre_cnt_lns           ,
-								pre_cnt_fnc     = pre_cnt_fnc       ,pre_cnt_ord     = pre_cnt_ord           ,pre_cnt_ovr     = pre_cnt_ovr           ,
-								pre_cnt_rpl     = pre_cnt_rpl       ,pre_cnt_lrj     = pre_cnt_lrj           ,pre_cnt_hrj     = pre_cnt_hrj           ,
-								smt_spc_pre     = smt_spc_pre       ,smt_shp_pre     = smt_shp_pre          ,smt_sze_pre     = smt_sze_pre           ,
-								pre_msk         = pre_msk           ,pre_msk_typ     = pre_msk_typ           ,pre_msk_abs_lne = False                 ,pre_msk_cte_val = pre_msk_cte_val,
-								pre_msk_blu_rgn = pre_msk_blu_rgn   ,pre_blu_lmb_min = pre_blu_lmb_min       ,pre_blu_lmb_max = pre_blu_lmb_max       ,
-								sig_clp         = sig_clp           ,sig_cut         = sig_cut               ,sig_fct         = sig_fct               ,sig_fll         = sig_fll,
-								wgt_typ         = wgt_typ           ,get_cont_flux   = get_cont_flux         ,gcv_lmbd_i      = gcv_lmbd_i            ,gcv_lmbd_f      = gcv_lmbd_f,							
+								sel_pre_shf     = sel_pre_shf       ,sel_pre_cnt     = sel_pre_cnt           ,sel_pre_msk     = sel_pre_msk,
+								pre_cnt         = pre_cnt           ,pre_cnt_typ     = pre_cnt_typ           ,pre_cnt_lns     = pre_cnt_lns,
+								pre_cnt_fnc     = pre_cnt_fnc       ,pre_cnt_ord     = pre_cnt_ord           ,pre_cnt_ovr     = pre_cnt_ovr,
+								pre_cnt_rpl     = pre_cnt_rpl       ,pre_cnt_lrj     = pre_cnt_lrj           ,pre_cnt_hrj     = pre_cnt_hrj,
+								smt_spc_pre     = smt_spc_pre       ,smt_shp_pre     = smt_shp_pre           ,smt_sze_pre     = smt_sze_pre,
+								pre_msk         = pre_msk           ,
+								pre_msk_typ     = pre_msk_typ       ,pre_msk_abs_lne = False                 ,pre_msk_cte_val = pre_msk_cte_val,
+								pre_msk_rgn     = pre_msk_rgn       ,
+								pre_msk_min     = pre_msk_min       ,pre_msk_max     = pre_msk_max           ,
+								sig_clp         = sig_clp           ,
+								sig_cut         = sig_cut           ,sig_fct         = sig_fct               ,sig_fll         = sig_fll,
+								wgt_typ         = wgt_typ           ,
+								get_cont_flux   = get_cont_flux     ,gcv_lmbd_i      = gcv_lmbd_i            ,gcv_lmbd_f      = gcv_lmbd_f,							
 								wrt_fits        = wrt_fits          ,spc_nse         = spc_nse               ,
-								pst_cnt         = pst_cnt           ,pst_cnt_typ     = pst_cnt_typ           ,pst_cnt_lns     = pst_cnt_lns            ,
-								pst_cnt_fnc     = pst_cnt_fnc       ,pst_cnt_ord     = pst_cnt_ord           ,pst_cnt_ovr     = pst_cnt_ovr            ,
-								pst_cnt_rpl     = pst_cnt_rpl       ,pst_cnt_lrj     = pst_cnt_lrj           ,pst_cnt_hrj     = pst_cnt_hrj            ,
+								pst_cnt         = pst_cnt           ,pst_cnt_typ     = pst_cnt_typ           ,pst_cnt_lns     = pst_cnt_lns,
+								pst_cnt_fnc     = pst_cnt_fnc       ,pst_cnt_ord     = pst_cnt_ord           ,pst_cnt_ovr     = pst_cnt_ovr,
+								pst_cnt_rpl     = pst_cnt_rpl       ,pst_cnt_lrj     = pst_cnt_lrj           ,pst_cnt_hrj     = pst_cnt_hrj,
 								smt_spc_pst     = smt_spc_pst       ,smt_shp_pst     = smt_shp_pst           ,smt_sze_pst     = smt_sze_pst,
-								bs_nmb_itr      = bs_i))#,
+								bs_nmb_itr      = bs_i))
 			
-			###
-			'''
-			bs_file_med      = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'med.fits'
-			bs_file_avg      = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avg.fits'
-			bs_file_std      = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'std.fits'
-			bs_file_avw      = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avw.fits'
-
-			bs_file_med_c    = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'med-c.fits'
-			bs_file_avg_c    = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avg-c.fits'
-			bs_file_avw_c    = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avw-c.fits'
-
-			bs_file_med_c_s  = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'med-c-smt.fits'
-			bs_file_avg_c_s  = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avg-c-smt.fits'
-			bs_file_avw_c_s  = (str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avw-c-smt.fits'
-
-			TBL_BS_MED.append(bs_file_med)
-			TBL_BS_AVG.append(bs_file_avg)
-			TBL_BS_STD.append(bs_file_std)
-			TBL_BS_AVW.append(bs_file_avw)
-
-			TBL_BS_MED_C.append(bs_file_med_c)
-			TBL_BS_AVG_C.append(bs_file_avg_c)
-			TBL_BS_AVW_C.append(bs_file_avw_c)
-
-			TBL_BS_MED_C_S.append(bs_file_med_c_s)
-			TBL_BS_AVG_C_S.append(bs_file_avg_c_s)
-			TBL_BS_AVW_C_S.append(bs_file_avw_c_s)
-			'''
-
 		[TBL_BS_MED.append((str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'med.fits') for main_it in range(bs_i)]#bs_file_med)
 		[TBL_BS_AVG.append((str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avg.fits') for main_it in range(bs_i)]#bs_file_avg)
 		[TBL_BS_STD.append((str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'std.fits') for main_it in range(bs_i)]#bs_file_std)
@@ -14778,7 +12125,7 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 		[TBL_BS_AVG_C_S.append((str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avg-c-smt.fits') for main_it in range(bs_i)]#bs_file_avg_c_s)
 		[TBL_BS_AVW_C_S.append((str(bs_tbl.split('.csv')[0]) + '-BS-'+str(main_it+1)+'-stk-').split('/')[-1] + 'avw-c-smt.fits') for main_it in range(bs_i)]#bs_file_avw_c_s)
 		
-		rtM                        = astropy.table.Table()
+		rtM                        = aptbl.Table()
 		rtM['bs_spc_file_med']     = TBL_BS_MED
 		rtM['bs_spc_file_avg']     = TBL_BS_AVG
 		rtM['bs_spc_file_std']     = TBL_BS_STD
@@ -14793,7 +12140,7 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 		
 		tbl_bs_mst                 = str_bst_tbl + (str(bs_tbl.split('.csv')[0]) + '-BS_MST_' +str(bs_i) + '.' + tbl_format_opt).split('/')[-1]
 		print
-		rtM.write(tbl_bs_mst, format=tbl_format_opt,overwrite=True)#'ascii.fixed_width_two_line')	
+		rtM.write(tbl_bs_mst, format=tbl_format_opt,overwrite=True)
 		print colored('No Output table in BS Restoring Mode!','yellow')
 		print colored('Results containing Bootstrap galaxies in table: ','green')
 		print colored(tbl_bs_mst,'green')
@@ -14830,7 +12177,7 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 			
 
 		
-		rtM                        = astropy.table.Table()
+		rtM                        = aptbl.Table()
 		rtM['bs_spc_file_med']     = TBL_BS_MED
 		rtM['bs_spc_file_avg']     = TBL_BS_AVG
 		rtM['bs_spc_file_std']     = TBL_BS_STD
@@ -14845,7 +12192,7 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 		
 		tbl_bs_mst                 = str_bst_tbl + (str(bs_tbl.split('.csv')[0]) + '-BS_MST_' +str(bs_i) + '.' + tbl_format_opt).split('/')[-1]
 		print
-		rtM.write(tbl_bs_mst, format=tbl_format_opt,overwrite=True)#'ascii.fixed_width_two_line')	
+		rtM.write(tbl_bs_mst, format=tbl_format_opt,overwrite=True)
 		print colored('Output table in BS Restoring Mode!','yellow')
 		print colored('Results containing Bootstrap galaxies in table: ','green')
 		print colored(tbl_bs_mst,'green')
@@ -14859,5 +12206,4 @@ def Bootstrap(bs_tbl,bs_var,bs_i,bs_pct,*args, **kwargs):
 		####BROKEN BOOTSTRAP######
 	####BROKEN BOOTSTRAP-ONLY TABLE######
 	####CLASSIC BOOTSTRAP OR COMPLETE BROKEN BOOTSTRAP#####
-
 ####Fnc_Stk_Stk####

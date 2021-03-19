@@ -1,41 +1,4 @@
-import math, sys, os, shutil, string, cmath
-import numpy as np
-import bottleneck as bn
-import pandas as pd
-
-import astropy
-from astropy.coordinates import SkyCoord
-from astropy import cosmology
-from astropy.cosmology import FlatLambdaCDM
-from astropy.io import ascii
-import astropy
-from astropy import stats 
 from astropy.io import fits
-from astropy import table
-from astropy import convolution
-from numpy import mean,median
-
-from decimal import *
-from progressbar import *
-from os.path import expanduser
-from itertools import tee, islice, chain, izip
-from termcolor import colored
-from pandas import DataFrame
-
-import scipy
-from scipy import stats
-from scipy.ndimage.filters import gaussian_filter
-from scipy.ndimage.filters import gaussian_filter1d
-from scipy import signal
-from scipy.constants import physical_constants
-import scipy.optimize as opt
-import warnings
-from scipy.optimize import OptimizeWarning
-import scipy.integrate as integrate
-from scipy.special import wofz
-
-import logging
-import itertools
 
 ####Fnc_Stk_Fts####
 def Wrt_FITS_File(img_inpt_array,otp_img_fn,*args, **kwargs):
@@ -47,11 +10,9 @@ def Wrt_FITS_File(img_inpt_array,otp_img_fn,*args, **kwargs):
 	
 def Header_Get(image,field):
 	hdulist = fits.open(image)
-
 	try:
 		header  = float(hdulist[0].header[field])
 	except:
-		print image
 		header  = str(hdulist[0].header[field])
 	hdulist.close()
 	return header
@@ -96,12 +57,11 @@ def Header_History_Step(fits_ipfn_prv,fits_ipfn_pst):
 	Header_Updt(fits_ipfn_pst,'h_s_c',c_step)
 
 def Header_History_Step_Backwards_Loop(fits_ipfn_crt,fits_ipfn_prv):
-		loop_back_step = int(Header_Get(fits_ipfn_crt,'h_s_c'))
-		while (loop_back_step > 0):
-			loop_back_step = int(loop_back_step - 1)
-			loop_back_step_header = 'h_s_' + str(loop_back_step)
-			Header_Copy(fits_ipfn_crt,fits_ipfn_prv,loop_back_step_header)
-		else:
-			pass
+	loop_back_step = int(Header_Get(fits_ipfn_crt,'h_s_c'))
+	while (loop_back_step > 0):
+		loop_back_step = int(loop_back_step - 1)
+		loop_back_step_header = 'h_s_' + str(loop_back_step)
+		Header_Copy(fits_ipfn_crt,fits_ipfn_prv,loop_back_step_header)
+	else:
+		pass
 ####Fnc_Stk_Fts####
-
