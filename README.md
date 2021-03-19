@@ -424,7 +424,7 @@ pb.finish()
 If ```ivl_fts_hdr=True``` then the initial guess values will be read from the fits files headers, otherwise they will be set by the defualt line quantities defined in the Line_Dictionary.py file .
 This will generate individual plots for each line profile fitted, located in ```~/Example/Stack_Results/COSMOS/BOOTSTRAP/PLOTS/INDIVIDUAL-BS/```.
 
-As explained above all the fitted parameters (_i.e. line properties (amplitude, sigma, line center), fitted values_) are saved in the corresponding compoosite spectra.
+As explained above all the fitted parameters (_i.e. line properties (amplitude, sigma, line center), fitted values_) are saved in the corresponding composite spectra fits headers.
 ## Dependencies
 Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task for continuum normalization. However a new version will be released dropping this dependency.
  - [astropy](https://www.astropy.org)
