@@ -263,7 +263,7 @@ To compute the Confidence Inteervals (CIs) of the composite spectra it is possib
 
 It is possible to complete a broken BS process. 
 **comp_BS_run**	(_bool_) enables the BS completion
-**bst_brk_int** sets the reeeinizilaation step at which the process broked, **bst_brk_lst** sets the BS number repetitions (_default=bs_iteration_num_)  #Last iteration step (default = bs_iteration_num) and **crts_BS_otb** (_bool_) creates the BS master table only for Completed BS Repetitions(_= bs_iteration_num_) but without master table. 
+**bst_brk_int** sets the reinizilation step at which the process broke, **bst_brk_lst** sets the BS number repetitions (_default=bs_iteration_num_)  #Last iteration step (default = bs_iteration_num) and **crts_BS_otb** (_bool_) creates the BS master table only for Completed BS Repetitions(_= bs_iteration_num_) but without master table. 
 
 
 To generate the CIs, first we define:
@@ -328,6 +328,11 @@ for tbl_2b_btstr in tables:
 					stk_pct_mde     = True                 ,stk_wgt_mde     = False))
 
 ```
+
+This process will create into the ```~/BOOTSTRAP/STACKS/``` directory three diferent subdirectories: ```~/BOOTSTRAP/STACKS/LAST-FITS``` containig all the files used to generate stacked boootstrap in each repetition with a similar structure similar to  ```~/Example/Stack_Results/COSMOS/STACKS/RESULTS/``` directory and described above in the **Stacking** section
+```~/BOOTSTRAP/STACKS/STATS-STR``` contains all the stacked boootstrap repetitions (_e.g. FILE_NAME-BS-1-stk-avg.fits, FILE_NAME-BS-2-stk-avg.fits, ... FILE_NAME-BS-N-stk-avg.fits_) and ```~/BOOTSTRAP/STACKS/STATS-BST``` contains the bootsrap stacked spectra considering all the _N_ stacked boootstrap repetitions.
+This process will create into the ```~/BOOTSTRAP/STACKS/``` directory three diferent subdirectories: ```~/BOOTSTRAP/STACKS/LAST-FITS``` containig all the files used to generate stacked boootstrap in each repetition with a similar structure similar to```~/BOOTSTRAP/STACKS/STATS-STR``` contains all the stacked boootstrap repetitions (_e.g. FILE_NAME-BS-1-stk-avg.fits, FILE_NAME-BS-2-stk-avg.fits, ... FILE_NAME-BS-N-stk-avg.fits_) and ```~/BOOTSTRAP/STACKS/STATS-BST``` contains the bootsrap stacked spectra considering all the _N_ stacked boootstrap repetitions.
+This process will create into the ```~/BOOTSTRAP/STACKS/``` directory three diferent subdirectories: ```~/BOOTSTRAP/STACKS/LAST-FITS``` containig all the files used to generate stacked boootstrap in each repetition with a similar structure similar to   ```~/BOOTSTRAP/STACKS/STATS-STR``` contains all the stacked boootstrap repetitions (_e.g. FILE_NAME-BS-1-stk-avg.fits, FILE_NAME-BS-2-stk-avg.fits, ... FILE_NAME-BS-N-stk-avg.fits_) and ```~/BOOTSTRAP/STACKS/STATS-BST``` contains the bootsrap stacked spectra considering all the _N_ stacked boootstrap repetitions.
 
 Finally, to plot the Stacked spectra including the CIs generated thorugh the BS process; first we define:
 
