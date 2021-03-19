@@ -437,6 +437,7 @@ Currently VSAT works only with astropy 2.0 as it relies on pyraf continuum task 
  - [pysynphot](https://pysynphot.readthedocs.io/en/latest/)
  - [pyraf](https://astroconda.readthedocs.io/en/latest/installation.html)
  - [termcolor](https://pypi.org/project/termcolor/)
+ - [progressbar](https://pypi.org/project/progressbar2/)
 ## License
 
 BSD 3-Clause License
