@@ -80,6 +80,7 @@ It is possible to pre-processes the spectra before combining them to generate a 
      - 10: Line fitting: Amplitude bound constrains.
 
 ## Plots
+To assess all tthe stacking analysis, VSAT-1D includes a series of tools to generate plot at the different stages of the stacking analysis. This includes: plots the individual spectra selected to generate the composite spectrum, any pre-processing (_e.g. masking, shifting, smoothing & cont fitting_) of the selected spectra, composite spectra including post-processing, line fitting and bootstrap analysis. This plots are includedd in the ```Example.py file```script.
 
 ## Line fitting
 VSAT uses lmfit for line fitting and by default a simple gaussian, however it is possible to use ```GM``` mode to fit multiple gaussian components for emmission before and after the central wavelength of some lines as CIV. The line fitting procedure is performed under a defined wavelength range which can contain a single line or multiple lines as defined in the Line_dictionary.py file. 
