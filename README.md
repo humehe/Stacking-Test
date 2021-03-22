@@ -1,5 +1,5 @@
 # VSAT-1D
-The Valparaíso Stacking Analysis Tool (VSAT) provides a series of tools for selecting, stacking, and analyzing 1D spectra. It is intended for stacking samples of spectra belonging to large extragalactic catalogs by selecting subsamples of galaxies defined by their available properties (_e.g. redshift, stellar mass, star formation rate_) being possible to generate diverse (_e.g. median, average, weighted average, histogram_) composite spectra. However, it is possible to also use VSAT on smaller datasets containing any type of astronomical object.
+VSAT-1D is part of the Valparaíso Stacking Analysis Tool (VSAT) and provides a series of tools for selecting, stacking, and analyzing 1D composite spectra. It is intended for stacking samples of spectra belonging to large extragalactic catalogs by selecting subsamples of galaxies defined by any given property (_e.g. redshift, stellar mass, star formation rate_) being possible to generate different (_e.g. median, average, weighted average, histogram_) composite spectra. However, it is possible to also use VSAT-1D on smaller datasets containing any type of astronomical object.
 
 ![Alt text](./Images/bootstrap.jpg?raw=true "Stacked spectra computed through median values including CIs.")
 
